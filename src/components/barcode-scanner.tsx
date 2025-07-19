@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useCallback } from "react"
 import { ScanLine } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
@@ -22,9 +22,9 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameId = useRef<number>();
 
-  const handleCheckIn = (studentId: string) => {
-    if (studentId.trim() === "") {
-        return
+  const handleCheckIn = useCallback((studentId: string) => {
+    if (!studentId || studentId.trim() === "") {
+        return;
     }
 
     const student = mockStudents.find(s => s.studentId.toLowerCase() === studentId.toLowerCase());
@@ -45,13 +45,14 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
             timestamp: timestamp,
         });
     }
-  }
+  }, [onScanComplete]);
 
   useEffect(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
+    let localIsScanning = isScanning;
 
-    if (!isScanning || !video || !canvas) {
+    if (!localIsScanning || !video || !canvas) {
         if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current);
         }
@@ -62,6 +63,11 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
     if (!context) return;
 
     const tick = () => {
+      if (!localIsScanning) {
+         if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+         return;
+      }
+
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         canvas.height = video.videoHeight;
         canvas.width = video.videoWidth;
@@ -71,20 +77,28 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
           inversionAttempts: "dontInvert",
         });
 
-        if (code) {
+        if (code && code.data) {
+          localIsScanning = false;
           handleCheckIn(code.data);
-          return; 
+          return; // Stop the loop once a code is found
         }
       }
-      animationFrameId.current = requestAnimationFrame(tick);
+      if(localIsScanning) {
+        animationFrameId.current = requestAnimationFrame(tick);
+      }
     };
 
-    tick();
+    // Wait for the video to start playing to avoid blank frames
+    video.oncanplay = () => {
+        tick();
+    };
 
     return () => {
+      localIsScanning = false;
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
+      if(video) video.oncanplay = null;
     };
   }, [isScanning, videoRef, handleCheckIn]);
 

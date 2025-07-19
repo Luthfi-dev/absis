@@ -16,111 +16,98 @@ export default function ScannerPage() {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
+  
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
   }, []);
 
   const cleanupAndReset = useCallback(() => {
     setIsScanning(false);
-    setScanResult(null);
-    stopCamera();
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+    stopCamera();
   }, [stopCamera]);
-
+  
   useEffect(() => {
-    const requestCamera = async () => {
-      if (isScanning) {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          toast({
-            variant: 'destructive',
-            title: 'Perangkat Tidak Didukung',
-            description: 'Peramban Anda tidak mendukung akses kamera.',
-          });
-          setHasCameraPermission(false);
-          cleanupAndReset();
-          return;
-        }
-
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-          streamRef.current = stream;
-          setHasCameraPermission(true);
-
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(err => {
-              console.error("Gagal memulai video:", err);
-              // Tambahkan toast jika autoplay diblokir
-            });
-          }
-
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          timeoutRef.current = setTimeout(() => {
-            toast({
-              title: 'Waktu Habis',
-              description: 'Kamera dinonaktifkan karena tidak ada aktivitas.',
-            });
-            cleanupAndReset();
-          }, 60000); // 1 menit
-        } catch (error) {
-          console.error('Error saat mengakses kamera:', error);
-          setHasCameraPermission(false);
-          toast({
-            variant: 'destructive',
-            title: 'Akses Kamera Ditolak',
-            description: 'Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.',
-          });
-          cleanupAndReset();
-        }
-      } else {
-        stopCamera();
-      }
-    };
-
-    requestCamera();
-
-    // Cleanup effect
     return () => {
+      // Cleanup on component unmount
       stopCamera();
        if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isScanning, toast, cleanupAndReset, stopCamera]);
+  }, [stopCamera]);
 
 
-  const handleScanComplete = (result: ScanResult) => {
-    setIsScanning(false); // This will trigger the useEffect cleanup to stop the camera
+  const handleScanComplete = useCallback((result: ScanResult) => {
+    cleanupAndReset();
     setScanResult(result);
     
     if (result.status === 'success' && audioRef.current) {
-      audioRef.current.play();
+      audioRef.current.play().catch(err => console.error("Gagal memutar suara:", err));
     }
     
     setTimeout(() => {
-      setScanResult(null); // Kembali ke halaman awal setelah 5 detik
+      setScanResult(null); 
     }, 5000);
-  };
+  }, [cleanupAndReset]);
   
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
     setScanResult(null);
     setIsScanning(true);
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        setHasCameraPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(err => {
+            console.error("Gagal memulai video:", err);
+            toast({ variant: "destructive", title: "Error", description: "Tidak bisa memutar pratinjau kamera." });
+          });
+        }
+        
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+          toast({
+            title: 'Waktu Habis',
+            description: 'Kamera dinonaktifkan karena tidak ada aktivitas.',
+          });
+          cleanupAndReset();
+        }, 60000); // 1 menit
+
+      } catch (error) {
+        console.error('Error saat mengakses kamera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Akses Kamera Ditolak',
+          description: 'Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.',
+        });
+        cleanupAndReset();
+      }
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Perangkat Tidak Didukung',
+            description: 'Peramban Anda tidak mendukung akses kamera.',
+          });
+        setHasCameraPermission(false);
+        cleanupAndReset();
+    }
   }
 
   const renderContent = () => {
