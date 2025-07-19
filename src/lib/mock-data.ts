@@ -10,7 +10,7 @@ export type ScheduleItem = {
   id: string;
   time: string;
   subject: string;
-  status: 'Ongoing' | 'Upcoming' | 'Finished';
+  status: 'Sedang Berlangsung' | 'Akan Datang' | 'Selesai';
   teacher: string;
 };
 
@@ -18,7 +18,7 @@ export type AttendanceRecord = {
   id: string;
   subject: string;
   date: string;
-  status: 'Present' | 'Absent' | 'Late';
+  status: 'Hadir' | 'Absen' | 'Terlambat';
 };
 
 export const mockStudents: Student[] = [
@@ -30,29 +30,29 @@ export const mockStudents: Student[] = [
 ];
 
 export const mockSchedule: ScheduleItem[] = [
-  { id: 'c1', time: '09:00 - 10:30', subject: 'Mathematics 101', status: 'Ongoing', teacher: 'Mr. Smith' },
-  { id: 'c2', time: '11:00 - 12:30', subject: 'History of Art', status: 'Upcoming', teacher: 'Ms. Jones' },
-  { id: 'c3', time: '13:30 - 15:00', subject: 'Physics for Beginners', status: 'Upcoming', teacher: 'Dr. Quantum' },
-  { id: 'c4', time: '15:30 - 17:00', subject: 'Creative Writing Workshop', status: 'Upcoming', teacher: 'Prof. Verse' },
+  { id: 'c1', time: '09:00 - 10:30', subject: 'Matematika 101', status: 'Sedang Berlangsung', teacher: 'Bpk. Smith' },
+  { id: 'c2', time: '11:00 - 12:30', subject: 'Sejarah Seni', status: 'Akan Datang', teacher: 'Ibu Jones' },
+  { id: 'c3', time: '13:30 - 15:00', subject: 'Fisika untuk Pemula', status: 'Akan Datang', teacher: 'Dr. Quantum' },
+  { id: 'c4', time: '15:30 - 17:00', subject: 'Lokakarya Penulisan Kreatif', status: 'Akan Datang', teacher: 'Prof. Verse' },
 ];
 
 export const mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [
-    { id: 'a1', subject: 'Mathematics 101', date: '2024-05-20', status: 'Present' },
-    { id: 'a2', subject: 'History of Art', date: '2024-05-20', status: 'Present' },
-    { id: 'a3', subject: 'Mathematics 101', date: '2024-05-19', status: 'Late' },
+    { id: 'a1', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
+    { id: 'a2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Hadir' },
+    { id: 'a3', subject: 'Matematika 101', date: '2024-05-19', status: 'Terlambat' },
   ],
   '2': [
-    { id: 'b1', subject: 'Mathematics 101', date: '2024-05-20', status: 'Present' },
-    { id: 'b2', subject: 'History of Art', date: '2024-05-20', status: 'Absent' },
+    { id: 'b1', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
+    { id: 'b2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Absen' },
   ],
   '3': [
-    { id: 'c1', subject: 'Mathematics 101', date: '2024-05-20', status: 'Present' },
+    { id: 'c1', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
   ],
   '4': [
-    { id: 'd1', subject: 'Physics for Beginners', date: '2024-05-20', status: 'Present' },
+    { id: 'd1', subject: 'Fisika untuk Pemula', date: '2024-05-20', status: 'Hadir' },
   ],
   '5': [
-    { id: 'e1', subject: 'Creative Writing Workshop', date: '2024-05-20', status: 'Late' },
+    { id: 'e1', subject: 'Lokakarya Penulisan Kreatif', date: '2024-05-20', status: 'Terlambat' },
   ],
 };

@@ -20,13 +20,13 @@ import { notFound } from "next/navigation"
 
 type StatusVariant = "default" | "secondary" | "destructive" | "outline"
 
-function getStatusVariant(status: 'Present' | 'Absent' | 'Late'): StatusVariant {
+function getStatusVariant(status: 'Hadir' | 'Absen' | 'Terlambat'): StatusVariant {
     switch (status) {
-        case 'Present':
+        case 'Hadir':
             return 'default'
-        case 'Late':
+        case 'Terlambat':
             return 'outline'
-        case 'Absent':
+        case 'Absen':
             return 'destructive'
     }
 }
@@ -48,23 +48,23 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
         </Avatar>
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">{student.name}</h1>
-          <p className="text-muted-foreground">Student ID: {student.studentId}</p>
+          <p className="text-muted-foreground">ID Siswa: {student.studentId}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Attendance History</CardTitle>
+          <CardTitle>Riwayat Kehadiran</CardTitle>
           <CardDescription>
-            A log of all attendance records for {student.name}.
+            Log semua catatan kehadiran untuk {student.name}.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Subject</TableHead>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Mata Pelajaran</TableHead>
                 <TableHead className="text-right">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -82,7 +82,7 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center">
-                    No attendance records found.
+                    Tidak ada catatan kehadiran yang ditemukan.
                   </TableCell>
                 </TableRow>
               )}

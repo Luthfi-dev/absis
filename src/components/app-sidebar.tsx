@@ -19,7 +19,6 @@ import {
   CheckSquare,
   Home,
   LogOut,
-  ScanLine,
   Users,
   Database,
 } from "lucide-react"
@@ -30,9 +29,8 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   const menuItems = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
-    { href: "/students", label: "Students", icon: Users },
-    { href: "/attendance", label: "Attendance", icon: ScanLine },
+    { href: "/dashboard", label: "Dasbor", icon: Home },
+    { href: "/students", label: "Siswa", icon: Users },
     { href: "/master-data", label: "Master Data", icon: Database },
   ]
 
@@ -75,7 +73,7 @@ export function AppSidebar() {
          <Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground">
             <Link href="/">
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                Keluar
             </Link>
         </Button>
       </SidebarFooter>

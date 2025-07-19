@@ -48,8 +48,8 @@ export function RosterImporter() {
     if (!file) {
       toast({
         variant: "destructive",
-        title: "No file selected",
-        description: "Please select a CSV file to analyze.",
+        title: "Tidak ada file yang dipilih",
+        description: "Silakan pilih file CSV untuk dianalisis.",
       })
       return
     }
@@ -64,8 +64,8 @@ export function RosterImporter() {
       } else {
         toast({
           variant: "destructive",
-          title: "Analysis Failed",
-          description: result.error || "An unknown error occurred.",
+          title: "Analisis Gagal",
+          description: result.error || "Terjadi kesalahan yang tidak diketahui.",
         })
       }
       setIsLoading(false)
@@ -73,8 +73,8 @@ export function RosterImporter() {
     reader.onerror = () => {
         toast({
             variant: "destructive",
-            title: "File Read Error",
-            description: "Could not read the selected file.",
+            title: "Kesalahan Membaca File",
+            description: "Tidak dapat membaca file yang dipilih.",
           })
         setIsLoading(false)
     }
@@ -82,10 +82,10 @@ export function RosterImporter() {
   }
   
   const handleImport = () => {
-    // In a real app, you would now parse the CSV with the mapping and save to DB
+    // Di aplikasi nyata, Anda sekarang akan mengurai CSV dengan pemetaan dan menyimpannya ke DB
     toast({
-        title: "Import Successful",
-        description: "Student roster has been imported.",
+        title: "Impor Berhasil",
+        description: "Daftar nama siswa telah diimpor.",
       })
     resetState()
   }
@@ -103,36 +103,36 @@ export function RosterImporter() {
       <DialogTrigger asChild>
         <Button>
           <Upload className="mr-2 h-4 w-4" />
-          Import Roster
+          Impor Daftar
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Import Student Roster</DialogTitle>
+          <DialogTitle>Impor Daftar Siswa</DialogTitle>
           <DialogDescription>
-            Upload a CSV file. We'll use AI to automatically map the columns.
+            Unggah file CSV. Kami akan menggunakan AI untuk memetakan kolom secara otomatis.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
             {!analysisResult ? (
                 <>
                 <div className="space-y-2">
-                    <Label htmlFor="roster-file">CSV File</Label>
+                    <Label htmlFor="roster-file">File CSV</Label>
                     <Input id="roster-file" type="file" accept=".csv" onChange={handleFileChange} />
                 </div>
-                {file && <p className="text-sm text-muted-foreground">Selected: {file.name}</p>}
+                {file && <p className="text-sm text-muted-foreground">Terpilih: {file.name}</p>}
                 </>
             ) : (
                 <div>
-                    <h4 className="font-medium mb-2">Suggested Column Mapping</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Please review the AI-suggested mappings before importing.</p>
+                    <h4 className="font-medium mb-2">Pemetaan Kolom yang Disarankan</h4>
+                    <p className="text-sm text-muted-foreground mb-4">Harap tinjau pemetaan yang disarankan AI sebelum mengimpor.</p>
                     <div className="rounded-md border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>CSV Column</TableHead>
+                                    <TableHead>Kolom CSV</TableHead>
                                     <TableHead></TableHead>
-                                    <TableHead>Student Field</TableHead>
+                                    <TableHead>Field Siswa</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -151,16 +151,16 @@ export function RosterImporter() {
         </div>
         <DialogFooter>
             <DialogClose asChild>
-                <Button variant="outline" onClick={resetState}>Cancel</Button>
+                <Button variant="outline" onClick={resetState}>Batal</Button>
             </DialogClose>
             {!analysisResult ? (
                  <Button onClick={handleAnalyze} disabled={!file || isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck2 className="mr-2 h-4 w-4" />}
-                    Analyze
+                    Analisis
                 </Button>
             ) : (
                 <Button onClick={handleImport}>
-                    Confirm and Import
+                    Konfirmasi dan Impor
                 </Button>
             )}
         </DialogFooter>

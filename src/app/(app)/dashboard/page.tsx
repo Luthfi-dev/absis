@@ -9,16 +9,16 @@ import { Users, UserCheck, UserX } from "lucide-react"
 
 export default function DashboardPage() {
   const stats = [
-    { title: "Total Students", value: "152", icon: Users, color: "text-blue-500" },
-    { title: "Present Today", value: "140", icon: UserCheck, color: "text-green-500" },
-    { title: "Absent Today", value: "12", icon: UserX, color: "text-red-500" },
+    { title: "Total Siswa", value: "152", icon: Users, color: "text-blue-500" },
+    { title: "Hadir Hari Ini", value: "140", icon: UserCheck, color: "text-green-500" },
+    { title: "Absen Hari Ini", value: "12", icon: UserX, color: "text-red-500" },
   ]
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, Super Admin!</p>
+        <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor</h1>
+        <p className="text-muted-foreground">Selamat datang kembali, Super Admin!</p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (

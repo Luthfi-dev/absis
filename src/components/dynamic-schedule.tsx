@@ -11,11 +11,11 @@ import { CalendarClock, Clock } from "lucide-react"
 
 function getStatusVariant(status: ScheduleItem['status']) {
   switch (status) {
-    case 'Ongoing':
+    case 'Sedang Berlangsung':
       return 'default'
-    case 'Finished':
+    case 'Selesai':
       return 'secondary'
-    case 'Upcoming':
+    case 'Akan Datang':
       return 'outline'
     default:
       return 'default'
@@ -28,9 +28,9 @@ export function DynamicSchedule() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarClock className="h-6 w-6" />
-          Today's Schedule
+          Jadwal Hari Ini
         </CardTitle>
-        <CardDescription>Current and upcoming classes for the day.</CardDescription>
+        <CardDescription>Kelas yang sedang berlangsung dan akan datang hari ini.</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">

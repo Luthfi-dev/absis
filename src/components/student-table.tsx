@@ -37,11 +37,11 @@ export function StudentTable() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="hidden md:table-cell">Student ID</TableHead>
+            <TableHead>Nama</TableHead>
+            <TableHead className="hidden md:table-cell">ID Siswa</TableHead>
             <TableHead className="hidden sm:table-cell">Email</TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">Aksi</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -66,18 +66,18 @@ export function StudentTable() {
                   <DropdownMenuTrigger asChild>
                     <Button aria-haspopup="true" size="icon" variant="ghost">
                       <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
+                      <span className="sr-only">Buka menu</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                     <DropdownMenuItem onSelect={() => router.push(`/records/${student.id}`)}>
                       <Eye className="mr-2 h-4 w-4" />
-                      View Records
+                      Lihat Catatan
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Edit className="mr-2 h-4 w-4" />
-                      Edit
+                      Ubah
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -85,7 +85,7 @@ export function StudentTable() {
                       onSelect={() => handleDelete(student.id)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                      Hapus
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
