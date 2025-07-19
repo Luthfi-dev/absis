@@ -71,11 +71,11 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder={role === 'admin' ? "admin@example.com" : "guru@example.com"} required />
+                  <Input id="email" type="email" placeholder={role === 'admin' ? "admin@example.com" : "guru@example.com"} required defaultValue={role === 'admin' ? "admin@attendease.com" : "guru@attendease.com"} />
               </div>
               <div className="space-y-2">
                   <Label htmlFor="password">Kata Sandi</Label>
-                  <Input id="password" type="password" required />
+                  <Input id="password" type="password" required defaultValue="password" />
               </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
