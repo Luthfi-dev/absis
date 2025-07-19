@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import QRCode from "react-qr-code"
 import { useState, useEffect } from "react"
 import { CheckSquare } from "lucide-react"
+import { encryptId } from "@/lib/crypto"
 
 interface StudentCardProps {
     student: Student
@@ -37,14 +38,14 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
         }
     }
     
-    const encryptedStudentId = typeof window !== 'undefined' ? btoa(student.id) : '';
-    const profileUrl = origin ? `${origin}/profile/${btoa(student.id)}` : '';
+    const encryptedStudentId = encryptId(student.id);
+    const profileUrl = origin ? `${origin}/profile/${encryptedStudentId}` : '';
 
-    const cardBaseClasses = "w-[21rem] h-[13.125rem] rounded-xl text-white shadow-lg transition-transform duration-700 preserve-3d print-color-adjust-exact"
+    const cardBaseClasses = "w-[21rem] h-[13.125rem] rounded-xl text-white shadow-lg transition-transform duration-700 preserve-3d"
     const cardContentClasses = "absolute inset-0 w-full h-full p-4 backface-hidden"
 
     return (
-        <div className="perspective-1000 w-[21rem] h-[13.125rem] print-color-adjust-exact">
+        <div className="perspective-1000 w-[21rem] h-[13.125rem]">
             <div
                 className={cn(cardBaseClasses, !isPrintMode && isFlipped && "rotate-y-180")}
                 onClick={handleFlip}

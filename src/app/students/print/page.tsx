@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { StudentCard } from '@/components/student-card'
 import { Button } from '@/components/ui/button'
 import { Printer } from 'lucide-react'
+import { decryptId } from '@/lib/crypto'
 
 function PrintPageContent() {
   const searchParams = useSearchParams()
@@ -14,7 +15,7 @@ function PrintPageContent() {
 
   useEffect(() => {
     const encryptedIds = searchParams.get('ids')?.split(',') ?? []
-    const ids = encryptedIds.map(id => atob(id));
+    const ids = encryptedIds.map(id => decryptId(id));
     const savedStudents = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('mockStudents') || JSON.stringify(mockStudents)) : mockStudents;
     const students = savedStudents.filter((s: Student) => ids.includes(s.id))
     setStudentsToPrint(students)

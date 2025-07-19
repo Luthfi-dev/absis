@@ -1,5 +1,7 @@
+
+'use client'
+
 import { mockStudents } from '@/lib/mock-data'
-import { notFound } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -8,13 +10,50 @@ import {
 } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { User, ShieldCheck, Hash, BookUser, Phone } from 'lucide-react'
+import { decryptId } from '@/lib/crypto'
+import { useEffect, useState } from 'react'
 
 export default function StudentProfilePage({ params }: { params: { id: string } }) {
-  const studentId = atob(params.id) // Decrypt the ID from Base64
-  const student = mockStudents.find((s) => s.id === studentId)
+  const [student, setStudent] = useState<typeof mockStudents[0] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const studentId = decryptId(params.id)
+      const foundStudent = mockStudents.find((s) => s.id === studentId)
+      if (foundStudent) {
+        setStudent(foundStudent);
+      } else {
+        setError("Siswa tidak ditemukan.");
+      }
+    } catch (e) {
+      console.error("Decryption or loading failed", e);
+      setError("Gagal memuat profil siswa. ID tidak valid.");
+    }
+  }, [params.id]);
+
+
+  if (error) {
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+            <Card className="w-full max-w-md shadow-2xl">
+                <CardHeader className="items-center text-center">
+                    <CardTitle className="font-headline text-2xl font-bold text-destructive">Error</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                    <p>{error}</p>
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
 
   if (!student) {
-    return notFound()
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+            <p>Loading...</p>
+        </div>
+    )
   }
 
   return (

@@ -37,6 +37,7 @@ import {
   AlertDialogTrigger,
 } from "./ui/alert-dialog"
 import { StudentCardDialog } from "./student-card-dialog"
+import { encryptId } from "@/lib/crypto"
 
 export function StudentTable() {
   const [students, setStudents] = useState<Student[]>(() => {
@@ -104,7 +105,7 @@ export function StudentTable() {
   }
 
   const handlePrint = (idsToPrint: string[]) => {
-    const encryptedIds = idsToPrint.map(id => btoa(id));
+    const encryptedIds = idsToPrint.map(id => encryptId(id));
     router.push(`/students/print?ids=${encryptedIds.join(',')}`)
   }
 
@@ -205,7 +206,7 @@ export function StudentTable() {
                             Lihat Kartu Digital
                         </DropdownMenuItem>
                        </StudentCardDialog>
-                      <DropdownMenuItem onSelect={() => router.push(`/records/${btoa(student.id)}`)}>
+                      <DropdownMenuItem onSelect={() => router.push(`/records/${encryptId(student.id)}`)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Lihat Catatan
                       </DropdownMenuItem>

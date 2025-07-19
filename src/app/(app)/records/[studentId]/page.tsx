@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { notFound } from "next/navigation"
+import { decryptId } from "@/lib/crypto"
 
 type StatusVariant = "default" | "secondary" | "destructive" | "outline"
 
@@ -33,7 +34,7 @@ function getStatusVariant(status: 'Hadir' | 'Absen' | 'Terlambat'): StatusVarian
 }
 
 export default function StudentRecordsPage({ params }: { params: { studentId: string } }) {
-  const studentId = atob(params.studentId) // Decrypt the ID from Base64
+  const studentId = decryptId(params.studentId)
   const student = mockStudents.find((s) => s.id === studentId)
   const records = mockAttendance[studentId] || []
 

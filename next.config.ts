@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    NEXT_PUBLIC_ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+  }
 };
 
 export default nextConfig;

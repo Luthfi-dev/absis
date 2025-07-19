@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
 import type { CameraFacingMode } from "@/app/(app)/settings/page"
+import { decryptId } from "@/lib/crypto"
 
 export type ScanResult = {
   status: "success" | "error";
@@ -38,7 +39,10 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused }: Bar
     }
 
     try {
-      studentId = atob(scannedData);
+      studentId = decryptId(scannedData);
+       if (studentId === 'decryption_error') {
+         throw new Error("Invalid QR Code content");
+       }
     } catch (e) {
       onScanComplete({
           status: "error",
