@@ -104,7 +104,8 @@ export function StudentTable() {
   }
 
   const handlePrint = (idsToPrint: string[]) => {
-    router.push(`/students/print?ids=${idsToPrint.join(',')}`)
+    const encryptedIds = idsToPrint.map(id => btoa(id));
+    router.push(`/students/print?ids=${encryptedIds.join(',')}`)
   }
 
   const isAllSelected = selectedStudents.size > 0 && selectedStudents.size === students.length

@@ -13,7 +13,8 @@ function PrintPageContent() {
   const [studentsToPrint, setStudentsToPrint] = useState<Student[]>([])
 
   useEffect(() => {
-    const ids = searchParams.get('ids')?.split(',') ?? []
+    const encryptedIds = searchParams.get('ids')?.split(',') ?? []
+    const ids = encryptedIds.map(id => atob(id));
     const savedStudents = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('mockStudents') || JSON.stringify(mockStudents)) : mockStudents;
     const students = savedStudents.filter((s: Student) => ids.includes(s.id))
     setStudentsToPrint(students)
