@@ -33,11 +33,16 @@ function PrintPageContent() {
 
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
             {studentsToPrint.length > 0 ? (
-                 <div className="print-area grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="print-area grid grid-cols-1 gap-4">
                     {studentsToPrint.map(student => (
-                        <div key={student.id} className="print-item-container break-inside-avoid p-2">
-                           <div className="print-card-wrapper mx-auto">
-                             <StudentCard student={student} />
+                        <div key={student.id} className="print-item-container break-inside-avoid">
+                           <div className="grid grid-cols-2 gap-4">
+                             <div className="print-card-wrapper">
+                                <StudentCard student={student} isPrintMode={true} initialSide="front" />
+                             </div>
+                             <div className="print-card-wrapper">
+                                <StudentCard student={student} isPrintMode={true} initialSide="back" />
+                             </div>
                            </div>
                         </div>
                     ))}
@@ -57,6 +62,8 @@ function PrintPageContent() {
             @media print {
                 body, .print-container {
                     background: #ffffff !important;
+                    margin: 0;
+                    padding: 0;
                 }
                 .print-container > header {
                     display: none;
@@ -66,16 +73,17 @@ function PrintPageContent() {
                     margin: 0 !important;
                 }
                 .print-area {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 1rem;
+                   display: flex;
+                   flex-direction: column;
+                   gap: 1rem;
                 }
                 .print-item-container {
-                    padding: 0;
-                    margin: 0;
                     page-break-inside: avoid;
+                }
+                .print-card-wrapper {
                     display: flex;
                     justify-content: center;
+                    align-items: center;
                 }
             }
             @page {
