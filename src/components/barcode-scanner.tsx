@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 import { ScanLine, Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
