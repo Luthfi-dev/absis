@@ -36,7 +36,7 @@ function PrintPageContent() {
                  <div className="print-area grid grid-cols-1 gap-4">
                     {studentsToPrint.map(student => (
                         <div key={student.id} className="print-item-container break-inside-avoid">
-                           <div className="grid grid-cols-2 gap-4">
+                           <div className="grid grid-cols-2">
                              <div className="print-card-wrapper">
                                 <StudentCard student={student} isPrintMode={true} initialSide="front" />
                              </div>
@@ -79,12 +79,12 @@ function PrintPageContent() {
                 }
                 .print-item-container {
                     page-break-inside: avoid;
-                    margin-left: 15px;
                 }
                 .print-card-wrapper {
                     display: flex;
-                    justify-content: center;
+                    justify-content: flex-start;
                     align-items: center;
+                    margin-left: 15px;
                 }
             }
             @page {
