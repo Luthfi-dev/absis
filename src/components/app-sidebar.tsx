@@ -21,6 +21,7 @@ import {
   LogOut,
   Users,
   Database,
+  Settings,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -32,6 +33,7 @@ export function AppSidebar() {
     { href: "/dashboard", label: "Dasbor", icon: Home },
     { href: "/students", label: "Siswa", icon: Users },
     { href: "/master-data", label: "Master Data", icon: Database },
+    { href: "/settings", label: "Pengaturan", icon: Settings },
   ]
 
   return (
@@ -49,7 +51,7 @@ export function AppSidebar() {
               <SidebarMenuButton
                 as={Link}
                 href={item.href}
-                isActive={pathname === item.href}
+                isActive={pathname.startsWith(item.href)}
                 icon={<item.icon />}
                 tooltip={item.label}
               >

@@ -22,12 +22,24 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameId = useRef<number>();
 
-  const handleCheckIn = useCallback((studentId: string) => {
-    if (!studentId || studentId.trim() === "") {
+  const handleCheckIn = useCallback((encryptedStudentId: string) => {
+    if (!encryptedStudentId || encryptedStudentId.trim() === "") {
         return;
     }
+    
+    let studentId: string;
+    try {
+      // In a real app, this would be a more robust decryption method.
+      // Using Base64 for simulation.
+      studentId = atob(encryptedStudentId);
+    } catch (e) {
+      console.error("Failed to decode QR code:", e);
+      // Don't show an error to the user, just ignore invalid QR codes.
+      return;
+    }
 
-    const student = mockStudents.find(s => s.studentId.toLowerCase() === studentId.toLowerCase());
+
+    const student = mockStudents.find(s => s.id === studentId);
     const now = new Date();
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
 
@@ -41,7 +53,7 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
     } else {
         onScanComplete({
             status: "error",
-            message: `ID Siswa ${studentId.toUpperCase()} tidak ditemukan.`,
+            message: `Siswa dengan ID terenkripsi tidak ditemukan.`,
             timestamp: timestamp,
         });
     }
@@ -88,10 +100,17 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
       }
     };
 
-    // Wait for the video to start playing to avoid blank frames
-    video.oncanplay = () => {
-        tick();
-    };
+    const startScan = () => {
+        if (video.HAVE_ENOUGH_DATA) {
+            tick();
+        } else {
+            video.oncanplay = () => {
+                tick();
+            };
+        }
+    }
+    
+    startScan();
 
     return () => {
       localIsScanning = false;
