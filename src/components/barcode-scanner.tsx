@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useEffect, useRef } from "react"
 import { ScanLine } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
+import jsQR from "jsqr"
 
 export type ScanResult = {
   status: "success" | "error";
@@ -15,14 +14,16 @@ export type ScanResult = {
 
 type BarcodeScannerProps = {
   onScanComplete: (result: ScanResult) => void;
+  videoRef: React.RefObject<HTMLVideoElement>;
+  isScanning: boolean;
 }
 
-export function BarcodeScanner({ onScanComplete }: BarcodeScannerProps) {
-  const [studentId, setStudentId] = useState("")
+export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: BarcodeScannerProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameId = useRef<number>();
 
-  const handleCheckIn = () => {
+  const handleCheckIn = (studentId: string) => {
     if (studentId.trim() === "") {
-        // Don't show an error for empty input, just ignore.
         return
     }
 
@@ -44,34 +45,60 @@ export function BarcodeScanner({ onScanComplete }: BarcodeScannerProps) {
             timestamp: timestamp,
         });
     }
-    setStudentId("");
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStudentId(e.target.value);
-  }
+  useEffect(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!isScanning || !video || !canvas) {
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+        }
+        return;
+    }
+
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return;
+
+    const tick = () => {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (code) {
+          handleCheckIn(code.data);
+          return; 
+        }
+      }
+      animationFrameId.current = requestAnimationFrame(tick);
+    };
+
+    tick();
+
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, [isScanning, videoRef, handleCheckIn]);
+
 
   return (
     <div className="space-y-4 text-center">
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-            <ScanLine className="h-8 w-8 text-primary" />
+            <ScanLine className="h-8 w-8 text-primary animate-pulse" />
         </div>
-        <h3 className="text-lg font-medium">Arahkan Barcode ke Kamera</h3>
+        <h3 className="text-lg font-medium">Arahkan QR Code ke Kamera</h3>
         <p className="text-sm text-muted-foreground">
-            Atau ketik ID Siswa di bawah ini dan tekan Enter.
+            Absensi akan tercatat secara otomatis.
         </p>
-        <div className="space-y-2 pt-2">
-          <Label htmlFor="student-id" className="sr-only">ID Siswa</Label>
-          <Input
-            id="student-id"
-            placeholder="Pindai atau ketik ID..."
-            value={studentId}
-            onChange={handleInputChange}
-            onKeyDown={(e) => e.key === "Enter" && handleCheckIn()}
-            autoFocus
-            className="text-center text-lg h-12"
-          />
-        </div>
       </div>
   )
 }

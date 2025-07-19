@@ -54,17 +54,17 @@ export default function ScannerPage() {
       return;
     }
     try {
-      // Specifically request the front camera
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // The play() call is crucial for some browsers to start the video stream.
+        videoRef.current.play().catch(err => console.error("Video play failed:", err));
       }
       setHasCameraPermission(true);
       setIsScanning(true);
       setScanResult(null);
 
-      // Set timeout to close camera after 1 minute of inactivity
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         toast({
@@ -76,7 +76,7 @@ export default function ScannerPage() {
     } catch (error) {
       console.error('Error saat mengakses kamera:', error);
       setHasCameraPermission(false);
-      setIsScanning(false); // Make sure to stop scanning state on error
+      setIsScanning(false);
       toast({
         variant: 'destructive',
         title: 'Akses Kamera Ditolak',
@@ -86,27 +86,6 @@ export default function ScannerPage() {
   }, [toast, cleanupAndReset]);
 
   useEffect(() => {
-    // Check for permission on mount without activating camera
-    const checkPermission = async () => {
-      try {
-        if (navigator.permissions) {
-          const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
-          setHasCameraPermission(permissions.state !== 'denied');
-          permissions.onchange = () => {
-            setHasCameraPermission(permissions.state !== 'denied');
-          };
-        } else {
-          // Fallback for browsers that don't support Permissions API, we'll find out on startCamera
-           setHasCameraPermission(true);
-        }
-      } catch (error) {
-        // This can happen on non-secure contexts or unsupported browsers
-        console.error("Error checking camera permission:", error);
-        setHasCameraPermission(false);
-      }
-    };
-    checkPermission();
-
     // Cleanup on unmount
     return () => {
       cleanupAndReset();
@@ -120,7 +99,6 @@ export default function ScannerPage() {
     if (result.status === 'success' && audioRef.current) {
       audioRef.current.play();
     }
-    // Reset after showing result for 5 seconds
     setTimeout(() => {
       cleanupAndReset();
     }, 5000);
@@ -140,10 +118,10 @@ export default function ScannerPage() {
         }
       return (
         <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
-          <CardContent className="p-0">
+          <CardContent className="p-0 relative">
              <video ref={videoRef} className="w-full aspect-video rounded-t-md bg-black" autoPlay muted playsInline />
             <div className="p-6">
-              <BarcodeScanner onScanComplete={handleScanComplete} />
+              <BarcodeScanner onScanComplete={handleScanComplete} videoRef={videoRef} isScanning={isScanning}/>
             </div>
           </CardContent>
         </Card>
@@ -158,7 +136,7 @@ export default function ScannerPage() {
               {scanResult.status === 'success' ? <UserCheck className="text-green-500" /> : <XCircle className="text-red-500" />}
               Status Absensi
             </CardTitle>
-          </CardHeader>
+          </Header>
           <CardContent className="flex flex-col items-center text-center space-y-4">
             {scanResult.status === 'success' && scanResult.student ? (
               <>
@@ -199,7 +177,7 @@ export default function ScannerPage() {
             <div className="p-8 space-y-4">
                 <h1 className="text-3xl font-bold font-headline animate-pulse-slow">Selamat Datang di AttendEase</h1>
                 <p className="text-muted-foreground">Silakan klik tombol di bawah untuk memulai sesi absensi Anda. Pastikan kartu pelajar Anda sudah siap!</p>
-                <Button size="lg" className="h-14 text-xl w-full" onClick={startCamera} disabled={hasCameraPermission === false}>
+                <Button size="lg" className="h-14 text-xl w-full" onClick={startCamera}>
                     <Camera className="mr-4 h-8 w-8" />
                     Mulai Absensi
                 </Button>
