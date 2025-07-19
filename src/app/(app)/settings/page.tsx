@@ -11,10 +11,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UploadCloud, Trash2, Camera, Smartphone } from "lucide-react"
+import { UploadCloud, Trash2, Camera, Smartphone, Lock, Unlock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Switch } from "@/components/ui/switch"
 
 export type CameraFacingMode = "user" | "environment"
 
@@ -23,6 +24,8 @@ export default function SettingsPage() {
   const [cardBackground, setCardBackground] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [cameraMode, setCameraMode] = useState<CameraFacingMode>('user')
+  const [pin, setPin] = useState('')
+  const [isPinEnabled, setIsPinEnabled] = useState(false)
 
   useEffect(() => {
     const savedBackground = localStorage.getItem('card-background')
@@ -34,6 +37,10 @@ export default function SettingsPage() {
     if (savedCameraMode) {
         setCameraMode(savedCameraMode)
     }
+    const savedPin = localStorage.getItem('scanner-pin') || ''
+    setPin(savedPin)
+    const savedIsPinEnabled = localStorage.getItem('scanner-pin-enabled') === 'true'
+    setIsPinEnabled(savedIsPinEnabled)
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,6 +93,15 @@ export default function SettingsPage() {
       })
   }
 
+  const handlePinSettingsSave = () => {
+    localStorage.setItem('scanner-pin', pin)
+    localStorage.setItem('scanner-pin-enabled', String(isPinEnabled))
+    toast({
+      title: "Pengaturan PIN Disimpan",
+      description: `PIN halaman absensi telah diperbarui.`
+    })
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -94,7 +110,7 @@ export default function SettingsPage() {
           Kelola pengaturan umum untuk aplikasi.
         </p>
       </div>
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Kustomisasi Kartu Siswa</CardTitle>
@@ -105,7 +121,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="card-background-file">File Gambar Latar</Label>
-              <Input id="card-background-file" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="max-w-xs" />
+              <Input id="card-background-file" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} />
               <p className="text-xs text-muted-foreground">
                 Direkomendasikan ukuran 856x540px. Maksimal 2MB.
               </p>
@@ -160,6 +176,44 @@ export default function SettingsPage() {
                         </Label>
                     </div>
                 </RadioGroup>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Keamanan Halaman Absensi</CardTitle>
+                <CardDescription>
+                  Aktifkan PIN untuk membatasi akses ke halaman pemindaian absensi.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex items-center gap-3">
+                    {isPinEnabled ? <Lock className="h-5 w-5 text-primary" /> : <Unlock className="h-5 w-5 text-muted-foreground" />}
+                    <Label htmlFor="pin-enabled" className="font-medium">
+                      Aktifkan PIN
+                    </Label>
+                </div>
+                <Switch
+                  id="pin-enabled"
+                  checked={isPinEnabled}
+                  onCheckedChange={setIsPinEnabled}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="scanner-pin">Atur PIN (4-6 digit)</Label>
+                <Input
+                  id="scanner-pin"
+                  type="password"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} // only allow digits
+                  maxLength={6}
+                  placeholder="••••••"
+                  disabled={!isPinEnabled}
+                />
+              </div>
+               <Button onClick={handlePinSettingsSave} disabled={isPinEnabled && (pin.length < 4 || pin.length > 6)}>
+                Simpan Pengaturan PIN
+              </Button>
             </CardContent>
         </Card>
       </div>

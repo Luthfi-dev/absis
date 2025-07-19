@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useCallback } from "react"
-import { ScanLine } from "lucide-react"
+import { ScanLine, Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
+import type { CameraFacingMode } from "@/app/(app)/settings/page"
 
 export type ScanResult = {
   status: "success" | "error";
@@ -16,14 +17,34 @@ export type ScanResult = {
 type BarcodeScannerProps = {
   onScanComplete: (result: ScanResult) => void;
   isScanning: boolean;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  setCameraError: (error: string | null) => void;
 }
 
-export function BarcodeScanner({ onScanComplete, isScanning, videoRef }: BarcodeScannerProps) {
+export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: BarcodeScannerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null);
   const animationFrameId = useRef<number>()
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+        videoRef.current.srcObject = null;
+    }
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = undefined;
+    }
+  }, []);
 
   const handleCheckIn = useCallback((scannedData: string) => {
+    // Only process if actively scanning
+    if (!isScanning) return;
+
     let studentId: string;
     const now = new Date();
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
@@ -63,12 +84,50 @@ export function BarcodeScanner({ onScanComplete, isScanning, videoRef }: Barcode
             scannedData: scannedData,
         });
     }
-  }, [onScanComplete]);
+  }, [onScanComplete, isScanning]);
   
 
   useEffect(() => {
+    const startCamera = async () => {
+      stopCamera();
+      setIsInitializing(true);
+      setCameraError(null);
+      const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'environment';
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+      } catch (err: any) {
+        console.error("Error accessing camera:", err);
+        if (err.name === 'NotAllowedError') {
+          setCameraError("Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.");
+        } else {
+          setCameraError(`Gagal memulai kamera: ${err.message}. Pastikan tidak digunakan oleh aplikasi lain.`);
+        }
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    if (isScanning) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+
+    return () => {
+      stopCamera();
+    };
+  }, [isScanning, setCameraError, stopCamera]);
+
+
+  useEffect(() => {
     const tick = () => {
-      if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+      if (isScanning && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
         const canvas = canvasRef.current;
         const video = videoRef.current;
         if(canvas) {
@@ -77,20 +136,21 @@ export function BarcodeScanner({ onScanComplete, isScanning, videoRef }: Barcode
             canvas.height = video.videoHeight;
             canvas.width = video.videoWidth;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height, {
-              inversionAttempts: "dontInvert",
-            });
-            if (code && code.data) {
-              handleCheckIn(code.data);
-              // Do not return here, let the parent component stop the scan
+            try {
+              const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+              const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+              });
+              if (code && code.data) {
+                handleCheckIn(code.data);
+              }
+            } catch (error) {
+              // Ignore getImageData errors which can happen if canvas is not ready
             }
           }
         }
       }
-      if(isScanning) {
-        animationFrameId.current = requestAnimationFrame(tick);
-      }
+      animationFrameId.current = requestAnimationFrame(tick);
     };
 
     if (isScanning) {
@@ -98,25 +158,32 @@ export function BarcodeScanner({ onScanComplete, isScanning, videoRef }: Barcode
     } else {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
-        animationFrameId.current = undefined;
       }
     }
 
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
-        animationFrameId.current = undefined;
       }
     };
-  }, [isScanning, handleCheckIn, videoRef]);
+  }, [isScanning, handleCheckIn]);
 
   return (
-    <div className="relative">
-      <video ref={videoRef} className="w-full aspect-video rounded-t-md bg-black" autoPlay muted playsInline />
+    <div className="relative w-full h-full bg-black flex items-center justify-center">
+      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+      
+      {isInitializing && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-black/70 z-30">
+              <Loader2 className="w-12 h-12 animate-spin mb-4" />
+              <p>Memulai kamera...</p>
+          </div>
+      )}
+      
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-        {isScanning && (
+        {isScanning && !isInitializing && (
           <>
-            <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg" />
+            <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg" style={{ boxSizing: 'border-box' }}/>
+            <div className="absolute top-0 left-0 w-full h-4 bg-red-500 animate-scan-y" />
             <ScanLine className="h-16 w-full text-white/80 absolute top-1/2 -translate-y-1/2 animate-pulse" />
           </>
         )}
