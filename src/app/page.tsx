@@ -2,7 +2,7 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { Camera, LogIn, UserCheck, XCircle } from 'lucide-react';
+import { Camera, LogIn, UserCheck, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -14,111 +14,65 @@ import Image from 'next/image';
 
 export default function ScannerPage() {
   const { toast } = useToast();
-  const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [lastScannedData, setLastScannedData] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const stopCamera = useCallback(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  }, []);
-
-  const cleanupAndReset = useCallback(() => {
+  const resetState = useCallback(() => {
     setIsScanning(false);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    stopCamera();
-  }, [stopCamera]);
-  
-  useEffect(() => {
-    return () => {
-      // Cleanup on component unmount
-      stopCamera();
-       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [stopCamera]);
-
-
-  const handleScanComplete = useCallback((result: ScanResult) => {
-    cleanupAndReset();
-    setScanResult(result);
-    
-    if (result.status === 'success' && audioRef.current) {
-      audioRef.current.play().catch(err => console.error("Gagal memutar suara:", err));
-    }
-    
-    setTimeout(() => {
-      setScanResult(null); 
-    }, 5000);
-  }, [cleanupAndReset]);
-  
-  const handleStartScan = async () => {
     setScanResult(null);
-    setIsScanning(true);
+    setLastScannedData(null);
+    setIsVerifying(false);
+  }, []);
+  
+  const handleScanComplete = useCallback((result: ScanResult) => {
+    setLastScannedData(result.scannedData);
+    setIsVerifying(true);
 
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        setHasCameraPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(err => {
-            console.error("Gagal memulai video:", err);
-            toast({ variant: "destructive", title: "Error", description: "Tidak bisa memutar pratinjau kamera." });
-          });
+    // Simulate backend verification
+    setTimeout(() => {
+        setIsScanning(false);
+        setIsVerifying(false);
+        setScanResult(result);
+        
+        if (result.status === 'success' && audioRef.current) {
+          audioRef.current.play().catch(err => console.error("Gagal memutar suara:", err));
         }
         
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => {
-          toast({
-            title: 'Waktu Habis',
-            description: 'Kamera dinonaktifkan karena tidak ada aktivitas.',
-          });
-          cleanupAndReset();
-        }, 60000); // 1 menit
+        // Show result for 5 seconds then reset
+        setTimeout(() => {
+          resetState();
+        }, 5000);
 
-      } catch (error) {
-        console.error('Error saat mengakses kamera:', error);
-        setHasCameraPermission(false);
-        toast({
-          variant: 'destructive',
-          title: 'Akses Kamera Ditolak',
-          description: 'Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.',
-        });
-        cleanupAndReset();
-      }
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Perangkat Tidak Didukung',
-            description: 'Peramban Anda tidak mendukung akses kamera.',
-          });
-        setHasCameraPermission(false);
-        cleanupAndReset();
-    }
+    }, 1500); // 1.5 second verification delay
+  }, [resetState]);
+  
+  const handleStartScan = async () => {
+    resetState();
+    setIsScanning(true);
   }
 
   const renderContent = () => {
-    if (isScanning) {
+    if (isScanning || isVerifying) {
       return (
         <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
           <CardContent className="p-0 relative">
-             <video ref={videoRef} className="w-full aspect-video rounded-t-md bg-black" autoPlay muted playsInline />
-            <div className="p-6">
-              <BarcodeScanner onScanComplete={handleScanComplete} videoRef={videoRef} isScanning={isScanning}/>
-            </div>
+            <BarcodeScanner 
+              onScanComplete={handleScanComplete}
+              isScanning={isScanning}
+            />
+             {isVerifying && (
+                <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
+                    <Loader2 className="w-12 h-12 animate-spin" />
+                    <p className="text-xl font-semibold">Memverifikasi Absensi...</p>
+                    <p className="text-sm bg-gray-700/50 px-2 py-1 rounded-md max-w-full truncate">
+                        {lastScannedData}
+                    </p>
+                </div>
+            )}
           </CardContent>
         </Card>
       );
@@ -149,6 +103,7 @@ export default function ScannerPage() {
                 <>
                  <XCircle className="w-24 h-24 text-red-500" />
                  <p className="text-red-600 font-semibold">{scanResult.message}</p>
+                 <p className="text-sm text-muted-foreground">{scanResult.timestamp}</p>
                 </>
             )}
           </CardContent>
@@ -177,14 +132,6 @@ export default function ScannerPage() {
                     <Camera className="mr-4 h-8 w-8" />
                     Mulai Absensi
                 </Button>
-                {hasCameraPermission === false && (
-                  <Alert variant="destructive" className="text-left">
-                      <AlertTitle>Akses Kamera Ditolak</AlertTitle>
-                      <AlertDescription>
-                        Anda perlu mengizinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.
-                      </AlertDescription>
-                  </Alert>
-                )}
             </div>
         </CardContent>
        </Card>
