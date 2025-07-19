@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Table,
   TableBody,
@@ -38,9 +38,41 @@ import {
 import { StudentCardDialog } from "./student-card-dialog"
 
 export function StudentTable() {
-  const [students, setStudents] = useState<Student[]>(mockStudents)
+  const [students, setStudents] = useState<Student[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedStudents = localStorage.getItem('mockStudents');
+      return savedStudents ? JSON.parse(savedStudents) : mockStudents;
+    }
+    return mockStudents;
+  });
+  
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
   const router = useRouter()
+
+  useEffect(() => {
+    // Save initial mock data to localStorage if not already present
+    if (typeof window !== 'undefined' && !localStorage.getItem('mockStudents')) {
+      localStorage.setItem('mockStudents', JSON.stringify(mockStudents));
+    }
+
+    const handleStudentAdded = () => {
+        const savedStudents = localStorage.getItem('mockStudents');
+        if (savedStudents) {
+            setStudents(JSON.parse(savedStudents));
+        }
+    };
+
+    window.addEventListener('studentAdded', handleStudentAdded);
+    return () => {
+        window.removeEventListener('studentAdded', handleStudentAdded);
+    };
+  }, []);
+
+  const updateLocalStorage = (updatedStudents: Student[]) => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('mockStudents', JSON.stringify(updatedStudents));
+    }
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -61,7 +93,10 @@ export function StudentTable() {
   }
 
   const handleDelete = (idsToDelete: string[]) => {
-    setStudents(students.filter((student) => !idsToDelete.includes(student.id)))
+    const updatedStudents = students.filter((student) => !idsToDelete.includes(student.id))
+    setStudents(updatedStudents)
+    updateLocalStorage(updatedStudents)
+
     const newSelection = new Set(selectedStudents)
     idsToDelete.forEach(id => newSelection.delete(id))
     setSelectedStudents(newSelection)

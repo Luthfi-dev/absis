@@ -1,7 +1,6 @@
-import { Button } from "@/components/ui/button"
 import { StudentTable } from "@/components/student-table"
-import { PlusCircle } from "lucide-react"
 import { RosterImporter } from "@/components/roster-importer"
+import { AddStudentDialog } from "@/components/add-student-dialog"
 
 export default function StudentsPage() {
   return (
@@ -12,10 +11,7 @@ export default function StudentsPage() {
             <p className="text-muted-foreground">Tambah, ubah, dan kelola daftar siswa Anda.</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Tambah Siswa
-            </Button>
+            <AddStudentDialog />
             <RosterImporter />
         </div>
       </div>
