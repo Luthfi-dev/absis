@@ -87,7 +87,6 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
   
   useEffect(() => {
     const startCamera = async () => {
-      stopCamera();
       setIsInitializing(true);
       setCameraError(null);
       const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'environment';
@@ -120,7 +119,7 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
     return () => {
       stopCamera();
     };
-  }, [isScanning, setCameraError]);
+  }, [isScanning, setCameraError, stopCamera]);
 
 
   useEffect(() => {
@@ -151,7 +150,7 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
       animationFrameId.current = requestAnimationFrame(tick);
     };
 
-    if (isScanning) {
+    if (isScanning && !isInitializing) {
       animationFrameId.current = requestAnimationFrame(tick);
     } else {
       if (animationFrameId.current) {
@@ -164,7 +163,7 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [isScanning, handleCheckIn]);
+  }, [isScanning, isInitializing, handleCheckIn]);
 
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center">
@@ -181,8 +180,10 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
         {isScanning && !isInitializing && (
           <>
             <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg" style={{ boxSizing: 'border-box' }}/>
-            <div className="absolute top-0 left-0 w-full h-4 bg-red-500 animate-scan-y" />
-            <ScanLine className="h-16 w-full text-white/80 absolute top-1/2 -translate-y-1/2 animate-pulse" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-px bg-red-500 animate-scan-y shadow-lg" />
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/50 text-white text-center p-3 rounded-lg animate-pulse-slow">
+              <p className="font-medium">Arahkan QR Code Kartu Siswa ke Kamera</p>
+            </div>
           </>
         )}
       </div>
