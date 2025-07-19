@@ -2,7 +2,7 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -190,7 +190,7 @@ export default function ScannerPage() {
             </CardHeader>
             <CardContent>
                 <Button size="lg" className="w-full" onClick={() => setIsScanning(true)}>
-                    <CameraOn className="mr-2 h-5 w-5" />
+                    <Camera className="mr-2 h-5 w-5" />
                     Mulai Absensi
                 </Button>
             </CardContent>
