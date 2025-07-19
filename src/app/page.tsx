@@ -136,7 +136,7 @@ export default function ScannerPage() {
               {scanResult.status === 'success' ? <UserCheck className="text-green-500" /> : <XCircle className="text-red-500" />}
               Status Absensi
             </CardTitle>
-          </Header>
+          </CardHeader>
           <CardContent className="flex flex-col items-center text-center space-y-4">
             {scanResult.status === 'success' && scanResult.student ? (
               <>
