@@ -20,7 +20,7 @@ function PrintPageContent() {
   }, [searchParams])
 
   return (
-    <div className="print-container">
+    <div className="print-container bg-gray-100 dark:bg-gray-800 min-h-screen">
         <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm print:hidden">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <h1 className="text-xl font-bold font-headline">Cetak Kartu Siswa</h1>
@@ -33,14 +33,11 @@ function PrintPageContent() {
 
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
             {studentsToPrint.length > 0 ? (
-                 <div className="print-area">
+                 <div className="print-area grid grid-cols-1 md:grid-cols-2 gap-4">
                     {studentsToPrint.map(student => (
-                        <div key={student.id} className="print-item">
-                           <div className="print-card-wrapper">
-                             <StudentCard student={student} initialSide="front" isPrintMode={true} />
-                           </div>
-                           <div className="print-card-wrapper">
-                             <StudentCard student={student} initialSide="back" isPrintMode={true} />
+                        <div key={student.id} className="print-item-container break-inside-avoid p-2">
+                           <div className="print-card-wrapper mx-auto">
+                             <StudentCard student={student} />
                            </div>
                         </div>
                     ))}
@@ -59,32 +56,26 @@ function PrintPageContent() {
         <style jsx global>{`
             @media print {
                 body, .print-container {
-                    background-color: #ffffff !important;
-                    background-image: none !important;
-                    margin: 0;
-                    padding: 0;
+                    background: #ffffff !important;
+                }
+                .print-container > header {
+                    display: none;
                 }
                 main {
                     padding: 0 !important;
                     margin: 0 !important;
                 }
-                .print-container > header {
-                    display: none !important;
-                }
                 .print-area {
-                    display: flex;
-                    flex-direction: column;
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
                     gap: 1rem;
                 }
-                .print-item {
-                    display: flex;
-                    flex-direction: row;
-                    gap: 1rem;
+                .print-item-container {
+                    padding: 0;
+                    margin: 0;
                     page-break-inside: avoid;
-                }
-                .print-card-wrapper {
-                  width: 21rem;
-                  height: 13.125rem;
+                    display: flex;
+                    justify-content: center;
                 }
             }
             @page {
