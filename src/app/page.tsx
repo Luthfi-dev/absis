@@ -153,8 +153,8 @@ export default function ScannerPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-       <audio ref={successAudioRef} src="/success.mp3" preload="auto" />
-       <audio ref={errorAudioRef} src="/error.mp3" preload="auto" />
+       <audio ref={successAudioRef} src="https://firebasestorage.googleapis.com/v0/b/ai-prototyper-scratch.appspot.com/o/public%2Fsuccess.mp3?alt=media" preload="auto" />
+       <audio ref={errorAudioRef} src="https://firebasestorage.googleapis.com/v0/b/ai-prototyper-scratch.appspot.com/o/public%2Ferror.mp3?alt=media" preload="auto" />
       <div className="absolute top-4 right-4 z-10">
         <Button asChild variant="outline" className="bg-background">
           <Link href="/login">
