@@ -14,7 +14,7 @@ interface StudentCardProps {
 }
 
 export function StudentCard({ student, initialSide = 'front', isPrintMode = false }: StudentCardProps) {
-    const [isFlipped, setIsFlipped] = useState(initialSide === 'back')
+    const [isFlipped, setIsFlipped] =useState(initialSide === 'back')
     const [cardBackground, setCardBackground] = useState<string | null>(null)
     const [origin, setOrigin] = useState('');
     const [customMessage, setCustomMessage] = useState('');
@@ -63,7 +63,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                     </header>
                     <footer className="flex items-end gap-3">
                         <div className="bg-white p-1 rounded-md shadow-md">
-                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={70} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={80} bgColor="#ffffff" fgColor="#000000" level="L" />}
                         </div>
                         <div className="flex-1 text-right overflow-hidden">
                             <p className="font-semibold text-lg leading-tight truncate">{student.name}</p>
@@ -78,12 +78,14 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                         <div className="flex-1 space-y-1 overflow-hidden">
                            <p className="text-xs opacity-90">Nama Lengkap</p>
                            <p className="font-medium text-base truncate">{student.name}</p>
+                           <p className="text-xs opacity-90 pt-2">ID Siswa</p>
+                           <p className="font-medium text-base truncate">{student.studentId}</p>
                            <p className="text-xs opacity-90 pt-2">NIS</p>
                            <p className="font-medium text-base truncate">{student.nis}</p>
                         </div>
                         <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
                            <div className="bg-white p-1 rounded-md shadow-md">
-                              {profileUrl && <QRCode value={profileUrl} size={60} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                              {profileUrl && <QRCode value={profileUrl} size={70} bgColor="#ffffff" fgColor="#000000" level="L" />}
                            </div>
                            <p className="text-[10px] text-center">Pindai untuk Profil</p>
                         </div>
