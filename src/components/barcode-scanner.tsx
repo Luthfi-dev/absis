@@ -23,6 +23,7 @@ type BarcodeScannerProps = {
 export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null);
   const animationFrameId = useRef<number>()
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
@@ -65,27 +66,30 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     }
   }, [onScanComplete]);
   
-  useEffect(() => {
-    const cleanupScanner = () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-        animationFrameId.current = undefined;
-      }
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
-        stream.getTracks().forEach((track) => track.stop())
-        videoRef.current.srcObject = null
-      }
-    };
+  const cleanupScanner = useCallback(() => {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = undefined;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
 
+  useEffect(() => {
     const startScanner = async () => {
-      cleanupScanner(); 
+      cleanupScanner();
       setHasCameraPermission(null);
       setCameraError(null);
 
       const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'user';
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
+        streamRef.current = stream; // Store the stream in the ref
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -111,7 +115,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
         const canvas = canvasRef.current;
         const video = videoRef.current;
         if(canvas) {
-          const context = canvas.getContext("2d");
+          const context = canvas.getContext("2d", { willReadFrequently: true });
           if (context) {
             canvas.height = video.videoHeight;
             canvas.width = video.videoWidth;
@@ -131,15 +135,15 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     };
 
     if (isScanning) {
-        startScanner();
+      startScanner();
     } else {
-        cleanupScanner();
+      cleanupScanner();
     }
 
     return () => {
       cleanupScanner();
     };
-  }, [isScanning, handleCheckIn]);
+  }, [isScanning, handleCheckIn, cleanupScanner]);
   
   if (!isScanning) {
     return null;
