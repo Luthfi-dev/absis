@@ -16,8 +16,8 @@ interface StudentCardProps {
 export function StudentCard({ student, initialSide = 'front', isPrintMode = false }: StudentCardProps) {
     const [isFlipped, setIsFlipped] =useState(initialSide === 'back')
     const [cardBackground, setCardBackground] = useState<string | null>(null)
-    const [origin, setOrigin] = useState('');
     const [customMessage, setCustomMessage] = useState('');
+    const [origin, setOrigin] = useState('');
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -63,7 +63,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                     </header>
                     <footer className="flex items-end gap-3">
                         <div className="bg-white p-1 rounded-md shadow-md">
-                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={90} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={96} bgColor="#ffffff" fgColor="#000000" level="L" />}
                         </div>
                         <div className="flex-1 text-right overflow-hidden">
                             <p className="font-semibold text-lg leading-tight truncate">{student.name}</p>
@@ -73,7 +73,12 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                 </div>
 
                 {/* Back Side */}
-                <div className={cn(cardContentClasses, "rotate-y-180 flex flex-col", isPrintMode && initialSide === 'front' && 'hidden')}>
+                <div className={cn(
+                    cardContentClasses, 
+                    "flex flex-col",
+                    !isPrintMode && "rotate-y-180",
+                    isPrintMode && initialSide === 'front' && 'hidden'
+                )}>
                     <div className="flex-1 flex items-center justify-between gap-4">
                         <div className="flex-1 space-y-1 overflow-hidden">
                            <p className="text-xs opacity-90">Nama Lengkap</p>
@@ -85,7 +90,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                         </div>
                         <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
                            <div className="bg-white p-1 rounded-md shadow-md">
-                              {profileUrl && <QRCode value={profileUrl} size={90} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                              {profileUrl && <QRCode value={profileUrl} size={96} bgColor="#ffffff" fgColor="#000000" level="L" />}
                            </div>
                            <p className="text-[10px] text-center">Pindai untuk Profil</p>
                         </div>
