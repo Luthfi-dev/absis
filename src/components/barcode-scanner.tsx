@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
@@ -42,14 +43,12 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
   }, []);
 
   const handleCheckIn = useCallback((scannedData: string) => {
-    // Only process if actively scanning
     if (!isScanning) return;
 
     let studentId: string;
     const now = new Date();
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
     
-    // Ignore obviously invalid QR codes
     if (scannedData.length < 5) {
         return; 
     }
@@ -86,7 +85,6 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
     }
   }, [onScanComplete, isScanning]);
   
-
   useEffect(() => {
     const startCamera = async () => {
       stopCamera();
@@ -122,7 +120,7 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
     return () => {
       stopCamera();
     };
-  }, [isScanning, setCameraError, stopCamera]);
+  }, [isScanning, setCameraError]);
 
 
   useEffect(() => {
