@@ -6,6 +6,13 @@ export type Student = {
   avatar: string;
 };
 
+export type Teacher = {
+  id: string;
+  name: string;
+  nip: string;
+  email: string;
+}
+
 export type ScheduleItem = {
   id: string;
   time: string;
@@ -29,6 +36,13 @@ export const mockStudents: Student[] = [
   { id: '5', name: 'Ethan Davis', studentId: 'S005', email: 'ethan.d@example.com', avatar: 'https://i.pravatar.cc/150?u=a092581f4e29026705d' },
 ];
 
+export const mockTeachers: Teacher[] = [
+  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com' },
+  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com' },
+  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com' },
+  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com' },
+]
+
 export const mockSchedule: ScheduleItem[] = [
   { id: 'c1', time: '09:00 - 10:30', subject: 'Matematika 101', status: 'Sedang Berlangsung', teacher: 'Bpk. Smith' },
   { id: 'c2', time: '11:00 - 12:30', subject: 'Sejarah Seni', status: 'Akan Datang', teacher: 'Ibu Jones' },
@@ -51,8 +65,10 @@ export const mockAttendance: Record<string, AttendanceRecord[]> = {
   ],
   '4': [
     { id: 'd1', subject: 'Fisika untuk Pemula', date: '2024-05-20', status: 'Hadir' },
+    { id: 'd2', subject: 'Matematika 101', date: '2024-05-20', status: 'Absen' },
   ],
   '5': [
     { id: 'e1', subject: 'Lokakarya Penulisan Kreatif', date: '2024-05-20', status: 'Terlambat' },
+    { id: 'e2', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
   ],
 };

@@ -140,7 +140,7 @@ export default function ScannerPage() {
             </div>
             <div className="p-8 space-y-4">
                 <h1 className="text-3xl font-bold font-headline animate-pulse-slow">Selamat Datang di AttendEase</h1>
-                <p className="text-muted-foreground">Silakan klik tombol di bawah untuk memulai sesi absensi Anda. Pastikan kartu pelajar Anda sudah siap!</p>
+                <p className="text-muted-foreground">Sistem absensi QR code modern. Silakan klik tombol di bawah untuk memulai sesi absensi Anda.</p>
                 <Button size="lg" className="h-14 text-xl w-full" onClick={handleStartScan}>
                     <Camera className="mr-4 h-8 w-8" />
                     Mulai Absensi
@@ -158,7 +158,7 @@ export default function ScannerPage() {
       <div className="absolute top-4 right-4 z-10">
         <Button asChild variant="outline" className="bg-background">
           <Link href="/login">
-            <LogIn className="mr-2 h-4 w-4" /> Masuk Admin
+            <LogIn className="mr-2 h-4 w-4" /> Masuk Staf
           </Link>
         </Button>
       </div>

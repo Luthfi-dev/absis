@@ -14,21 +14,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/components/ui/sidebar"
 import {
   CheckSquare,
-  Home,
   LogOut,
-  Users,
-  Database,
-  Settings,
-  ClipboardCheck,
+  LayoutDashboard,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-export function AppSidebar() {
+export function TeacherSidebar() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar();
 
@@ -37,11 +33,7 @@ export function AppSidebar() {
   }
 
   const menuItems = [
-    { href: "/dashboard", label: "Dasbor", icon: Home },
-    { href: "/students", label: "Siswa", icon: Users },
-    { href: "/attendance", label: "Kehadiran", icon: ClipboardCheck },
-    { href: "/master-data", label: "Master Data", icon: Database },
-    { href: "/settings", label: "Pengaturan", icon: Settings },
+    { href: "/teacher-dashboard", label: "Dasbor", icon: LayoutDashboard },
   ]
 
   return (
@@ -73,12 +65,12 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-2">
           <Avatar className="size-8">
-            <AvatarImage src="https://i.pravatar.cc/150?u=superadmin" alt="Admin" />
-            <AvatarFallback>SA</AvatarFallback>
+            <AvatarImage src="https://i.pravatar.cc/150?u=teacher" alt="Guru" />
+            <AvatarFallback>G</AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">
-            <span className="font-semibold text-sidebar-foreground">Super Admin</span>
-            <span className="text-xs text-muted-foreground">superadmin@attendease.com</span>
+            <span className="font-semibold text-sidebar-foreground">Bpk. Smith</span>
+            <span className="text-xs text-muted-foreground">guru@attendease.com</span>
           </div>
         </div>
          <Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground">

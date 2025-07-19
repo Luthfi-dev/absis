@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { ScanLine, AlertTriangle } from "lucide-react"
+import { ScanLine, AlertTriangle, CameraOff } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
+import type { CameraFacingMode } from "@/app/(app)/settings/page"
 
 export type ScanResult = {
   status: "success" | "error";
@@ -24,14 +25,18 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationFrameId = useRef<number>()
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [cameraMode, setCameraMode] = useState<CameraFacingMode>('user')
+  
+  useEffect(() => {
+    const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode | null
+    if (savedMode) {
+      setCameraMode(savedMode)
+    }
+  }, [])
 
   const cleanupScanner = useCallback(() => {
     if (animationFrameId.current) {
       cancelAnimationFrame(animationFrameId.current)
-    }
-    if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
     }
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
@@ -46,7 +51,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
     
     try {
-      if (scannedData.length < 5) return; // Ignore small irrelevant scans
+      if (scannedData.length < 5) return;
       studentId = atob(scannedData);
     } catch (e) {
       onScanComplete({
@@ -79,75 +84,74 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   }, [onScanComplete]);
   
   useEffect(() => {
-    if (!isScanning) {
-      cleanupScanner();
-      return;
-    }
-
-    let running = false;
-    const tick = () => {
-      if (!running) return;
-
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      if (video && canvas && video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.height = video.videoHeight;
-        canvas.width = video.videoWidth;
-        const context = canvas.getContext('2d');
-        if(context) {
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-          });
-
-          if (code && code.data) {
-            handleCheckIn(code.data);
-            return; // Stop scanning after a successful scan
-          }
-        }
-      }
-      if (running) {
-        animationFrameId.current = requestAnimationFrame(tick);
-      }
-    };
+    let stream: MediaStream | null = null;
+    let animationFrame: number;
 
     const startScanner = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } });
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current?.play().catch(e => console.error("Play error:", e));
-            running = true;
-            tick();
-          };
+          videoRef.current.play();
+          tick();
         }
-        
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => {
-            if(running) {
-                onScanComplete({status: "error", message:"Sesi pemindaian berakhir.", scannedData: ""});
-            }
-        }, 60000); // 1 minute timeout
-      } catch (error) {
-        console.error('Error saat mengakses kamera:', error);
+      } catch (err) {
+        console.error("Error accessing camera:", err);
         setHasCameraPermission(false);
       }
     };
 
-    startScanner();
+    const tick = () => {
+      if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        if(canvas) {
+          const context = canvas.getContext("2d");
+          if (context) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "dontInvert",
+            });
+            if (code && code.data) {
+              handleCheckIn(code.data);
+              return; 
+            }
+          }
+        }
+      }
+      animationFrame = requestAnimationFrame(tick);
+    };
+
+    if (isScanning) {
+      startScanner();
+    } else {
+      cleanupScanner();
+    }
 
     return () => {
-      running = false;
-      cleanupScanner();
+      if(stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      cancelAnimationFrame(animationFrame);
     };
-  }, [isScanning, handleCheckIn, cleanupScanner, onScanComplete]);
+  }, [isScanning, cameraMode, handleCheckIn, cleanupScanner]);
+  
+  if (hasCameraPermission === null && isScanning) {
+    return (
+        <div className="flex flex-col items-center justify-center p-6 aspect-video bg-muted rounded-t-md">
+            <CameraOff className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Meminta izin kamera...</p>
+        </div>
+    )
+  }
 
   if (hasCameraPermission === false) {
     return (
-        <div className="p-6">
+        <div className="p-6 aspect-video bg-destructive/10 rounded-t-md">
             <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Akses Kamera Diperlukan</AlertTitle>
