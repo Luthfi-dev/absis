@@ -81,14 +81,14 @@ export default function RosterPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-start">
+      <div className="md:flex md:justify-between md:items-start space-y-4 md:space-y-0">
         <div>
             <h1 className="text-3xl font-bold tracking-tight font-headline">Roster Kelas</h1>
             <p className="text-muted-foreground">Atur dan lihat jadwal pelajaran mingguan untuk setiap kelas.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Select onValueChange={setSelectedClassId} value={selectedClassId || ''}>
-              <SelectTrigger className="w-[280px]">
+              <SelectTrigger className="w-full sm:w-[280px]">
                 <SelectValue placeholder="Pilih kelas untuk dilihat..." />
               </SelectTrigger>
               <SelectContent>
@@ -103,7 +103,7 @@ export default function RosterPage() {
                 classId={selectedClassId} 
                 onRosterAdded={handleRosterAdded} 
                 triggerButton={
-                    <Button disabled={!selectedClassId}>
+                    <Button disabled={!selectedClassId} className="w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Atur Roster
                     </Button>
