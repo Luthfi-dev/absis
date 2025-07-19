@@ -1,98 +1,77 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CheckCircle, ScanLine, XCircle } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
+import { ScanLine } from "lucide-react"
+import { mockStudents, Student } from "@/lib/mock-data"
+
+export type ScanResult = {
+  status: "success" | "error";
+  message: string;
+  student?: Student;
+  timestamp?: string;
+};
 
 type BarcodeScannerProps = {
-  onScanComplete: () => void;
-  onInputChange: () => void;
+  onScanComplete: (result: ScanResult) => void;
 }
 
-export function BarcodeScanner({ onScanComplete, onInputChange }: BarcodeScannerProps) {
+export function BarcodeScanner({ onScanComplete }: BarcodeScannerProps) {
   const [studentId, setStudentId] = useState("")
-  const [status, setStatus] = useState<"success" | "error" | "idle">("idle")
-  const [message, setMessage] = useState("")
 
   const handleCheckIn = () => {
     if (studentId.trim() === "") {
-      setStatus("error")
-      setMessage("Silakan masukkan ID siswa.")
-      onScanComplete();
-      setTimeout(() => setStatus("idle"), 3000);
-      return
+        // Don't show an error for empty input, just ignore.
+        return
     }
 
-    // Simulasi panggilan API dan validasi
-    if (studentId.toUpperCase().startsWith("S")) {
-      setStatus("success")
-      setMessage(`Siswa ${studentId.toUpperCase()} berhasil check-in.`)
+    const student = mockStudents.find(s => s.studentId.toLowerCase() === studentId.toLowerCase());
+    const now = new Date();
+    const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
+
+    if (student) {
+        onScanComplete({
+            status: "success",
+            message: "Berhasil melakukan absensi.",
+            student: student,
+            timestamp: timestamp,
+        });
     } else {
-      setStatus("error")
-      setMessage(`ID Siswa ${studentId.toUpperCase()} tidak ditemukan.`)
+        onScanComplete({
+            status: "error",
+            message: `ID Siswa ${studentId.toUpperCase()} tidak ditemukan.`,
+            timestamp: timestamp,
+        });
     }
-    setStudentId("")
-    onScanComplete();
-
-    // Reset status after a few seconds
-    setTimeout(() => {
-        setStatus("idle")
-    }, 3000)
+    setStudentId("");
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onInputChange();
     setStudentId(e.target.value);
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ScanLine className="h-6 w-6" />
-          Absensi Barcode
-        </CardTitle>
-        <CardDescription>
-          Masukkan ID siswa atau pindai barcode untuk mencatat kehadiran.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="student-id">ID Siswa</Label>
+    <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+            <ScanLine className="h-8 w-8 text-primary" />
+        </div>
+        <h3 className="text-lg font-medium">Arahkan Barcode ke Kamera</h3>
+        <p className="text-sm text-muted-foreground">
+            Atau ketik ID Siswa di bawah ini dan tekan Enter.
+        </p>
+        <div className="space-y-2 pt-2">
+          <Label htmlFor="student-id" className="sr-only">ID Siswa</Label>
           <Input
             id="student-id"
-            placeholder="contoh: S001"
+            placeholder="Pindai atau ketik ID..."
             value={studentId}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleCheckIn()}
             autoFocus
+            className="text-center text-lg h-12"
           />
         </div>
-        <Button onClick={handleCheckIn} className="w-full">
-          Check In
-        </Button>
-        {status !== "idle" && (
-          <Alert variant={status === "success" ? "default" : "destructive"} className={status === 'success' ? 'bg-green-100 border-green-400' : ''}>
-            {status === "success" ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <XCircle className="h-4 w-4" />
-            )}
-            <AlertTitle>{status === "success" ? "Berhasil" : "Gagal"}</AlertTitle>
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
+      </div>
   )
 }
