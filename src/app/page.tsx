@@ -9,32 +9,79 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import type { CameraFacingMode } from './(app)/settings/page';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export default function ScannerPage() {
+  const { toast } = useToast();
   const successAudioRef = useRef<HTMLAudioElement>(null);
   const errorAudioRef = useRef<HTMLAudioElement>(null);
-  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isInitializingCamera, setIsInitializingCamera] = useState(false);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+        videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    stopCamera();
+    setIsInitializingCamera(true);
+    setCameraError(null);
+    const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'user';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsScanning(true);
+      }
+    } catch (err: any) {
+      console.error("Error accessing camera:", err);
+      if (err.name === 'NotAllowedError') {
+        setCameraError("Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.");
+      } else {
+        setCameraError(`Gagal memulai kamera: ${err.message}. Pastikan tidak digunakan oleh aplikasi lain.`);
+      }
+      setIsScanning(false);
+    } finally {
+        setIsInitializingCamera(false);
+    }
+  }, [stopCamera]);
 
   const resetState = useCallback(() => {
-    setIsScanning(false);
     setScanResult(null);
     setLastScannedData(null);
     setIsVerifying(false);
   }, []);
   
   const handleScanComplete = useCallback((result: ScanResult) => {
-    if (!result.scannedData) return; // Ignore empty scans
+    if (!result.scannedData || isVerifying) return; // Ignore empty scans or if already verifying
 
-    setLastScannedData(result.scannedData);
     setIsVerifying(true);
-    setIsScanning(false);
-
+    setLastScannedData(result.scannedData);
+    
+    // Stop scanning visually, but keep camera on for a bit
+    setIsScanning(false); 
+    
     // Simulate backend verification
     setTimeout(() => {
+        stopCamera(); // Stop camera only after verification is done
         setIsVerifying(false);
         setScanResult(result);
         
@@ -50,37 +97,61 @@ export default function ScannerPage() {
         }, 5000);
 
     }, 1500); // 1.5 second verification delay
-  }, [resetState]);
+  }, [isVerifying, resetState, stopCamera]);
   
   const handleStartScan = () => {
     resetState();
-    setIsScanning(true);
+    startCamera();
   }
 
   const handleCancelScan = () => {
     setIsScanning(false);
-    resetState();
+    stopCamera();
   }
+  
+  // Ensure camera is stopped on component unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
+
 
   const renderContent = () => {
-    if (isScanning || isVerifying) {
+    if (isInitializingCamera || isVerifying || isScanning || cameraError) {
       return (
         <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
           <CardContent className="p-0 relative">
             <BarcodeScanner 
+              videoRef={videoRef}
               onScanComplete={handleScanComplete}
               isScanning={isScanning}
             />
-             {isVerifying && (
+             { (isInitializingCamera || isVerifying) && (
                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
                     <Loader2 className="w-12 h-12 animate-spin" />
-                    <p className="text-xl font-semibold">Memverifikasi Absensi...</p>
-                    <p className="text-sm bg-gray-700/50 px-2 py-1 rounded-md max-w-full truncate">
-                        {lastScannedData}
+                    <p className="text-xl font-semibold">
+                        {isVerifying ? "Memverifikasi Absensi..." : "Memulai kamera..."}
                     </p>
+                    {isVerifying && lastScannedData && (
+                        <p className="text-sm bg-gray-700/50 px-2 py-1 rounded-md max-w-full truncate">
+                            {lastScannedData}
+                        </p>
+                    )}
                 </div>
             )}
-             {isScanning && (
+            { cameraError && (
+                 <div className="absolute inset-0 bg-destructive/90 flex flex-col items-center justify-center text-destructive-foreground z-20 p-4">
+                    <Alert variant="destructive" className="border-0">
+                        <AlertTriangle className="h-6 w-6" />
+                        <AlertTitle className="text-xl">Error Kamera</AlertTitle>
+                        <AlertDescription className="text-base">
+                            {cameraError}
+                        </AlertDescription>
+                    </Alert>
+                 </div>
+            )}
+             { (isScanning || cameraError) && (
                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                     <Button variant="destructive" onClick={handleCancelScan}>Batalkan</Button>
                 </div>
@@ -141,8 +212,8 @@ export default function ScannerPage() {
             <div className="p-8 space-y-4">
                 <h1 className="text-3xl font-bold font-headline animate-pulse-slow">Selamat Datang di AttendEase</h1>
                 <p className="text-muted-foreground">Sistem absensi QR code modern. Silakan klik tombol di bawah untuk memulai sesi absensi Anda.</p>
-                <Button size="lg" className="h-14 text-xl w-full" onClick={handleStartScan}>
-                    <Camera className="mr-4 h-8 w-8" />
+                <Button size="lg" className="h-14 text-xl w-full" onClick={handleStartScan} disabled={isInitializingCamera}>
+                    {isInitializingCamera ? <Loader2 className="mr-4 h-8 w-8 animate-spin" /> : <Camera className="mr-4 h-8 w-8" />}
                     Mulai Absensi
                 </Button>
             </div>
