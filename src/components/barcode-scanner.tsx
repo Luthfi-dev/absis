@@ -79,6 +79,11 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   }, [onScanComplete]);
   
   useEffect(() => {
+    if (!isScanning) {
+      cleanupScanner();
+      return;
+    }
+
     let running = false;
     const tick = () => {
       if (!running) return;
@@ -113,35 +118,32 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-          running = true;
-          tick();
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current?.play().catch(e => console.error("Play error:", e));
+            running = true;
+            tick();
+          };
         }
-         // Set a timeout to stop scanning after 1 minute of inactivity
+        
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         timeoutRef.current = setTimeout(() => {
             if(running) {
-                handleCheckIn(''); 
+                onScanComplete({status: "error", message:"Sesi pemindaian berakhir.", scannedData: ""});
             }
-        }, 60000);
+        }, 60000); // 1 minute timeout
       } catch (error) {
         console.error('Error saat mengakses kamera:', error);
         setHasCameraPermission(false);
       }
     };
 
-    if (isScanning) {
-      startScanner();
-    } else {
-      running = false;
-      cleanupScanner();
-    }
+    startScanner();
 
     return () => {
       running = false;
       cleanupScanner();
     };
-  }, [isScanning, handleCheckIn, cleanupScanner]);
+  }, [isScanning, handleCheckIn, cleanupScanner, onScanComplete]);
 
   if (hasCameraPermission === false) {
     return (

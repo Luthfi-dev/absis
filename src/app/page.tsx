@@ -27,6 +27,8 @@ export default function ScannerPage() {
   }, []);
   
   const handleScanComplete = useCallback((result: ScanResult) => {
+    if (!result.scannedData) return; // Ignore empty scans
+
     setLastScannedData(result.scannedData);
     setIsVerifying(true);
     setIsScanning(false);
@@ -50,7 +52,7 @@ export default function ScannerPage() {
     }, 1500); // 1.5 second verification delay
   }, [resetState]);
   
-  const handleStartScan = async () => {
+  const handleStartScan = () => {
     resetState();
     setIsScanning(true);
   }
