@@ -102,3 +102,10 @@ body {
     transform: rotateY(180deg);
   }
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
