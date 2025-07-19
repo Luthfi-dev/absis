@@ -14,6 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
@@ -21,10 +22,14 @@ import {
   Home,
   LogOut,
   Users,
-  Database,
   Settings,
   ClipboardCheck,
   CalendarDays,
+  User,
+  School,
+  Book,
+  Clock,
+  Database
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -42,8 +47,13 @@ export function AppSidebar() {
     { href: "/students", label: "Siswa", icon: Users },
     { href: "/roster", label: "Roster Kelas", icon: CalendarDays },
     { href: "/attendance", label: "Kehadiran", icon: ClipboardCheck },
-    { href: "/master-data", label: "Master Data", icon: Database },
-    { href: "/settings", label: "Pengaturan", icon: Settings },
+  ]
+  
+  const masterDataItems = [
+    { href: "/master-data/teachers", label: "Data Guru", icon: User },
+    { href: "/master-data/classes", label: "Data Kelas", icon: School },
+    { href: "/master-data/subjects", label: "Data Pelajaran", icon: Book },
+    { href: "/master-data/schedules", label: "Data Jadwal", icon: Clock },
   ]
 
   return (
@@ -61,6 +71,29 @@ export function AppSidebar() {
               <SidebarMenuButton
                 as={Link}
                 href={item.href}
+                isActive={pathname.startsWith(item.href) && item.href !== '/dashboard' || pathname === '/dashboard'}
+                icon={<item.icon />}
+                tooltip={item.label}
+                onClick={handleLinkClick}
+              >
+                {item.label}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <SidebarSeparator />
+        <SidebarMenu>
+            <SidebarMenuItem>
+                 <div className="px-2 text-xs font-medium text-sidebar-foreground/70 flex items-center gap-2">
+                    <Database className="h-4 w-4" />
+                    <span>Master Data</span>
+                </div>
+            </SidebarMenuItem>
+           {masterDataItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                as={Link}
+                href={item.href}
                 isActive={pathname.startsWith(item.href)}
                 icon={<item.icon />}
                 tooltip={item.label}
@@ -70,6 +103,14 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+        </SidebarMenu>
+        <SidebarSeparator />
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton as={Link} href="/settings" isActive={pathname.startsWith('/settings')} icon={<Settings/>} tooltip="Pengaturan" onClick={handleLinkClick}>
+                    Pengaturan
+                </SidebarMenuButton>
+            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
