@@ -1,8 +1,8 @@
+
 'use client'
 
 import { Student } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import QRCode from "react-qr-code"
 import { useState, useEffect } from "react"
 import { CheckSquare } from "lucide-react"
@@ -17,13 +17,16 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
     const [isFlipped, setIsFlipped] = useState(initialSide === 'back')
     const [cardBackground, setCardBackground] = useState<string | null>(null)
     const [origin, setOrigin] = useState('');
+    const [customMessage, setCustomMessage] = useState('');
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const savedBg = localStorage.getItem('card-background');
-            if (savedBg) {
-                setCardBackground(savedBg);
-            }
+            if (savedBg) setCardBackground(savedBg);
+
+            const savedMessage = localStorage.getItem('card-lost-message') || '';
+            setCustomMessage(savedMessage);
+
             setOrigin(window.location.origin);
         }
     }, []);
@@ -34,17 +37,16 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
         }
     }
     
-    // In a real app, this would be a proper encryption method.
-    // Using Base64 for simulation purposes.
     const encryptedStudentId = typeof window !== 'undefined' ? btoa(student.id) : '';
     const profileUrl = origin ? `${origin}/profile/${btoa(student.id)}` : '';
 
 
     const cardBaseClasses = "w-full aspect-[85.6/54] rounded-xl text-white shadow-lg transition-transform duration-700 preserve-3d"
-    const cardContentClasses = "absolute inset-0 w-full h-full flex flex-col p-4 backface-hidden"
+    const cardContentClasses = "absolute inset-0 w-full h-full p-[5cqw] backface-hidden"
+    const containerClasses = "w-full container-type-size"
 
     return (
-        <div className="perspective-1000">
+        <div className={cn("perspective-1000", containerClasses)}>
             <div
                 className={cn(cardBaseClasses, isFlipped && "rotate-y-180")}
                 onClick={handleFlip}
@@ -56,38 +58,43 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                 }}
             >
                 {/* Front Side */}
-                <div className={cn(cardContentClasses, "z-10 justify-between")}>
+                <div className={cn(cardContentClasses, "z-10 flex flex-col justify-between")}>
                     <header className="flex justify-between items-start">
-                        <div className="font-bold text-lg">Kartu Siswa</div>
-                        <CheckSquare className="w-8 h-8"/>
+                        <div className="font-bold text-[5.5cqw]">Kartu Siswa</div>
+                        <CheckSquare className="w-[9cqw] h-[9cqw]"/>
                     </header>
-                    <footer className="flex items-end gap-4">
-                        <div className="bg-white p-1 rounded-md shadow-md">
-                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={70} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                    <footer className="flex items-end gap-[4cqw]">
+                        <div className="bg-white p-[1cqw] rounded-md shadow-md">
+                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={1} style={{ height: "auto", maxWidth: "100%", width: "22cqw" }} bgColor="#ffffff" fgColor="#000000" level="L" />}
                         </div>
                         <div className="flex-1 text-right overflow-hidden">
-                            <p className="font-semibold text-lg leading-tight truncate">{student.name}</p>
-                            <p className="text-sm opacity-90">{student.studentId}</p>
+                            <p className="font-semibold text-[5.5cqw] leading-tight truncate">{student.name}</p>
+                            <p className="text-[4cqw] opacity-90">{student.studentId}</p>
                         </div>
                     </footer>
                 </div>
 
                 {/* Back Side */}
-                <div className={cn(cardContentClasses, "rotate-y-180 flex-row items-center gap-4")}>
-                     <div className="flex-1 space-y-1 overflow-hidden">
-                        <p className="text-xs opacity-90">Nama Lengkap</p>
-                        <p className="font-medium truncate">{student.name}</p>
-                        <p className="text-xs opacity-90">ID Siswa / NIS</p>
-                        <p className="font-medium text-sm truncate">{student.studentId} / {student.nis}</p>
-                        <p className="text-xs opacity-90">Kelas</p>
-                        <p className="font-medium truncate">{student.kelas}</p>
-                     </div>
-                     <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                        <div className="bg-white p-1 rounded-md shadow-md">
-                           {profileUrl && <QRCode value={profileUrl} size={60} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                <div className={cn(cardContentClasses, "rotate-y-180 flex flex-col")}>
+                    <div className="flex-1 flex items-center gap-[4cqw]">
+                        <div className="flex-1 space-y-[1cqw] overflow-hidden">
+                           <p className="text-[3.5cqw] opacity-90">Nama Lengkap</p>
+                           <p className="font-medium text-[4.5cqw] truncate">{student.name}</p>
+                           <p className="text-[3.5cqw] opacity-90 pt-[2cqw]">NIS</p>
+                           <p className="font-medium text-[4.5cqw] truncate">{student.nis}</p>
                         </div>
-                        <p className="text-[10px] text-center">Scan untuk Profil</p>
-                     </div>
+                        <div className="flex flex-col items-center justify-center gap-[1cqw] flex-shrink-0">
+                           <div className="bg-white p-[1cqw] rounded-md shadow-md">
+                              {profileUrl && <QRCode value={profileUrl} size={1} style={{ height: "auto", maxWidth: "100%", width: "20cqw" }} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                           </div>
+                           <p className="text-[3cqw] text-center">Pindai untuk Profil</p>
+                        </div>
+                    </div>
+                    {customMessage && (
+                        <div className="mt-auto text-center text-[2.8cqw] opacity-80 leading-tight">
+                            {customMessage}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

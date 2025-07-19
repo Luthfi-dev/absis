@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useSearchParams } from 'next/navigation'
@@ -13,22 +14,27 @@ function PrintPageContent() {
 
   useEffect(() => {
     const ids = searchParams.get('ids')?.split(',') ?? []
-    const students = mockStudents.filter(s => ids.includes(s.id))
+    // Initialize with mockStudents if localStorage is empty or doesn't have the student
+    const savedStudents = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('mockStudents') || JSON.stringify(mockStudents)) : mockStudents;
+    const students = savedStudents.filter((s: Student) => ids.includes(s.id))
     setStudentsToPrint(students)
   }, [searchParams])
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 p-4 sm:p-8">
-        <div className="max-w-5xl mx-auto">
-            <div className="flex justify-between items-center mb-8 print:hidden">
-                <h1 className="text-2xl font-bold font-headline">Cetak Kartu Siswa</h1>
+    <div className="bg-background min-h-screen">
+        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm print:hidden">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4">
+                <h1 className="text-xl font-bold font-headline">Cetak Kartu Siswa</h1>
                 <Button onClick={() => window.print()}>
                     <Printer className="mr-2 h-4 w-4" />
                     Cetak Halaman
                 </Button>
             </div>
+        </header>
+
+        <main className="container mx-auto p-4 sm:p-6 lg:p-8">
             {studentsToPrint.length > 0 ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
                     {studentsToPrint.map(student => (
                         <div key={student.id} className="space-y-4 page-break-inside-avoid">
                             <StudentCard student={student} initialSide="front" isPrintMode={true} />
@@ -37,19 +43,28 @@ function PrintPageContent() {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-16">
-                    <p>Tidak ada siswa yang dipilih untuk dicetak.</p>
+                <div className="flex items-center justify-center py-24 text-center">
+                    <div className="max-w-md">
+                        <h2 className="text-2xl font-semibold">Tidak ada siswa yang dipilih</h2>
+                        <p className="text-muted-foreground mt-2">
+                            Silakan kembali ke halaman siswa dan pilih setidaknya satu siswa untuk dicetak kartunya.
+                        </p>
+                    </div>
                 </div>
             )}
-        </div>
+        </main>
         <style jsx global>{`
             @media print {
                 body {
+                    background-color: #fff;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
                 }
                 .page-break-inside-avoid {
                     page-break-inside: avoid;
+                }
+                main {
+                    padding: 0;
                 }
             }
         `}</style>
@@ -59,8 +74,9 @@ function PrintPageContent() {
 
 export default function PrintPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
             <PrintPageContent />
         </Suspense>
     )
 }
+
