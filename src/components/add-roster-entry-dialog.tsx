@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -27,13 +27,14 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { mockSubjects, mockTeachers, type RosterEntry } from "@/lib/mock-data"
+import { mockSubjects, mockTeachers, mockSchedule, type RosterEntry } from "@/lib/mock-data"
 
 const daysOfWeek = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const timeSlots = [...new Set(mockSchedule.map(item => item.time))];
 
 const rosterEntrySchema = z.object({
   day: z.string().min(1, "Hari harus dipilih."),
-  time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d) - ([01]\d|2[0-3]):([0-5]\d)$/, "Format waktu harus HH:mm - HH:mm."),
+  time: z.string().min(1, "Waktu harus dipilih."),
   subjectId: z.string().min(1, "Mata pelajaran harus dipilih."),
   teacherId: z.string().min(1, "Guru harus dipilih."),
 });
@@ -61,15 +62,16 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
     },
   })
   
-  // Reset form when dialog opens with a new day
-  useState(() => {
-    form.reset({
-        day: day || "",
-        time: "",
-        subjectId: "",
-        teacherId: "",
-    })
-  });
+  useEffect(() => {
+    if (isOpen) {
+        form.reset({
+            day: day || "",
+            time: "",
+            subjectId: "",
+            teacherId: "",
+        })
+    }
+  }, [isOpen, day, form]);
 
 
   const onSubmit = (data: RosterFormValues) => {
@@ -132,10 +134,17 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
               name="time"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Waktu (cth. 07:00 - 08:30)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="HH:mm - HH:mm" {...field} />
-                  </FormControl>
+                  <FormLabel>Waktu</FormLabel>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Pilih slot waktu..." />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
