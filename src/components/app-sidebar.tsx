@@ -53,7 +53,6 @@ export function AppSidebar() {
     { href: "/master-data/teachers", label: "Data Guru", icon: User },
     { href: "/master-data/classes", label: "Data Kelas", icon: School },
     { href: "/master-data/subjects", label: "Data Pelajaran", icon: Book },
-    { href: "/master-data/schedules", label: "Data Jadwal", icon: Clock },
   ]
 
   return (
