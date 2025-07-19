@@ -97,6 +97,8 @@ export const mockRoster: Roster = {
         { id: 'r1-1', day: 'Senin', time: '07:00 - 08:30', subjectId: 'm1', teacherId: 't1' },
         { id: 'r1-2', day: 'Senin', time: '08:30 - 10:00', subjectId: 'm3', teacherId: 't3' },
         { id: 'r1-3', day: 'Selasa', time: '09:00 - 10:30', subjectId: 'm5', teacherId: 't3' },
+        { id: 'r1-4', day: 'Sabtu', time: '09:00 - 11:00', subjectId: 'm4', teacherId: 't4' },
+
     ],
     'k2': [ // 11 IPS 2
         { id: 'r2-1', day: 'Senin', time: '07:00 - 08:30', subjectId: 'm2', teacherId: 't2' },
