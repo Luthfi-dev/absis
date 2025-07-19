@@ -14,14 +14,13 @@ function PrintPageContent() {
 
   useEffect(() => {
     const ids = searchParams.get('ids')?.split(',') ?? []
-    // Initialize with mockStudents if localStorage is empty or doesn't have the student
     const savedStudents = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('mockStudents') || JSON.stringify(mockStudents)) : mockStudents;
     const students = savedStudents.filter((s: Student) => ids.includes(s.id))
     setStudentsToPrint(students)
   }, [searchParams])
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-gray-100 dark:bg-gray-800 min-h-screen">
         <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm print:hidden">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <h1 className="text-xl font-bold font-headline">Cetak Kartu Siswa</h1>
@@ -34,9 +33,9 @@ function PrintPageContent() {
 
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
             {studentsToPrint.length > 0 ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
+                 <div className="flex flex-wrap justify-center gap-8 print:gap-4">
                     {studentsToPrint.map(student => (
-                        <div key={student.id} className="space-y-4 page-break-inside-avoid">
+                        <div key={student.id} className="w-[21rem] space-y-4 page-break-inside-avoid">
                             <StudentCard student={student} initialSide="front" isPrintMode={true} />
                             <StudentCard student={student} initialSide="back" isPrintMode={true} />
                         </div>
@@ -56,7 +55,7 @@ function PrintPageContent() {
         <style jsx global>{`
             @media print {
                 body {
-                    background-color: #fff;
+                    background-color: #fff !important;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
                 }
@@ -65,6 +64,12 @@ function PrintPageContent() {
                 }
                 main {
                     padding: 0;
+                    margin: 0;
+                }
+                .container {
+                    width: 100%;
+                    padding: 0;
+                    margin: 0;
                 }
             }
         `}</style>
@@ -79,4 +84,3 @@ export default function PrintPage() {
         </Suspense>
     )
 }
-
