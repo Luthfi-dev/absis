@@ -2,7 +2,7 @@
 
 import { BarcodeScanner } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { LogIn } from 'lucide-react';
+import { Camera, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef, useState } from 'react';
@@ -57,16 +57,24 @@ export default function ScannerPage() {
 
       <div className="w-full max-w-2xl space-y-4">
         {hasCameraPermission === null && (
-            <div className="flex flex-col items-center justify-center p-8 text-center bg-muted rounded-lg">
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-muted rounded-lg h-48">
                 <p className="text-muted-foreground">Meminta izin kamera...</p>
             </div>
         )}
-        <div className={hasCameraPermission ? 'block' : 'hidden'}>
-          <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
-        </div>
+        
+        {/* The video element is required for the scanner to work, but we can hide it */}
+        <video ref={videoRef} className="hidden" autoPlay muted playsInline />
+
+        {hasCameraPermission === true && (
+          <div className="flex flex-col items-center justify-center p-8 text-center bg-green-100/50 text-green-800 rounded-lg h-48 border border-green-200">
+            <Camera className="h-12 w-12 mb-4" />
+            <h2 className="text-xl font-semibold">Kamera Aktif</h2>
+            <p className="text-muted-foreground">Siap untuk memindai ID siswa.</p>
+          </div>
+        )}
 
         {hasCameraPermission === false && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="h-48">
             <AlertTitle>Akses Kamera Diperlukan</AlertTitle>
             <AlertDescription>
               Mohon izinkan akses kamera untuk menggunakan fitur ini. Periksa pengaturan peramban Anda.
