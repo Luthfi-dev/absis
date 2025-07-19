@@ -85,6 +85,8 @@ function PrintPageContent() {
                     justify-content: flex-start;
                     align-items: center;
                     margin-left: 15px;
+                    transform-origin: top left;
+                    transform: scale(0.95);
                 }
             }
             @page {
