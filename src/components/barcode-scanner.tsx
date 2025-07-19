@@ -23,7 +23,7 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
   const animationFrameId = useRef<number>();
 
   const handleCheckIn = useCallback((encryptedStudentId: string) => {
-    if (!encryptedStudentId || encryptedStudentId.trim() === "") {
+    if (!encryptedStudentId || encryptedStudentId.trim() === "" || encryptedStudentId.length < 4) {
         return;
     }
     
@@ -101,7 +101,7 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
     };
 
     const startScan = () => {
-        if (video.HAVE_ENOUGH_DATA) {
+        if (video.readyState >= video.HAVE_ENOUGH_DATA) {
             tick();
         } else {
             video.oncanplay = () => {
