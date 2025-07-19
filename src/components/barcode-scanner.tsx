@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { ScanLine, AlertTriangle, CameraOff } from "lucide-react"
+import { ScanLine, AlertTriangle, CameraOff, Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
@@ -29,7 +29,8 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   
   const cleanupScanner = useCallback(() => {
     if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current)
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = undefined;
     }
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
@@ -77,24 +78,23 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   }, [onScanComplete]);
   
   useEffect(() => {
-    if (!isScanning) {
-      cleanupScanner();
-      return;
-    }
-
     let stream: MediaStream | null = null;
-    let animationFrame: number;
 
     const startScanner = async () => {
-      // Read camera mode from localStorage every time scanner starts
+      cleanupScanner(); // Ensure any previous stream is stopped
+      setHasCameraPermission(null);
+      setCameraError(null);
+
       const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'user';
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
         setHasCameraPermission(true);
-        setCameraError(null);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          videoRef.current.play().catch(e => {
+            console.error("Error playing video:", e);
+            setCameraError("Gagal memulai pratinjau kamera.");
+          });
           tick();
         }
       } catch (err: any) {
@@ -132,18 +132,26 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
       animationFrameId.current = requestAnimationFrame(tick);
     };
 
-    startScanner();
+    if (isScanning) {
+        startScanner();
+    } else {
+        cleanupScanner();
+    }
 
     return () => {
       cleanupScanner();
     };
   }, [isScanning, handleCheckIn, cleanupScanner]);
   
-  if (hasCameraPermission === null && isScanning) {
+  if (!isScanning) {
+    return null;
+  }
+    
+  if (hasCameraPermission === null) {
     return (
         <div className="flex flex-col items-center justify-center p-6 aspect-video bg-muted rounded-t-md">
-            <CameraOff className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Meminta izin kamera...</p>
+            <Loader2 className="h-12 w-12 text-muted-foreground mb-4 animate-spin" />
+            <p className="text-muted-foreground">Memulai kamera...</p>
         </div>
     )
   }
