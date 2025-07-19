@@ -2,9 +2,9 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { PinDialog } from '@/components/pin-dialog';
@@ -27,6 +27,8 @@ export default function ScannerPage() {
   const [pinDialogAction, setPinDialogAction] = useState<'open' | 'close'>('open');
   const router = useRouter();
 
+  const [isScanning, setIsScanning] = useState(false);
+
 
   useEffect(() => {
     const pinEnabled = localStorage.getItem('scanner-pin-enabled') === 'true';
@@ -44,6 +46,7 @@ export default function ScannerPage() {
     setLastScannedData(null);
     setIsVerifying(false);
     setCameraError(null);
+    setIsScanning(false); // Kembali ke halaman intro setelah selesai
   }, []);
   
   const handleScanComplete = useCallback((result: ScanResult) => {
@@ -87,13 +90,12 @@ export default function ScannerPage() {
     }
   };
 
-
   const renderContent = () => {
     if (!isUnlocked) {
         return (
             <div className="flex flex-col items-center justify-center text-center">
-                <Loader2 className="w-12 h-12 animate-spin mb-4" />
-                <p className="text-xl font-semibold">Memuat Halaman Absensi...</p>
+                <Loader2 className="w-12 h-12 animate-spin mb-4 text-white" />
+                <p className="text-xl font-semibold text-white">Memuat Halaman Absensi...</p>
                 <p className="text-muted-foreground">Menunggu otentikasi PIN.</p>
             </div>
         )
@@ -133,49 +135,77 @@ export default function ScannerPage() {
       );
     }
     
-    return (
-        <Card className="w-full h-full sm:w-full sm:h-auto sm:max-w-md mx-auto animate-in fade-in zoom-in-95 flex flex-col">
-            <CardContent className="p-0 relative flex-grow">
-            <BarcodeScanner 
-                onScanComplete={handleScanComplete}
-                setCameraError={setCameraError}
-                isPaused={isVerifying || !!scanResult}
-            />
-             { isVerifying && (
-                <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
-                    <Loader2 className="w-12 h-12 animate-spin" />
-                    <p className="text-xl font-semibold">Memverifikasi Absensi...</p>
-                    {lastScannedData && (
-                        <p className="text-sm bg-gray-700/50 px-2 py-1 rounded-md max-w-full truncate">
-                            {lastScannedData}
-                        </p>
-                    )}
+    if (isScanning) {
+        return (
+            <Card className="w-full h-full sm:w-full sm:h-auto sm:max-w-md mx-auto animate-in fade-in zoom-in-95 flex flex-col">
+                <CardContent className="p-0 relative flex-grow">
+                <BarcodeScanner 
+                    onScanComplete={handleScanComplete}
+                    setCameraError={setCameraError}
+                    isPaused={isVerifying || !!scanResult}
+                />
+                 { isVerifying && (
+                    <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
+                        <Loader2 className="w-12 h-12 animate-spin" />
+                        <p className="text-xl font-semibold">Memverifikasi Absensi...</p>
+                        {lastScannedData && (
+                            <p className="text-sm bg-gray-700/50 px-2 py-1 rounded-md max-w-full truncate">
+                                {lastScannedData}
+                            </p>
+                        )}
+                    </div>
+                )}
+                { cameraError && (
+                     <div className="absolute inset-0 bg-destructive/90 flex flex-col items-center justify-center text-destructive-foreground z-20 p-4 text-center">
+                        <Alert variant="destructive" className="border-0">
+                            <AlertTriangle className="h-6 w-6" />
+                            <AlertTitle className="text-xl">Error Kamera</AlertTitle>
+                            <AlertDescription className="text-base">
+                                {cameraError}
+                            </AlertDescription>
+                        </Alert>
+                     </div>
+                )}
+                </CardContent>
+                 <div className="p-4 bg-background border-t">
+                    <Button variant="outline" className="w-full" onClick={() => setIsScanning(false)}>
+                        <CameraOff className="mr-2 h-4 w-4" />
+                        Batalkan Pemindaian
+                    </Button>
                 </div>
-            )}
-            { cameraError && (
-                 <div className="absolute inset-0 bg-destructive/90 flex flex-col items-center justify-center text-destructive-foreground z-20 p-4 text-center">
-                    <Alert variant="destructive" className="border-0">
-                        <AlertTriangle className="h-6 w-6" />
-                        <AlertTitle className="text-xl">Error Kamera</AlertTitle>
-                        <AlertDescription className="text-base">
-                            {cameraError}
-                        </AlertDescription>
-                    </Alert>
-                 </div>
-            )}
+            </Card>
+          );
+    }
+
+    return (
+        <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95 text-center">
+            <CardHeader>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <ScanLine className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-3xl font-bold">Halaman Absensi</CardTitle>
+                <CardDescription>
+                    Halaman ini siap untuk memulai sesi absensi. Klik tombol di bawah untuk mengaktifkan kamera.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button size="lg" className="w-full" onClick={() => setIsScanning(true)}>
+                    <CameraOn className="mr-2 h-5 w-5" />
+                    Mulai Absensi
+                </Button>
             </CardContent>
         </Card>
-      );
+    )
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-900 p-0 sm:p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
        <audio ref={successAudioRef} src="https://app.maudigi.com/audio/diterima.mp3" preload="auto" />
        <audio ref={errorAudioRef} src="https://app.maudigi.com/audio/tidakterdaftar.mp3" preload="auto" />
 
         {isUnlocked && (
             <div className="absolute top-4 right-4 z-50">
-                <Button variant="destructive" onClick={handleClosePage} className="rounded-full h-12 w-12 p-0">
+                <Button variant="destructive" size="icon" onClick={handleClosePage} className="rounded-full h-12 w-12 p-0">
                     <X className="h-6 w-6" />
                     <span className="sr-only">Tutup Halaman Absensi</span>
                 </Button>
