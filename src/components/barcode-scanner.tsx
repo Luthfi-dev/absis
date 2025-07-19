@@ -14,7 +14,12 @@ import { Label } from "@/components/ui/label"
 import { CheckCircle, ScanLine, XCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 
-export function BarcodeScanner() {
+type BarcodeScannerProps = {
+  onScanComplete: () => void;
+  onInputChange: () => void;
+}
+
+export function BarcodeScanner({ onScanComplete, onInputChange }: BarcodeScannerProps) {
   const [studentId, setStudentId] = useState("")
   const [status, setStatus] = useState<"success" | "error" | "idle">("idle")
   const [message, setMessage] = useState("")
@@ -23,6 +28,8 @@ export function BarcodeScanner() {
     if (studentId.trim() === "") {
       setStatus("error")
       setMessage("Silakan masukkan ID siswa.")
+      onScanComplete();
+      setTimeout(() => setStatus("idle"), 3000);
       return
     }
 
@@ -35,11 +42,17 @@ export function BarcodeScanner() {
       setMessage(`ID Siswa ${studentId.toUpperCase()} tidak ditemukan.`)
     }
     setStudentId("")
+    onScanComplete();
 
     // Reset status after a few seconds
     setTimeout(() => {
         setStatus("idle")
     }, 3000)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange();
+    setStudentId(e.target.value);
   }
 
   return (
@@ -60,7 +73,7 @@ export function BarcodeScanner() {
             id="student-id"
             placeholder="contoh: S001"
             value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleCheckIn()}
             autoFocus
           />

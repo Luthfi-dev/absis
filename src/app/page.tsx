@@ -5,45 +5,76 @@ import { Button } from '@/components/ui/button';
 import { Camera, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function ScannerPage() {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
-  useEffect(() => {
-    const getCameraPermission = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setHasCameraPermission(false);
+  const getCameraPermission = useCallback(async (showToast = true) => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (showToast) {
         toast({
           variant: 'destructive',
           title: 'Perangkat Tidak Didukung',
           description: 'Peramban Anda tidak mendukung akses kamera.',
         });
-        return;
       }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error saat mengakses kamera:', error);
-        setHasCameraPermission(false);
+      setHasCameraPermission(false);
+      setIsCameraActive(false);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setHasCameraPermission(true);
+      setIsCameraActive(true);
+    } catch (error) {
+      console.error('Error saat mengakses kamera:', error);
+      setHasCameraPermission(false);
+      setIsCameraActive(false);
+      if (showToast) {
         toast({
           variant: 'destructive',
           title: 'Akses Kamera Ditolak',
           description: 'Mohon izinkan akses kamera di pengaturan peramban Anda untuk menggunakan fitur ini.',
         });
       }
-    };
-
-    getCameraPermission();
+    }
   }, [toast]);
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      setIsCameraActive(false);
+    }
+  };
+
+  const startCamera = () => {
+    if (!isCameraActive && hasCameraPermission) {
+      getCameraPermission(false);
+    }
+  };
+
+  useEffect(() => {
+    getCameraPermission();
+    // Cleanup on unmount
+    return () => {
+      stopCamera();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -62,15 +93,14 @@ export default function ScannerPage() {
             </div>
         )}
         
-        {/* The video element is required for the scanner to work, but we can hide it */}
         <video ref={videoRef} className="hidden" autoPlay muted playsInline />
 
         {hasCameraPermission === true && (
-          <div className="flex flex-col items-center justify-center p-8 text-center bg-green-100/50 text-green-800 rounded-lg h-48 border border-green-200">
-            <Camera className="h-12 w-12 mb-4" />
-            <h2 className="text-xl font-semibold">Kamera Aktif</h2>
-            <p className="text-muted-foreground">Siap untuk memindai ID siswa.</p>
-          </div>
+            <div className={`flex flex-col items-center justify-center p-8 text-center rounded-lg h-48 border transition-colors ${isCameraActive ? 'bg-green-100/50 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+                <Camera className={`h-12 w-12 mb-4 transition-colors ${isCameraActive ? 'text-green-500' : 'text-gray-400'}`} />
+                <h2 className="text-xl font-semibold">{isCameraActive ? 'Kamera Aktif' : 'Kamera Siaga'}</h2>
+                <p className="text-muted-foreground">{isCameraActive ? 'Siap untuk memindai ID siswa.' : 'Ketik untuk mengaktifkan kamera.'}</p>
+            </div>
         )}
 
         {hasCameraPermission === false && (
@@ -82,7 +112,7 @@ export default function ScannerPage() {
           </Alert>
         )}
         
-        <BarcodeScanner />
+        <BarcodeScanner onScanComplete={stopCamera} onInputChange={startCamera} />
       </div>
     </div>
   );
