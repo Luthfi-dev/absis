@@ -15,33 +15,26 @@ import Image from 'next/image';
 export default function ScannerPage() {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
+  const cleanupAndReset = useCallback(() => {
+    setIsScanning(false);
+    setScanResult(null);
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
     }
   }, []);
-
-  const cleanupAndReset = useCallback(() => {
-    stopCamera();
-    setIsScanning(false);
-    setScanResult(null);
-  }, [stopCamera]);
 
   const startCamera = useCallback(async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -55,16 +48,14 @@ export default function ScannerPage() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // The play() call is crucial for some browsers to start the video stream.
-        videoRef.current.play().catch(err => console.error("Video play failed:", err));
+        await videoRef.current.play();
       }
       setHasCameraPermission(true);
       setIsScanning(true);
       setScanResult(null);
-
+      
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         toast({
@@ -73,6 +64,7 @@ export default function ScannerPage() {
         });
         cleanupAndReset();
       }, 60000); // 1 minute
+
     } catch (error) {
       console.error('Error saat mengakses kamera:', error);
       setHasCameraPermission(false);
@@ -94,8 +86,12 @@ export default function ScannerPage() {
 
   const handleScanComplete = (result: ScanResult) => {
     setIsScanning(false);
-    stopCamera();
     setScanResult(result);
+     if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
     if (result.status === 'success' && audioRef.current) {
       audioRef.current.play();
     }
@@ -106,20 +102,11 @@ export default function ScannerPage() {
 
   const renderContent = () => {
     if (isScanning) {
-        if (hasCameraPermission === false) {
-             return (
-                <Alert variant="destructive" className="max-w-md mx-auto">
-                    <AlertTitle>Akses Kamera Diperlukan</AlertTitle>
-                    <AlertDescription>
-                    Mohon izinkan akses kamera untuk menggunakan fitur ini. Periksa pengaturan peramban Anda.
-                    </AlertDescription>
-                </Alert>
-             )
-        }
       return (
         <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
           <CardContent className="p-0 relative">
-             <video ref={videoRef} className="w-full aspect-video rounded-t-md bg-black" autoPlay muted playsInline />
+            {/* The video element MUST be in the DOM for the scanner to work */}
+            <video ref={videoRef} className="w-full aspect-video rounded-t-md bg-black" autoPlay muted playsInline />
             <div className="p-6">
               <BarcodeScanner onScanComplete={handleScanComplete} videoRef={videoRef} isScanning={isScanning}/>
             </div>
@@ -182,7 +169,12 @@ export default function ScannerPage() {
                     Mulai Absensi
                 </Button>
                 {hasCameraPermission === false && (
-                    <p className="text-red-500 pt-2 text-sm">Akses kamera ditolak. Mohon aktifkan di pengaturan peramban Anda.</p>
+                  <Alert variant="destructive" className="text-left">
+                      <AlertTitle>Akses Kamera Ditolak</AlertTitle>
+                      <AlertDescription>
+                        Anda perlu mengizinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.
+                      </AlertDescription>
+                  </Alert>
                 )}
             </div>
         </CardContent>
