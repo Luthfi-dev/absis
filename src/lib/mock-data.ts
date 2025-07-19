@@ -1,8 +1,11 @@
 export type Student = {
-  id: string;
+  id: string; // Internal unique ID
+  studentId: string; // Auto-generated e.g., S001
   name: string;
-  studentId: string;
-  email: string;
+  nis: string;
+  nisn: string;
+  kelas: string;
+  nomorOrangTua?: string;
   avatar: string;
 };
 
@@ -29,11 +32,11 @@ export type AttendanceRecord = {
 };
 
 export const mockStudents: Student[] = [
-  { id: '1', name: 'Alice Johnson', studentId: 'S001', email: 'alice.j@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
-  { id: '2', name: 'Bob Williams', studentId: 'S002', email: 'bob.w@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-  { id: '3', name: 'Charlie Brown', studentId: 'S003', email: 'charlie.b@example.com', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
-  { id: '4', name: 'Diana Miller', studentId: 'S004', email: 'diana.m@example.com', avatar: 'https://i.pravatar.cc/150?u=a048581f4e29026701d' },
-  { id: '5', name: 'Ethan Davis', studentId: 'S005', email: 'ethan.d@example.com', avatar: 'https://i.pravatar.cc/150?u=a092581f4e29026705d' },
+  { id: '1', name: 'Alice Johnson', studentId: 'S001', nis: '212210001', nisn: '0011223344', kelas: '12 IPA 1', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
+  { id: '2', name: 'Bob Williams', studentId: 'S002', nis: '212210002', nisn: '0022334455', kelas: '12 IPA 1', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
+  { id: '3', name: 'Charlie Brown', studentId: 'S003', nis: '212210003', nisn: '0033445566', kelas: '11 IPS 2', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
+  { id: '4', name: 'Diana Miller', studentId: 'S004', nis: '212210004', nisn: '0044556677', kelas: '11 IPS 2', avatar: 'https://i.pravatar.cc/150?u=a048581f4e29026701d' },
+  { id: '5', name: 'Ethan Davis', studentId: 'S005', nis: '212210005', nisn: '0055667788', kelas: '10 A', avatar: 'https://i.pravatar.cc/150?u=a092581f4e29026705d' },
 ];
 
 export const mockTeachers: Teacher[] = [

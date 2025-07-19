@@ -73,10 +73,10 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                      <div className="flex-1 space-y-2">
                         <p className="text-xs opacity-90">Nama Lengkap</p>
                         <p className="font-medium">{student.name}</p>
-                        <p className="text-xs opacity-90">ID Siswa</p>
-                        <p className="font-medium">{student.studentId}</p>
-                        <p className="text-xs opacity-90">Email</p>
-                        <p className="font-medium text-sm">{student.email}</p>
+                        <p className="text-xs opacity-90">ID Siswa / NIS</p>
+                        <p className="font-medium text-sm">{student.studentId} / {student.nis}</p>
+                        <p className="text-xs opacity-90">Kelas</p>
+                        <p className="font-medium">{student.kelas}</p>
                      </div>
                      <div className="flex flex-col items-center gap-2">
                         <div className="bg-white p-2 rounded-md shadow-md">

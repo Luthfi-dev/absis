@@ -41,7 +41,12 @@ export function StudentTable() {
   const [students, setStudents] = useState<Student[]>(() => {
     if (typeof window !== 'undefined') {
       const savedStudents = localStorage.getItem('mockStudents');
-      return savedStudents ? JSON.parse(savedStudents) : mockStudents;
+      // Initialize with mockStudents if localStorage is empty
+      if (!savedStudents) {
+        localStorage.setItem('mockStudents', JSON.stringify(mockStudents));
+        return mockStudents;
+      }
+      return JSON.parse(savedStudents);
     }
     return mockStudents;
   });
@@ -50,11 +55,6 @@ export function StudentTable() {
   const router = useRouter()
 
   useEffect(() => {
-    // Save initial mock data to localStorage if not already present
-    if (typeof window !== 'undefined' && !localStorage.getItem('mockStudents')) {
-      localStorage.setItem('mockStudents', JSON.stringify(mockStudents));
-    }
-
     const handleStudentAdded = () => {
         const savedStudents = localStorage.getItem('mockStudents');
         if (savedStudents) {
@@ -156,7 +156,8 @@ export function StudentTable() {
               </TableHead>
               <TableHead>Nama</TableHead>
               <TableHead className="hidden md:table-cell">ID Siswa</TableHead>
-              <TableHead className="hidden sm:table-cell">Email</TableHead>
+              <TableHead className="hidden sm:table-cell">NISN</TableHead>
+              <TableHead className="hidden sm:table-cell">Kelas</TableHead>
               <TableHead>
                 <span className="sr-only">Aksi</span>
               </TableHead>
@@ -184,7 +185,8 @@ export function StudentTable() {
                 <TableCell className="hidden md:table-cell">
                   <Badge variant="outline">{student.studentId}</Badge>
                 </TableCell>
-                <TableCell className="hidden sm:table-cell">{student.email}</TableCell>
+                <TableCell className="hidden sm:table-cell">{student.nisn}</TableCell>
+                <TableCell className="hidden sm:table-cell">{student.kelas}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Loader2, PlusCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -27,11 +26,32 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import type { Student } from "@/lib/mock-data"
+
+const getStudentsFromStorage = (): Student[] => {
+    if (typeof window === 'undefined') return [];
+    const savedStudents = localStorage.getItem('mockStudents');
+    return savedStudents ? JSON.parse(savedStudents) : [];
+}
 
 const studentSchema = z.object({
-  name: z.string().min(3, "Nama harus memiliki setidaknya 3 karakter."),
-  studentId: z.string().min(1, "ID Siswa tidak boleh kosong."),
-  email: z.string().email("Format email tidak valid."),
+  namaLengkap: z.string().min(3, "Nama lengkap harus memiliki setidaknya 3 karakter."),
+  nis: z.string().min(1, "NIS tidak boleh kosong."),
+  nisn: z.string().min(1, "NISN tidak boleh kosong."),
+  kelas: z.string().min(1, "Kelas tidak boleh kosong."),
+  nomorOrangTua: z.string().optional(),
+}).refine((data) => {
+    const students = getStudentsFromStorage();
+    return !students.some(s => s.nis === data.nis);
+}, {
+    message: "NIS ini sudah terdaftar.",
+    path: ["nis"],
+}).refine((data) => {
+    const students = getStudentsFromStorage();
+    return !students.some(s => s.nisn === data.nisn);
+}, {
+    message: "NISN ini sudah terdaftar.",
+    path: ["nisn"],
 })
 
 type StudentFormValues = z.infer<typeof studentSchema>
@@ -42,6 +62,18 @@ const dispatchStudentAddedEvent = () => {
     window.dispatchEvent(new Event('studentAdded'));
 };
 
+const generateNextStudentId = (students: Student[]): string => {
+    if (!students.length) return 'S001';
+    const lastStudent = students.reduce((latest, current) => {
+        const latestNum = parseInt(latest.studentId.substring(1), 10);
+        const currentNum = parseInt(current.studentId.substring(1), 10);
+        return currentNum > latestNum ? current : latest;
+    });
+    const lastIdNum = parseInt(lastStudent.studentId.substring(1), 10);
+    const nextIdNum = lastIdNum + 1;
+    return `S${String(nextIdNum).padStart(3, '0')}`;
+}
+
 
 export function AddStudentDialog() {
   const [isOpen, setIsOpen] = useState(false)
@@ -50,25 +82,37 @@ export function AddStudentDialog() {
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
-      name: "",
-      studentId: "",
-      email: "",
+      namaLengkap: "",
+      nis: "",
+      nisn: "",
+      kelas: "",
+      nomorOrangTua: "",
     },
   })
 
   const onSubmit = (data: StudentFormValues) => {
+    const students = getStudentsFromStorage();
+    const newStudentId = generateNextStudentId(students);
+    
     // In a real application, you would make an API call here.
     // For this mock, we'll just show a success message.
     console.log("New student data:", data)
     toast({
       title: "Siswa Berhasil Ditambahkan",
-      description: `${data.name} telah ditambahkan ke dalam daftar.`,
+      description: `${data.namaLengkap} telah ditambahkan dengan ID ${newStudentId}.`,
     })
 
-    // This is a mock way to update the table.
-    // In a real app, you'd likely use a state management library or refetch data.
-    const newStudent = { ...data, id: Date.now().toString(), avatar: `https://i.pravatar.cc/150?u=${data.studentId}` };
-    const students = JSON.parse(localStorage.getItem('mockStudents') || '[]');
+    const newStudent: Student = { 
+        id: Date.now().toString(), 
+        studentId: newStudentId,
+        name: data.namaLengkap,
+        nis: data.nis,
+        nisn: data.nisn,
+        kelas: data.kelas,
+        nomorOrangTua: data.nomorOrangTua,
+        avatar: `https://i.pravatar.cc/150?u=${newStudentId}` 
+    };
+
     localStorage.setItem('mockStudents', JSON.stringify([...students, newStudent]));
     dispatchStudentAddedEvent();
 
@@ -89,14 +133,14 @@ export function AddStudentDialog() {
         <DialogHeader>
           <DialogTitle>Tambah Siswa Baru</DialogTitle>
           <DialogDescription>
-            Isi detail di bawah ini untuk menambahkan siswa baru.
+            Isi detail di bawah ini untuk menambahkan siswa baru. ID Siswa akan dibuat otomatis.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="namaLengkap"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nama Lengkap</FormLabel>
@@ -109,12 +153,12 @@ export function AddStudentDialog() {
             />
             <FormField
               control={form.control}
-              name="studentId"
+              name="nis"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID Siswa</FormLabel>
+                  <FormLabel>NIS</FormLabel>
                   <FormControl>
-                    <Input placeholder="cth. S006" {...field} />
+                    <Input placeholder="cth. 212210123" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,12 +166,38 @@ export function AddStudentDialog() {
             />
             <FormField
               control={form.control}
-              name="email"
+              name="nisn"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>NISN</FormLabel>
                   <FormControl>
-                    <Input placeholder="cth. budi@example.com" {...field} />
+                    <Input placeholder="cth. 0012345678" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="kelas"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kelas</FormLabel>
+                  <FormControl>
+                    <Input placeholder="cth. 10 IPA 1" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="nomorOrangTua"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nomor Orang Tua (Opsional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="cth. 081234567890" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
