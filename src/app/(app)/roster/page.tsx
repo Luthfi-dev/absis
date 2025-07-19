@@ -72,7 +72,7 @@ export default function RosterPage() {
                            {day}
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="flex-grow">
+                    <CardContent className="flex-grow flex flex-col">
                         {entries.length > 0 ? (
                             <ul className="space-y-4">
                                 {entries.map(entry => (
@@ -84,8 +84,12 @@ export default function RosterPage() {
                                 ))}
                             </ul>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-center text-muted-foreground p-4">
-                                <p>Tidak ada jadwal untuk hari ini.</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4 border-2 border-dashed rounded-lg">
+                                <p className="mb-4">Belum ada jadwal untuk hari ini.</p>
+                                <Button variant="outline" size="sm">
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Tambah Pelajaran
+                                </Button>
                             </div>
                         )}
                     </CardContent>
