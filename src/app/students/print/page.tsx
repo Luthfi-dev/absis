@@ -79,6 +79,7 @@ function PrintPageContent() {
                 }
                 .print-item-container {
                     page-break-inside: avoid;
+                    margin-left: 15px;
                 }
                 .print-card-wrapper {
                     display: flex;
