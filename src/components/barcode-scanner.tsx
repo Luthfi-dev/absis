@@ -33,8 +33,7 @@ export function BarcodeScanner({ onScanComplete, videoRef, isScanning }: Barcode
       // Using Base64 for simulation.
       studentId = atob(encryptedStudentId);
     } catch (e) {
-      console.error("Failed to decode QR code:", e);
-      // Don't show an error to the user, just ignore invalid QR codes.
+      // Silently ignore invalid QR codes, as they can be picked up by mistake.
       return;
     }
 
