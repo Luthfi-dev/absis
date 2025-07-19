@@ -26,15 +26,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   const animationFrameId = useRef<number>()
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [cameraMode, setCameraMode] = useState<CameraFacingMode>('user')
   
-  useEffect(() => {
-    const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode | null
-    if (savedMode) {
-      setCameraMode(savedMode)
-    }
-  }, [])
-
   const cleanupScanner = useCallback(() => {
     if (animationFrameId.current) {
       cancelAnimationFrame(animationFrameId.current)
@@ -94,8 +86,10 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     let animationFrame: number;
 
     const startScanner = async () => {
+      // Read camera mode from localStorage every time scanner starts
+      const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'user';
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
         setHasCameraPermission(true);
         setCameraError(null);
         if (videoRef.current) {
@@ -135,7 +129,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
           }
         }
       }
-      animationFrame = requestAnimationFrame(tick);
+      animationFrameId.current = requestAnimationFrame(tick);
     };
 
     startScanner();
@@ -143,7 +137,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     return () => {
       cleanupScanner();
     };
-  }, [isScanning, cameraMode, handleCheckIn, cleanupScanner]);
+  }, [isScanning, handleCheckIn, cleanupScanner]);
   
   if (hasCameraPermission === null && isScanning) {
     return (
