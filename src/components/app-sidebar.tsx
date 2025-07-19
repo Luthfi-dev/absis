@@ -14,7 +14,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import {
   CheckSquare,
@@ -22,6 +21,7 @@ import {
   LogOut,
   ScanLine,
   Users,
+  Database,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -33,6 +33,7 @@ export function AppSidebar() {
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/students", label: "Students", icon: Users },
     { href: "/attendance", label: "Attendance", icon: ScanLine },
+    { href: "/master-data", label: "Master Data", icon: Database },
   ]
 
   return (
