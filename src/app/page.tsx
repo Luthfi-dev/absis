@@ -54,7 +54,8 @@ export default function ScannerPage() {
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Specifically request the front camera
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -75,10 +76,11 @@ export default function ScannerPage() {
     } catch (error) {
       console.error('Error saat mengakses kamera:', error);
       setHasCameraPermission(false);
+      setIsScanning(false); // Make sure to stop scanning state on error
       toast({
         variant: 'destructive',
         title: 'Akses Kamera Ditolak',
-        description: 'Mohon izinkan akses kamera di pengaturan peramban Anda.',
+        description: 'Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.',
       });
     }
   }, [toast, cleanupAndReset]);
@@ -89,15 +91,13 @@ export default function ScannerPage() {
       try {
         if (navigator.permissions) {
           const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
-          if (permissions.state === 'granted') {
-            setHasCameraPermission(true);
-          } else if (permissions.state === 'denied') {
-            setHasCameraPermission(false);
-          } else {
-              setHasCameraPermission(null);
-          }
+          setHasCameraPermission(permissions.state !== 'denied');
+          permissions.onchange = () => {
+            setHasCameraPermission(permissions.state !== 'denied');
+          };
         } else {
-            setHasCameraPermission(null); // Fallback for browsers that don't support Permissions API
+          // Fallback for browsers that don't support Permissions API, we'll find out on startCamera
+           setHasCameraPermission(true);
         }
       } catch (error) {
         // This can happen on non-secure contexts or unsupported browsers
@@ -114,11 +114,13 @@ export default function ScannerPage() {
   }, [cleanupAndReset]);
 
   const handleScanComplete = (result: ScanResult) => {
+    setIsScanning(false);
+    stopCamera();
     setScanResult(result);
     if (result.status === 'success' && audioRef.current) {
       audioRef.current.play();
     }
-    // Stop camera and reset after showing result for 5 seconds
+    // Reset after showing result for 5 seconds
     setTimeout(() => {
       cleanupAndReset();
     }, 5000);
@@ -137,7 +139,7 @@ export default function ScannerPage() {
              )
         }
       return (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
           <CardContent className="p-0">
              <video ref={videoRef} className="w-full aspect-video rounded-t-md bg-black" autoPlay muted playsInline />
             <div className="p-6">
@@ -181,13 +183,21 @@ export default function ScannerPage() {
     }
 
     return (
-       <Card className="w-full max-w-lg mx-auto overflow-hidden">
+       <Card className="w-full max-w-lg mx-auto overflow-hidden shadow-2xl">
         <CardContent className="p-0 text-center">
             <div className="p-8 bg-primary/10">
-                 <Image src="https://placehold.co/400x300.png" alt="Ilustrasi Absensi" width={400} height={300} className="mx-auto rounded-lg" data-ai-hint="student scan"/>
+                 <Image 
+                    src="https://placehold.co/400x300.png" 
+                    alt="Ilustrasi Absensi" 
+                    width={400} 
+                    height={300} 
+                    className="mx-auto rounded-lg transition-transform duration-500 ease-in-out hover:scale-105" 
+                    data-ai-hint="student scan"
+                    priority
+                />
             </div>
             <div className="p-8 space-y-4">
-                <h1 className="text-3xl font-bold font-headline">Selamat Datang di AttendEase</h1>
+                <h1 className="text-3xl font-bold font-headline animate-pulse-slow">Selamat Datang di AttendEase</h1>
                 <p className="text-muted-foreground">Silakan klik tombol di bawah untuk memulai sesi absensi Anda. Pastikan kartu pelajar Anda sudah siap!</p>
                 <Button size="lg" className="h-14 text-xl w-full" onClick={startCamera} disabled={hasCameraPermission === false}>
                     <Camera className="mr-4 h-8 w-8" />
