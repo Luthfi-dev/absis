@@ -27,16 +27,19 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { mockSubjects, mockTeachers, mockSchedule, type RosterEntry } from "@/lib/mock-data"
+import { mockSubjects, mockTeachers, type RosterEntry } from "@/lib/mock-data"
 
 const daysOfWeek = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-const timeSlots = [...new Set(mockSchedule.map(item => item.time))];
 
 const rosterEntrySchema = z.object({
   day: z.string().min(1, "Hari harus dipilih."),
-  time: z.string().min(1, "Waktu harus dipilih."),
+  startTime: z.string().min(1, "Waktu mulai harus diisi."),
+  endTime: z.string().min(1, "Waktu selesai harus diisi."),
   subjectId: z.string().min(1, "Mata pelajaran harus dipilih."),
   teacherId: z.string().min(1, "Guru harus dipilih."),
+}).refine(data => data.endTime > data.startTime, {
+    message: "Waktu selesai harus setelah waktu mulai.",
+    path: ["endTime"],
 });
 
 type RosterFormValues = z.infer<typeof rosterEntrySchema>
@@ -56,7 +59,8 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
     resolver: zodResolver(rosterEntrySchema),
     defaultValues: {
       day: day || "",
-      time: "",
+      startTime: "",
+      endTime: "",
       subjectId: "",
       teacherId: "",
     },
@@ -66,7 +70,8 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
     if (isOpen) {
         form.reset({
             day: day || "",
-            time: "",
+            startTime: "",
+            endTime: "",
             subjectId: "",
             teacherId: "",
         })
@@ -77,7 +82,10 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
   const onSubmit = (data: RosterFormValues) => {
     const newEntry: RosterEntry = {
         id: `r-${Date.now()}`,
-        ...data,
+        day: data.day,
+        time: `${data.startTime} - ${data.endTime}`,
+        subjectId: data.subjectId,
+        teacherId: data.teacherId,
     }
     
     onRosterAdded(newEntry);
@@ -129,26 +137,34 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Waktu</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Waktu Mulai</FormLabel>
                     <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih slot waktu..." />
-                        </SelectTrigger>
+                        <Input type="time" {...field} />
                     </FormControl>
-                    <SelectContent>
-                        {timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Waktu Selesai</FormLabel>
+                    <FormControl>
+                        <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
              <FormField
               control={form.control}
               name="subjectId"
