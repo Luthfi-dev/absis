@@ -59,9 +59,17 @@ function PrintPageContent() {
         <style jsx global>{`
             @media print {
                 body, .print-container {
-                    background-color: #fff !important;
+                    background-color: #ffffff !important;
+                    background-image: none !important;
                     margin: 0;
                     padding: 0;
+                }
+                main {
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                .print-container > header {
+                    display: none !important;
                 }
                 .print-area {
                     display: flex;

@@ -40,7 +40,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
     const encryptedStudentId = typeof window !== 'undefined' ? btoa(student.id) : '';
     const profileUrl = origin ? `${origin}/profile/${btoa(student.id)}` : '';
 
-    const cardBaseClasses = "w-[21rem] h-[13.125rem] rounded-xl text-white shadow-lg transition-transform duration-700 preserve-3d"
+    const cardBaseClasses = "w-[21rem] h-[13.125rem] rounded-xl text-white shadow-lg transition-transform duration-700 preserve-3d print-color-adjust-exact"
     const cardContentClasses = "absolute inset-0 w-full h-full p-4 backface-hidden"
 
     return (
@@ -58,15 +58,15 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                 {/* Front Side */}
                 <div className={cn(cardContentClasses, "z-10 flex flex-col justify-between", isPrintMode && initialSide === 'back' && 'hidden' )}>
                     <header className="flex justify-between items-start">
-                        <div className="font-bold text-xl">Kartu Siswa</div>
+                        <div className="font-bold text-2xl">Kartu Siswa</div>
                         <CheckSquare className="w-8 h-8"/>
                     </header>
                     <footer className="flex items-end gap-3">
                         <div className="bg-white p-1 rounded-md shadow-md">
-                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={106} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={116} bgColor="#ffffff" fgColor="#000000" level="L" />}
                         </div>
                         <div className="flex-1 text-right overflow-hidden">
-                            <p className="font-semibold text-xl leading-tight truncate">{student.name}</p>
+                            <p className="font-semibold text-2xl leading-tight truncate">{student.name}</p>
                             <p className="text-sm opacity-90">{student.studentId}</p>
                         </div>
                     </footer>
@@ -76,8 +76,8 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                 <div className={cn(
                     cardContentClasses, 
                     "flex flex-col",
-                    !isPrintMode && "rotate-y-180",
-                    isPrintMode && initialSide === 'front' && 'hidden'
+                    !isFlipped && !isPrintMode && "rotate-y-180",
+                    isPrintMode && initialSide === 'front' && 'hidden',
                 )}>
                     <div className="flex-1 flex items-center justify-between gap-4">
                         <div className="flex-1 space-y-1 overflow-hidden">
