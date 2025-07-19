@@ -1,3 +1,4 @@
+
 import { mockStudents, mockAttendance } from "@/lib/mock-data"
 import {
   Card,
@@ -32,8 +33,9 @@ function getStatusVariant(status: 'Hadir' | 'Absen' | 'Terlambat'): StatusVarian
 }
 
 export default function StudentRecordsPage({ params }: { params: { studentId: string } }) {
-  const student = mockStudents.find((s) => s.id === params.studentId)
-  const records = mockAttendance[params.studentId] || []
+  const studentId = atob(params.studentId) // Decrypt the ID from Base64
+  const student = mockStudents.find((s) => s.id === studentId)
+  const records = mockAttendance[studentId] || []
 
   if (!student) {
     notFound()

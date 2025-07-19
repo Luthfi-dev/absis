@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -203,7 +204,7 @@ export function StudentTable() {
                             Lihat Kartu Digital
                         </DropdownMenuItem>
                        </StudentCardDialog>
-                      <DropdownMenuItem onSelect={() => router.push(`/records/${student.id}`)}>
+                      <DropdownMenuItem onSelect={() => router.push(`/records/${btoa(student.id)}`)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Lihat Catatan
                       </DropdownMenuItem>
