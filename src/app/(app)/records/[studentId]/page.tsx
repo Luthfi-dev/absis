@@ -1,0 +1,95 @@
+import { mockStudents, mockAttendance } from "@/lib/mock-data"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { notFound } from "next/navigation"
+
+type StatusVariant = "default" | "secondary" | "destructive" | "outline"
+
+function getStatusVariant(status: 'Present' | 'Absent' | 'Late'): StatusVariant {
+    switch (status) {
+        case 'Present':
+            return 'default'
+        case 'Late':
+            return 'outline'
+        case 'Absent':
+            return 'destructive'
+    }
+}
+
+export default function StudentRecordsPage({ params }: { params: { studentId: string } }) {
+  const student = mockStudents.find((s) => s.id === params.studentId)
+  const records = mockAttendance[params.studentId] || []
+
+  if (!student) {
+    notFound()
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center gap-4">
+        <Avatar className="h-20 w-20 border-2 border-primary">
+          <AvatarImage src={student.avatar} />
+          <AvatarFallback className="text-2xl">{student.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-headline">{student.name}</h1>
+          <p className="text-muted-foreground">Student ID: {student.studentId}</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Attendance History</CardTitle>
+          <CardDescription>
+            A log of all attendance records for {student.name}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead className="text-right">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {records.length > 0 ? (
+                records.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{record.date}</TableCell>
+                    <TableCell className="font-medium">{record.subject}</TableCell>
+                    <TableCell className="text-right">
+                        <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">
+                    No attendance records found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
