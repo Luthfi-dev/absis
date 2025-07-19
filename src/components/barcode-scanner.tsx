@@ -25,6 +25,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationFrameId = useRef<number>()
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
+  const [cameraError, setCameraError] = useState<string | null>(null)
   const [cameraMode, setCameraMode] = useState<CameraFacingMode>('user')
   
   useEffect(() => {
@@ -84,6 +85,11 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   }, [onScanComplete]);
   
   useEffect(() => {
+    if (!isScanning) {
+      cleanupScanner();
+      return;
+    }
+
     let stream: MediaStream | null = null;
     let animationFrame: number;
 
@@ -91,14 +97,20 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } });
         setHasCameraPermission(true);
+        setCameraError(null);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play();
           tick();
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error accessing camera:", err);
         setHasCameraPermission(false);
+        if (err.name === 'NotAllowedError') {
+            setCameraError("Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.");
+        } else {
+            setCameraError("Gagal memulai kamera. Pastikan tidak digunakan oleh aplikasi lain atau coba kamera lain di pengaturan.");
+        }
       }
     };
 
@@ -126,17 +138,10 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
       animationFrame = requestAnimationFrame(tick);
     };
 
-    if (isScanning) {
-      startScanner();
-    } else {
-      cleanupScanner();
-    }
+    startScanner();
 
     return () => {
-      if(stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      cancelAnimationFrame(animationFrame);
+      cleanupScanner();
     };
   }, [isScanning, cameraMode, handleCheckIn, cleanupScanner]);
   
@@ -149,14 +154,14 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     )
   }
 
-  if (hasCameraPermission === false) {
+  if (hasCameraPermission === false && cameraError) {
     return (
         <div className="p-6 aspect-video bg-destructive/10 rounded-t-md">
             <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Akses Kamera Diperlukan</AlertTitle>
+                <AlertTitle>Error Kamera</AlertTitle>
                 <AlertDescription>
-                    Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.
+                    {cameraError}
                 </AlertDescription>
             </Alert>
         </div>
