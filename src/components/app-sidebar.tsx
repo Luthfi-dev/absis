@@ -24,6 +24,7 @@ import {
   Database,
   Settings,
   ClipboardCheck,
+  CalendarDays,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -39,6 +40,7 @@ export function AppSidebar() {
   const menuItems = [
     { href: "/dashboard", label: "Dasbor", icon: Home },
     { href: "/students", label: "Siswa", icon: Users },
+    { href: "/roster", label: "Roster Kelas", icon: CalendarDays },
     { href: "/attendance", label: "Kehadiran", icon: ClipboardCheck },
     { href: "/master-data", label: "Master Data", icon: Database },
     { href: "/settings", label: "Pengaturan", icon: Settings },
@@ -82,7 +84,7 @@ export function AppSidebar() {
           </div>
         </div>
          <Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground">
-            <Link href="/login">
+            <Link href="/">
                 <LogOut className="mr-2 h-4 w-4" />
                 Keluar
             </Link>

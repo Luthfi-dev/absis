@@ -16,6 +16,18 @@ export type Teacher = {
   email: string;
 }
 
+export type Class = {
+  id: string;
+  name: string;
+  waliKelas: string;
+}
+
+export type Subject = {
+  id: string;
+  name: string;
+  kode: string;
+}
+
 export type ScheduleItem = {
   id: string;
   time: string;
@@ -23,6 +35,19 @@ export type ScheduleItem = {
   status: 'Sedang Berlangsung' | 'Akan Datang' | 'Selesai';
   teacher: string;
 };
+
+export type RosterEntry = {
+    id: string;
+    day: string;
+    time: string;
+    subjectId: string;
+    teacherId: string;
+}
+
+export type Roster = {
+    [classId: string]: RosterEntry[];
+}
+
 
 export type AttendanceRecord = {
   id: string;
@@ -44,7 +69,21 @@ export const mockTeachers: Teacher[] = [
   { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com' },
   { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com' },
   { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com' },
-]
+];
+
+export const mockClasses: Class[] = [
+  { id: 'k1', name: '12 IPA 1', waliKelas: 'Bpk. Smith' },
+  { id: 'k2', name: '11 IPS 2', waliKelas: 'Ibu Jones' },
+  { id: 'k3', name: '10 A', waliKelas: 'Dr. Quantum' },
+];
+
+export const mockSubjects: Subject[] = [
+  { id: 'm1', name: 'Matematika 101', kode: 'MTK-101' },
+  { id: 'm2', name: 'Sejarah Seni', kode: 'SS-201' },
+  { id: 'm3', name: 'Fisika untuk Pemula', kode: 'FIS-101' },
+  { id: 'm4', name: 'Lokakarya Penulisan Kreatif', kode: 'KRT-301' },
+  { id: 'm5', name: 'Biologi Sel', kode: 'BIO-102' },
+];
 
 export const mockSchedule: ScheduleItem[] = [
   { id: 'c1', time: '09:00 - 10:30', subject: 'Matematika 101', status: 'Sedang Berlangsung', teacher: 'Bpk. Smith' },
@@ -52,6 +91,19 @@ export const mockSchedule: ScheduleItem[] = [
   { id: 'c3', time: '13:30 - 15:00', subject: 'Fisika untuk Pemula', status: 'Akan Datang', teacher: 'Dr. Quantum' },
   { id: 'c4', time: '15:30 - 17:00', subject: 'Lokakarya Penulisan Kreatif', status: 'Akan Datang', teacher: 'Prof. Verse' },
 ];
+
+export const mockRoster: Roster = {
+    'k1': [ // 12 IPA 1
+        { id: 'r1-1', day: 'Senin', time: '07:00 - 08:30', subjectId: 'm1', teacherId: 't1' },
+        { id: 'r1-2', day: 'Senin', time: '08:30 - 10:00', subjectId: 'm3', teacherId: 't3' },
+        { id: 'r1-3', day: 'Selasa', time: '09:00 - 10:30', subjectId: 'm5', teacherId: 't3' },
+    ],
+    'k2': [ // 11 IPS 2
+        { id: 'r2-1', day: 'Senin', time: '07:00 - 08:30', subjectId: 'm2', teacherId: 't2' },
+        { id: 'r2-2', day: 'Rabu', time: '10:00 - 11:30', subjectId: 'm4', teacherId: 't4' },
+    ]
+}
+
 
 export const mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [
