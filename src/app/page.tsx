@@ -4,17 +4,15 @@ import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
 import { Camera, LogIn, UserCheck, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 export default function ScannerPage() {
-  const { toast } = useToast();
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const successAudioRef = useRef<HTMLAudioElement>(null);
+  const errorAudioRef = useRef<HTMLAudioElement>(null);
   
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -31,15 +29,17 @@ export default function ScannerPage() {
   const handleScanComplete = useCallback((result: ScanResult) => {
     setLastScannedData(result.scannedData);
     setIsVerifying(true);
+    setIsScanning(false);
 
     // Simulate backend verification
     setTimeout(() => {
-        setIsScanning(false);
         setIsVerifying(false);
         setScanResult(result);
         
-        if (result.status === 'success' && audioRef.current) {
-          audioRef.current.play().catch(err => console.error("Gagal memutar suara:", err));
+        if (result.status === 'success') {
+          successAudioRef.current?.play().catch(err => console.error("Gagal memutar suara sukses:", err));
+        } else {
+          errorAudioRef.current?.play().catch(err => console.error("Gagal memutar suara error:", err));
         }
         
         // Show result for 5 seconds then reset
@@ -53,6 +53,11 @@ export default function ScannerPage() {
   const handleStartScan = async () => {
     resetState();
     setIsScanning(true);
+  }
+
+  const handleCancelScan = () => {
+    setIsScanning(false);
+    resetState();
   }
 
   const renderContent = () => {
@@ -73,6 +78,11 @@ export default function ScannerPage() {
                     </p>
                 </div>
             )}
+             {isScanning && (
+                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+                    <Button variant="destructive" onClick={handleCancelScan}>Batalkan</Button>
+                </div>
+             )}
           </CardContent>
         </Card>
       );
@@ -102,6 +112,7 @@ export default function ScannerPage() {
             ) : (
                 <>
                  <XCircle className="w-24 h-24 text-red-500" />
+                 <h2 className="text-xl font-bold text-destructive">Absensi Gagal</h2>
                  <p className="text-red-600 font-semibold">{scanResult.message}</p>
                  <p className="text-sm text-muted-foreground">{scanResult.timestamp}</p>
                 </>
@@ -140,7 +151,8 @@ export default function ScannerPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-       <audio ref={audioRef} src="/success.mp3" preload="auto" />
+       <audio ref={successAudioRef} src="/success.mp3" preload="auto" />
+       <audio ref={errorAudioRef} src="/error.mp3" preload="auto" />
       <div className="absolute top-4 right-4 z-10">
         <Button asChild variant="outline" className="bg-background">
           <Link href="/login">

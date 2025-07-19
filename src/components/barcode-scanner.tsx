@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback, useState } from "react"
 import { ScanLine, AlertTriangle } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
-import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 
 export type ScanResult = {
@@ -21,30 +20,25 @@ type BarcodeScannerProps = {
 }
 
 export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerProps) {
-  const { toast } = useToast()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationFrameId = useRef<number>()
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const stopCamera = useCallback(() => {
+  const cleanupScanner = useCallback(() => {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current)
+    }
+    if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+    }
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach((track) => track.stop())
       videoRef.current.srcObject = null
     }
-  }, [])
-
-  const cleanupScanner = useCallback(() => {
-    if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current)
-    }
-    if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-    }
-    stopCamera()
-  },[stopCamera]);
+  },[]);
 
   const handleCheckIn = useCallback((scannedData: string) => {
     let studentId: string;
@@ -52,6 +46,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
     
     try {
+      if (scannedData.length < 5) return; // Ignore small irrelevant scans
       studentId = atob(scannedData);
     } catch (e) {
       onScanComplete({
@@ -68,7 +63,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     if (student) {
         onScanComplete({
             status: "success",
-            message: "Berhasil melakukan absensi.",
+            message: "Absensi diterima.",
             student: student,
             timestamp: timestamp,
             scannedData: scannedData,
@@ -83,98 +78,70 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     }
   }, [onScanComplete]);
   
-  // Effect to manage camera stream
   useEffect(() => {
-    if (isScanning) {
-        const getCameraPermission = async () => {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                    setHasCameraPermission(true)
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream
-                        videoRef.current.play().catch(err => {
-                            console.error("Gagal memulai video:", err)
-                            toast({ variant: "destructive", title: "Error Kamera", description: "Tidak bisa memutar pratinjau kamera." });
-                        })
-                    }
-                } catch (error) {
-                    console.error('Error saat mengakses kamera:', error)
-                    setHasCameraPermission(false)
-                }
-            } else {
-                setHasCameraPermission(false)
-            }
-        }
-        getCameraPermission()
-    } else {
-        cleanupScanner();
-    }
-    return () => {
-       cleanupScanner();
-    }
-  }, [isScanning, toast, cleanupScanner])
-
-  // Effect for QR scanning loop
-  useEffect(() => {
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    
-    if (!isScanning || !hasCameraPermission || !video || !canvas) {
-        return;
-    }
-
-    let running = true;
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    if (!context) return;
-    
-    // Set a timeout to stop scanning after 1 minute of inactivity
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-        if(running) {
-            toast({
-                title: 'Waktu Habis',
-                description: 'Kamera dinonaktifkan karena tidak ada aktivitas.',
-            });
-            handleCheckIn(''); // Trigger a failure state
-        }
-    }, 60000);
-
-
+    let running = false;
     const tick = () => {
-      if (!running || !video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-        if (running) requestAnimationFrame(tick)
-        return
-      }
+      if (!running) return;
 
-      canvas.height = video.videoHeight
-      canvas.width = video.videoWidth
-      context.drawImage(video, 0, 0, canvas.width, canvas.height)
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: "dontInvert",
-      });
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (video && canvas && video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        const context = canvas.getContext('2d');
+        if(context) {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
 
-      if (code && code.data) {
-        running = false;
-        handleCheckIn(code.data);
-        return;
+          if (code && code.data) {
+            handleCheckIn(code.data);
+            return; // Stop scanning after a successful scan
+          }
+        }
       }
-      
-      if(running) {
+      if (running) {
         animationFrameId.current = requestAnimationFrame(tick);
       }
     };
-    
-    tick();
+
+    const startScanner = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+          running = true;
+          tick();
+        }
+         // Set a timeout to stop scanning after 1 minute of inactivity
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            if(running) {
+                handleCheckIn(''); 
+            }
+        }, 60000);
+      } catch (error) {
+        console.error('Error saat mengakses kamera:', error);
+        setHasCameraPermission(false);
+      }
+    };
+
+    if (isScanning) {
+      startScanner();
+    } else {
+      running = false;
+      cleanupScanner();
+    }
 
     return () => {
-        running = false;
-        if(animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current);
-        }
-    }
-  }, [isScanning, hasCameraPermission, toast, handleCheckIn])
+      running = false;
+      cleanupScanner();
+    };
+  }, [isScanning, handleCheckIn, cleanupScanner]);
 
   if (hasCameraPermission === false) {
     return (
