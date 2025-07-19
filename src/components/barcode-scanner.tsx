@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { ScanLine, AlertTriangle, CameraOff, Loader2 } from "lucide-react"
+import { ScanLine, AlertTriangle, Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
@@ -26,18 +26,6 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   const animationFrameId = useRef<number>()
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  
-  const cleanupScanner = useCallback(() => {
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-      animationFrameId.current = undefined;
-    }
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
-      videoRef.current.srcObject = null
-    }
-  },[]);
 
   const handleCheckIn = useCallback((scannedData: string) => {
     let studentId: string;
@@ -78,16 +66,26 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
   }, [onScanComplete]);
   
   useEffect(() => {
-    let stream: MediaStream | null = null;
+    const cleanupScanner = () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+        animationFrameId.current = undefined;
+      }
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach((track) => track.stop())
+        videoRef.current.srcObject = null
+      }
+    };
 
     const startScanner = async () => {
-      cleanupScanner(); // Ensure any previous stream is stopped
+      cleanupScanner(); 
       setHasCameraPermission(null);
       setCameraError(null);
 
       const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'user';
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -141,7 +139,7 @@ export function BarcodeScanner({ onScanComplete, isScanning }: BarcodeScannerPro
     return () => {
       cleanupScanner();
     };
-  }, [isScanning, handleCheckIn, cleanupScanner]);
+  }, [isScanning, handleCheckIn]);
   
   if (!isScanning) {
     return null;
