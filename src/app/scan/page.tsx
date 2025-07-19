@@ -16,7 +16,6 @@ export default function ScannerPage() {
   const successAudioRef = useRef<HTMLAudioElement>(null);
   const errorAudioRef = useRef<HTMLAudioElement>(null);
 
-  const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -34,7 +33,6 @@ export default function ScannerPage() {
     setIsPinRequired(pinEnabled);
     if (!pinEnabled) {
       setIsUnlocked(true);
-      handleStartScan();
     } else {
       setShowPinDialog(true);
       setPinDialogAction('open');
@@ -45,7 +43,7 @@ export default function ScannerPage() {
     setScanResult(null);
     setLastScannedData(null);
     setIsVerifying(false);
-    handleStartScan(); // Restart scanning
+    setCameraError(null);
   }, []);
   
   const handleScanComplete = useCallback((result: ScanResult) => {
@@ -53,7 +51,6 @@ export default function ScannerPage() {
 
     setIsVerifying(true);
     setLastScannedData(result.scannedData);
-    setIsScanning(false); // Stop scanning visually
     
     setTimeout(() => {
         setIsVerifying(false);
@@ -71,19 +68,6 @@ export default function ScannerPage() {
 
     }, 1500);
   }, [isVerifying, resetState]);
-  
-  const handleStartScan = () => {
-    if (!isUnlocked) return;
-    setScanResult(null);
-    setLastScannedData(null);
-    setIsVerifying(false);
-    setCameraError(null);
-    setIsScanning(true);
-  }
-
-  const handleStopScan = () => {
-    setIsScanning(false);
-  }
 
   const handleClosePage = () => {
     if (isPinRequired) {
@@ -98,7 +82,6 @@ export default function ScannerPage() {
     if (pinDialogAction === 'open') {
       setIsUnlocked(true);
       setShowPinDialog(false);
-      handleStartScan();
     } else { // 'close'
       router.push('/');
     }
@@ -111,6 +94,7 @@ export default function ScannerPage() {
             <div className="flex flex-col items-center justify-center text-center">
                 <Loader2 className="w-12 h-12 animate-spin mb-4" />
                 <p className="text-xl font-semibold">Memuat Halaman Absensi...</p>
+                <p className="text-muted-foreground">Menunggu otentikasi PIN.</p>
             </div>
         )
     }
@@ -154,8 +138,8 @@ export default function ScannerPage() {
             <CardContent className="p-0 relative flex-grow">
             <BarcodeScanner 
                 onScanComplete={handleScanComplete}
-                isScanning={isScanning}
                 setCameraError={setCameraError}
+                isPaused={isVerifying || !!scanResult}
             />
              { isVerifying && (
                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">

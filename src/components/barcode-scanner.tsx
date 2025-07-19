@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { ScanLine, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
 import type { CameraFacingMode } from "@/app/(app)/settings/page"
@@ -17,34 +17,18 @@ export type ScanResult = {
 
 type BarcodeScannerProps = {
   onScanComplete: (result: ScanResult) => void;
-  isScanning: boolean;
   setCameraError: (error: string | null) => void;
+  isPaused: boolean;
 }
 
-export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: BarcodeScannerProps) {
+export function BarcodeScanner({ onScanComplete, setCameraError, isPaused }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameId = useRef<number>()
   const [isInitializing, setIsInitializing] = useState(true);
 
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-        videoRef.current.srcObject = null;
-    }
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-      animationFrameId.current = undefined;
-    }
-  }, []);
-
   const handleCheckIn = useCallback((scannedData: string) => {
-    if (!isScanning) return;
-
     let studentId: string;
     const now = new Date();
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
@@ -83,90 +67,115 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
             scannedData: scannedData,
         });
     }
-  }, [onScanComplete, isScanning]);
+  }, [onScanComplete]);
   
   useEffect(() => {
+    let isActive = true;
+
     const startCamera = async () => {
       setIsInitializing(true);
       setCameraError(null);
+      
       const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'environment';
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+        if (isActive) {
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play();
+          }
+          setIsInitializing(false);
+          startScanLoop();
+        } else {
+            stream.getTracks().forEach((track) => track.stop());
         }
       } catch (err: any) {
         console.error("Error accessing camera:", err);
-        if (err.name === 'NotAllowedError') {
-          setCameraError("Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.");
-        } else {
-          setCameraError(`Gagal memulai kamera: ${err.message}. Pastikan tidak digunakan oleh aplikasi lain.`);
+        if(isActive) {
+            if (err.name === 'NotAllowedError') {
+              setCameraError("Mohon izinkan akses kamera di pengaturan peramban Anda untuk melanjutkan.");
+            } else {
+              setCameraError(`Gagal memulai kamera: ${err.message}. Pastikan tidak digunakan oleh aplikasi lain.`);
+            }
+            setIsInitializing(false);
         }
-      } finally {
-        setIsInitializing(false);
-      }
+      } 
     };
 
-    if (isScanning) {
-      startCamera();
-    } else {
-      stopCamera();
+    const stopScanLoop = () => {
+        if(animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current)
+            animationFrameId.current = undefined
+        }
     }
 
-    return () => {
-      stopCamera();
-    };
-  }, [isScanning, setCameraError, stopCamera]);
+    const startScanLoop = () => {
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+        }
 
-
-  useEffect(() => {
-    const tick = () => {
-      if (isScanning && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-        const canvas = canvasRef.current;
-        const video = videoRef.current;
-        if(canvas) {
-          const context = canvas.getContext("2d", { willReadFrequently: true });
-          if (context) {
-            canvas.height = video.videoHeight;
-            canvas.width = video.videoWidth;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            try {
-              const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-              const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: "dontInvert",
-              });
-              if (code && code.data) {
-                handleCheckIn(code.data);
+        const tick = () => {
+          if (isPaused) {
+            animationFrameId.current = requestAnimationFrame(tick);
+            return;
+          }
+          if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+            const canvas = canvasRef.current;
+            const video = videoRef.current;
+            if(canvas) {
+              const context = canvas.getContext("2d", { willReadFrequently: true });
+              if (context) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                try {
+                  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                  const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                  });
+                  if (code && code.data) {
+                    handleCheckIn(code.data);
+                  }
+                } catch (error) {
+                  // Ignore getImageData errors which can happen if canvas is not ready
+                }
               }
-            } catch (error) {
-              // Ignore getImageData errors which can happen if canvas is not ready
             }
           }
-        }
-      }
-      animationFrameId.current = requestAnimationFrame(tick);
-    };
-
-    if (isScanning && !isInitializing) {
-      animationFrameId.current = requestAnimationFrame(tick);
-    } else {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
+          animationFrameId.current = requestAnimationFrame(tick);
+        };
+        animationFrameId.current = requestAnimationFrame(tick);
     }
+    
+    startCamera();
 
     return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
+      isActive = false;
+      stopScanLoop();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
       }
     };
-  }, [isScanning, isInitializing, handleCheckIn]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (isPaused) {
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+            animationFrameId.current = undefined;
+        }
+    }
+  }, [isPaused])
 
   return (
-    <div className="relative w-full h-full bg-black flex items-center justify-center">
+    <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden rounded-md">
       <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
       
       {isInitializing && (
@@ -176,17 +185,15 @@ export function BarcodeScanner({ onScanComplete, isScanning, setCameraError }: B
           </div>
       )}
       
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-        {isScanning && !isInitializing && (
-          <>
+      {!isInitializing && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
             <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg" style={{ boxSizing: 'border-box' }}/>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-px bg-red-500 animate-scan-y shadow-lg" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[280px] h-px bg-red-500 animate-scan-y shadow-lg" />
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/50 text-white text-center p-3 rounded-lg animate-pulse-slow">
               <p className="font-medium">Arahkan QR Code Kartu Siswa ke Kamera</p>
             </div>
-          </>
-        )}
-      </div>
+        </div>
+      )}
       <canvas ref={canvasRef} className="hidden" />
     </div>
   )
