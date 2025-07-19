@@ -7,9 +7,10 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export default function ScannerPage() {
   const { toast } = useToast();
@@ -86,16 +87,21 @@ export default function ScannerPage() {
     // Check for permission on mount without activating camera
     const checkPermission = async () => {
       try {
-        const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
-        if (permissions.state === 'granted') {
-          setHasCameraPermission(true);
-        } else if (permissions.state === 'denied') {
-          setHasCameraPermission(false);
+        if (navigator.permissions) {
+          const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          if (permissions.state === 'granted') {
+            setHasCameraPermission(true);
+          } else if (permissions.state === 'denied') {
+            setHasCameraPermission(false);
+          } else {
+              setHasCameraPermission(null);
+          }
         } else {
-            setHasCameraPermission(null);
+            setHasCameraPermission(null); // Fallback for browsers that don't support Permissions API
         }
       } catch (error) {
         // This can happen on non-secure contexts or unsupported browsers
+        console.error("Error checking camera permission:", error);
         setHasCameraPermission(false);
       }
     };
@@ -122,7 +128,7 @@ export default function ScannerPage() {
     if (isScanning) {
         if (hasCameraPermission === false) {
              return (
-                <Alert variant="destructive" className="h-48">
+                <Alert variant="destructive" className="max-w-md mx-auto">
                     <AlertTitle>Akses Kamera Diperlukan</AlertTitle>
                     <AlertDescription>
                     Mohon izinkan akses kamera untuk menggunakan fitur ini. Periksa pengaturan peramban Anda.
@@ -175,29 +181,38 @@ export default function ScannerPage() {
     }
 
     return (
-      <div className="text-center">
-        <Button size="lg" className="h-24 w-64 text-2xl" onClick={startCamera} disabled={hasCameraPermission === false}>
-          <Camera className="mr-4 h-8 w-8" />
-          Mulai Absensi
-        </Button>
-        {hasCameraPermission === false && (
-            <p className="text-red-500 mt-4 text-sm">Akses kamera ditolak. Mohon aktifkan di pengaturan peramban.</p>
-        )}
-      </div>
+       <Card className="w-full max-w-lg mx-auto overflow-hidden">
+        <CardContent className="p-0 text-center">
+            <div className="p-8 bg-primary/10">
+                 <Image src="https://placehold.co/400x300.png" alt="Ilustrasi Absensi" width={400} height={300} className="mx-auto rounded-lg" data-ai-hint="student scan"/>
+            </div>
+            <div className="p-8 space-y-4">
+                <h1 className="text-3xl font-bold font-headline">Selamat Datang di AttendEase</h1>
+                <p className="text-muted-foreground">Silakan klik tombol di bawah untuk memulai sesi absensi Anda. Pastikan kartu pelajar Anda sudah siap!</p>
+                <Button size="lg" className="h-14 text-xl w-full" onClick={startCamera} disabled={hasCameraPermission === false}>
+                    <Camera className="mr-4 h-8 w-8" />
+                    Mulai Absensi
+                </Button>
+                {hasCameraPermission === false && (
+                    <p className="text-red-500 pt-2 text-sm">Akses kamera ditolak. Mohon aktifkan di pengaturan peramban Anda.</p>
+                )}
+            </div>
+        </CardContent>
+       </Card>
     );
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
        <audio ref={audioRef} src="/success.mp3" preload="auto" />
       <div className="absolute top-4 right-4 z-10">
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="bg-background">
           <Link href="/login">
             <LogIn className="mr-2 h-4 w-4" /> Masuk Admin
           </Link>
         </Button>
       </div>
-      <div className="w-full max-w-2xl">
+      <div className="w-full">
         {renderContent()}
       </div>
     </div>
