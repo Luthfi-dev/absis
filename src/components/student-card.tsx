@@ -24,7 +24,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
             const savedBg = localStorage.getItem('card-background');
             if (savedBg) setCardBackground(savedBg);
 
-            const savedMessage = localStorage.getItem('card-lost-message') || '';
+            const savedMessage = localStorage.getItem('card-lost-message') || 'Jika kartu ini ditemukan, harap kembalikan ke administrasi sekolah.';
             setCustomMessage(savedMessage);
 
             setOrigin(window.location.origin);
@@ -44,9 +44,9 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
     const cardContentClasses = "absolute inset-0 w-full h-full p-4 backface-hidden"
 
     return (
-        <div className="perspective-1000">
+        <div className="perspective-1000 w-[21rem] h-[13.125rem]">
             <div
-                className={cn(cardBaseClasses, isFlipped && "rotate-y-180")}
+                className={cn(cardBaseClasses, isFlipped && !isPrintMode && "rotate-y-180")}
                 onClick={handleFlip}
                 style={{
                     cursor: isPrintMode ? 'default' : 'pointer',
@@ -56,14 +56,14 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                 }}
             >
                 {/* Front Side */}
-                <div className={cn(cardContentClasses, "z-10 flex flex-col justify-between")}>
+                <div className={cn(cardContentClasses, "z-10 flex flex-col justify-between", isPrintMode && initialSide === 'back' && 'hidden' )}>
                     <header className="flex justify-between items-start">
                         <div className="font-bold text-lg">Kartu Siswa</div>
                         <CheckSquare className="w-8 h-8"/>
                     </header>
                     <footer className="flex items-end gap-3">
                         <div className="bg-white p-1 rounded-md shadow-md">
-                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={80} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                           {encryptedStudentId && <QRCode value={encryptedStudentId} size={90} bgColor="#ffffff" fgColor="#000000" level="L" />}
                         </div>
                         <div className="flex-1 text-right overflow-hidden">
                             <p className="font-semibold text-lg leading-tight truncate">{student.name}</p>
@@ -73,7 +73,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                 </div>
 
                 {/* Back Side */}
-                <div className={cn(cardContentClasses, "rotate-y-180 flex flex-col")}>
+                <div className={cn(cardContentClasses, "rotate-y-180 flex flex-col", isPrintMode && initialSide === 'front' && 'hidden')}>
                     <div className="flex-1 flex items-center justify-between gap-4">
                         <div className="flex-1 space-y-1 overflow-hidden">
                            <p className="text-xs opacity-90">Nama Lengkap</p>
@@ -85,7 +85,7 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                         </div>
                         <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
                            <div className="bg-white p-1 rounded-md shadow-md">
-                              {profileUrl && <QRCode value={profileUrl} size={70} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                              {profileUrl && <QRCode value={profileUrl} size={90} bgColor="#ffffff" fgColor="#000000" level="L" />}
                            </div>
                            <p className="text-[10px] text-center">Pindai untuk Profil</p>
                         </div>

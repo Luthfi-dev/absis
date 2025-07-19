@@ -20,7 +20,7 @@ function PrintPageContent() {
   }, [searchParams])
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-800 min-h-screen">
+    <div className="print-container">
         <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm print:hidden">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <h1 className="text-xl font-bold font-headline">Cetak Kartu Siswa</h1>
@@ -33,16 +33,20 @@ function PrintPageContent() {
 
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
             {studentsToPrint.length > 0 ? (
-                 <div className="flex flex-wrap justify-center gap-8 print:gap-4">
+                 <div className="print-area">
                     {studentsToPrint.map(student => (
-                        <div key={student.id} className="w-[21rem] space-y-4 page-break-inside-avoid">
-                            <StudentCard student={student} initialSide="front" isPrintMode={true} />
-                            <StudentCard student={student} initialSide="back" isPrintMode={true} />
+                        <div key={student.id} className="print-item">
+                           <div className="print-card-wrapper">
+                             <StudentCard student={student} initialSide="front" isPrintMode={true} />
+                           </div>
+                           <div className="print-card-wrapper">
+                             <StudentCard student={student} initialSide="back" isPrintMode={true} />
+                           </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="flex items-center justify-center py-24 text-center">
+                <div className="flex items-center justify-center py-24 text-center print:hidden">
                     <div className="max-w-md">
                         <h2 className="text-2xl font-semibold">Tidak ada siswa yang dipilih</h2>
                         <p className="text-muted-foreground mt-2">
@@ -54,23 +58,30 @@ function PrintPageContent() {
         </main>
         <style jsx global>{`
             @media print {
-                body {
+                body, .print-container {
                     background-color: #fff !important;
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
+                    margin: 0;
+                    padding: 0;
                 }
-                .page-break-inside-avoid {
+                .print-area {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+                .print-item {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 1rem;
                     page-break-inside: avoid;
                 }
-                main {
-                    padding: 0;
-                    margin: 0;
+                .print-card-wrapper {
+                  width: 21rem;
+                  height: 13.125rem;
                 }
-                .container {
-                    width: 100%;
-                    padding: 0;
-                    margin: 0;
-                }
+            }
+            @page {
+              size: A4;
+              margin: 1cm;
             }
         `}</style>
     </div>
