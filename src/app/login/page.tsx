@@ -22,7 +22,6 @@ type AuthMode = "login" | "register"
 const getTeachersFromStorage = (): Teacher[] => {
     if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('mockTeachers');
-    // Initialize with mockTeachers if localStorage is empty or doesn't exist
     if (!saved) {
       localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
       return mockTeachers;
@@ -44,9 +43,10 @@ export default function LoginPage() {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const email = (form.elements.namedItem('email') as HTMLInputElement).value.toLowerCase();
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     
     if (authMode === "login") {
-      const user = users.find(u => u.email.toLowerCase() === email);
+      const user = users.find(u => u.email.toLowerCase() === email && u.password === password);
 
       if (user) {
           if (user.status !== 'active') {
@@ -73,12 +73,15 @@ export default function LoginPage() {
     } else { // Register mode
       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
       const nip = (form.elements.namedItem('nip') as HTMLInputElement).value;
+      const registerPassword = (form.elements.namedItem('password') as HTMLInputElement).value;
+
 
       const newUser: Teacher = {
         id: `t-${Date.now()}`,
         name,
         nip,
         email,
+        password: registerPassword,
         status: 'pending',
         role: 'teacher' // All new registrations are teachers by default
       };
@@ -86,7 +89,6 @@ export default function LoginPage() {
       const updatedUsers = [...users, newUser];
       localStorage.setItem('mockTeachers', JSON.stringify(updatedUsers));
       
-      // Notify other components if needed
       window.dispatchEvent(new Event('usersUpdated'));
 
       toast({
@@ -94,18 +96,8 @@ export default function LoginPage() {
         description: `Akun untuk ${name} telah dibuat dan menunggu persetujuan admin.`,
       });
 
-      setAuthMode("login"); // Switch back to login mode
+      setAuthMode("login");
     }
-  }
-
-  const getLoginIcon = () => {
-    if (authMode === 'login') {
-      const email = (document.getElementById('email') as HTMLInputElement)?.value.toLowerCase();
-      const user = users.find(u => u.email.toLowerCase() === email);
-      if (user?.role === 'admin') return <Shield className="mb-3 h-6 w-6" />;
-      return <User className="mb-3 h-6 w-6" />;
-    }
-    return <UserPlus className="mb-3 h-6 w-6" />;
   }
 
   return (
@@ -134,11 +126,11 @@ export default function LoginPage() {
               )}
               <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="email@example.com" required defaultValue="admin@attendease.com" />
+                  <Input id="email" type="email" placeholder="email@example.com" required defaultValue="superadmin@gmail.com" />
               </div>
               <div className="space-y-2">
                   <Label htmlFor="password">Kata Sandi</Label>
-                  <Input id="password" type="password" required defaultValue="password" />
+                  <Input id="password" type="password" required defaultValue="123456" />
               </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

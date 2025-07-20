@@ -120,11 +120,11 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex flex-col text-sm">
             <span className="font-semibold text-sidebar-foreground">Super Admin</span>
-            <span className="text-xs text-muted-foreground">superadmin@attendease.com</span>
+            <span className="text-xs text-muted-foreground">superadmin@gmail.com</span>
           </div>
         </div>
          <Button asChild variant="ghost" className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground">
-            <Link href="/">
+            <Link href="/login">
                 <LogOut className="mr-2 h-4 w-4" />
                 Keluar
             </Link>

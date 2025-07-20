@@ -56,6 +56,7 @@ export default function UsersPage() {
     const updateUsersInStorage = (updatedUsers: Teacher[]) => {
         setUsers(updatedUsers);
         localStorage.setItem('mockTeachers', JSON.stringify(updatedUsers));
+        window.dispatchEvent(new Event('usersUpdated'));
     }
 
     const handleStatusChange = (userId: string, newStatus: 'active' | 'pending') => {
