@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-type PinAction = 'open' | 'close' | 'switch-camera' | 'toggle-auto-scan';
+type PinAction = 'open' | 'close' | 'open-settings';
 
 interface PinDialogProps {
   isOpen: boolean;
@@ -34,10 +35,8 @@ export function PinDialog({ isOpen, onClose, onSuccess, action }: PinDialogProps
         return 'Masukkan PIN untuk membuka halaman absensi.';
       case 'close':
         return 'Masukkan PIN untuk menutup halaman absensi.';
-      case 'switch-camera':
-        return 'Masukkan PIN untuk mengganti kamera.';
-      case 'toggle-auto-scan':
-        return 'Masukkan PIN untuk mengubah mode auto-scan.';
+      case 'open-settings':
+        return 'Masukkan PIN untuk mengakses pengaturan pemindai.';
       default:
         return 'Masukkan PIN untuk melanjutkan.';
     }

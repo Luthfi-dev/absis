@@ -14,7 +14,6 @@ import { AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { CameraFacingMode } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -22,13 +21,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
 
-type PinAction = 'open' | 'close' | 'switch-camera' | 'toggle-auto-scan';
+type PinAction = 'open' | 'close' | 'open-settings';
 
 export default function ScannerPage() {
   const successAudioRef = useRef<HTMLAudioElement>(null);
@@ -136,6 +134,15 @@ export default function ScannerPage() {
       router.push('/');
     }
   };
+  
+  const handleOpenSettings = () => {
+    if (isPinRequired) {
+      setPinDialogAction('open-settings');
+      setShowPinDialog(true);
+    } else {
+      setShowSettingsDialog(true);
+    }
+  }
 
   const executeCameraSwitch = () => {
     const newMode = facingMode === 'user' ? 'environment' : 'user';
@@ -163,26 +170,10 @@ export default function ScannerPage() {
       setIsUnlocked(true);
     } else if (pinDialogAction === 'close') {
       router.push('/');
-    } else if (pinDialogAction === 'switch-camera') {
-      executeCameraSwitch();
-    } else if (pinDialogAction === 'toggle-auto-scan') {
-      executeAutoScanToggle();
+    } else if (pinDialogAction === 'open-settings') {
+      setShowSettingsDialog(true);
     }
   };
-  
-  const handleControlClick = (action: 'switch-camera' | 'toggle-auto-scan') => {
-    if (isPinRequired) {
-      setPinDialogAction(action);
-      setShowPinDialog(true);
-    } else {
-      if (action === 'switch-camera') {
-        executeCameraSwitch();
-      } else if (action === 'toggle-auto-scan') {
-        executeAutoScanToggle();
-      }
-    }
-  };
-
 
   const renderContent = () => {
     if (!isUnlocked) {
@@ -308,7 +299,7 @@ export default function ScannerPage() {
             <DialogHeader>
                 <DialogTitle>Pengaturan Pemindai</DialogTitle>
                 <DialogDescription>
-                    Atur perilaku pemindai absensi. Perlu verifikasi PIN jika diaktifkan.
+                    Atur perilaku pemindai absensi. Pengaturan akan disimpan di perangkat ini.
                 </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
@@ -322,10 +313,10 @@ export default function ScannerPage() {
                     <Switch
                         id="auto-scan-mode"
                         checked={isAutoScan}
-                        onCheckedChange={() => handleControlClick('toggle-auto-scan')}
+                        onCheckedChange={executeAutoScanToggle}
                     />
                 </div>
-                 <Button variant="outline" className="w-full" onClick={() => handleControlClick('switch-camera')}>
+                 <Button variant="outline" className="w-full" onClick={executeCameraSwitch}>
                     <Repeat className="mr-2 h-4 w-4" />
                     Ganti ke Kamera {facingMode === 'user' ? 'Belakang' : 'Depan'}
                 </Button>
@@ -345,7 +336,7 @@ export default function ScannerPage() {
         {isUnlocked && (
             <>
                 <div className="absolute top-4 left-4 z-50">
-                     <Button variant="secondary" size="icon" onClick={() => setShowSettingsDialog(true)} className="rounded-full h-12 w-12 p-0">
+                     <Button variant="secondary" size="icon" onClick={handleOpenSettings} className="rounded-full h-12 w-12 p-0">
                         <Settings className="h-6 w-6" />
                         <span className="sr-only">Buka Pengaturan</span>
                     </Button>
