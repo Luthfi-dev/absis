@@ -4,12 +4,12 @@
 import { Header } from "@/components/header"
 import { TeacherSidebar } from "@/components/teacher-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AuthProvider, useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/use-auth"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
-function TeacherLayoutContent({
+export default function TeacherLayout({
   children,
 }: {
   children: React.ReactNode
@@ -44,16 +44,4 @@ function TeacherLayoutContent({
       </div>
     </SidebarProvider>
   )
-}
-
-export default function TeacherLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <AuthProvider>
-      <TeacherLayoutContent>{children}</TeacherLayoutContent>
-    </AuthProvider>
-  );
 }

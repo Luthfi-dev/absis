@@ -4,13 +4,12 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Header } from "@/components/header"
-import { AuthProvider } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 
-function AppLayoutContent({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode
@@ -44,18 +43,5 @@ function AppLayoutContent({
         </SidebarInset>
       </div>
     </SidebarProvider>
-  )
-}
-
-
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <AuthProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
-    </AuthProvider>
   )
 }
