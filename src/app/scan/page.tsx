@@ -3,14 +3,13 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings, AlertTriangle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { PinDialog } from '@/components/pin-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { CameraFacingMode } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +33,6 @@ export default function ScannerPage() {
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [lastScannedData, setLastScannedData] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   
@@ -94,13 +92,11 @@ export default function ScannerPage() {
   }, [resetIdleTimer]);
   
   const handleScanComplete = useCallback((result: ScanResult) => {
-    if (!result.scannedData || isVerifying) return;
+    if (isVerifying) return;
 
     setIsVerifying(true);
-    setLastScannedData(result.scannedData);
     
     setTimeout(() => {
-        setIsVerifying(false);
         setScanResult(result);
         
         if (result.status === 'success') {
@@ -109,21 +105,21 @@ export default function ScannerPage() {
           errorAudioRef.current?.play().catch(err => console.error("Gagal memutar suara error:", err));
         }
         
-        if (isAutoScan) {
-          setTimeout(() => {
+        // This timer is for how long the result card is shown
+        const resultDisplayTime = 3000;
+        
+        setTimeout(() => {
             setScanResult(null);
-            setLastScannedData(null);
-            resetIdleTimer(); // Reset timer on new scan
-          }, 3000);
-        } else {
-          setTimeout(() => {
-            setIsScanning(false); // Kembali ke halaman intro setelah selesai jika bukan auto-scan
-            setScanResult(null);
-            setLastScannedData(null);
-          }, 5000);
-        }
+            setIsVerifying(false);
+            
+            if (isAutoScan) {
+              resetIdleTimer(); // Reset timer on new scan
+            } else {
+              setIsScanning(false); // Go back to intro screen if not auto-scan
+            }
+        }, resultDisplayTime);
 
-    }, 1500);
+    }, 500); // Short delay to show verification
   }, [isVerifying, isAutoScan, resetIdleTimer]);
 
   const handleClosePage = () => {
@@ -136,7 +132,7 @@ export default function ScannerPage() {
   };
   
   const handleOpenSettings = () => {
-    if (isPinRequired) {
+    if (isPinRequired && !isUnlocked) {
       setPinDialogAction('open-settings');
       setShowPinDialog(true);
     } else {
@@ -149,11 +145,6 @@ export default function ScannerPage() {
     setFacingMode(newMode);
     localStorage.setItem('scanner-facing-mode', newMode);
     toast({ title: `Kamera diubah ke ${newMode === 'user' ? 'depan (selfie)' : 'belakang (utama)'}` });
-    // If scanning, we need to stop and restart to apply camera change
-    if(isScanning) {
-        setIsScanning(false);
-        setTimeout(() => setIsScanning(true), 100);
-    }
   };
 
   const executeAutoScanToggle = () => {
@@ -171,6 +162,7 @@ export default function ScannerPage() {
     } else if (pinDialogAction === 'close') {
       router.push('/');
     } else if (pinDialogAction === 'open-settings') {
+      setIsUnlocked(true); // Unlock before opening settings
       setShowSettingsDialog(true);
     }
   };
@@ -181,12 +173,12 @@ export default function ScannerPage() {
             <div className="flex flex-col items-center justify-center text-center">
                 <Loader2 className="w-12 h-12 animate-spin mb-4 text-white" />
                 <p className="text-xl font-semibold text-white">Memuat Halaman Absensi...</p>
-                <p className="text-muted-foreground">Menunggu otentikasi PIN.</p>
+                <p className="text-muted-foreground text-white/70">Menunggu otentikasi PIN.</p>
             </div>
         )
     }
 
-    if (scanResult && (!isAutoScan || isVerifying)) {
+    if (scanResult) {
       return (
         <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
           <CardHeader>
@@ -231,24 +223,11 @@ export default function ScannerPage() {
                     isPaused={isVerifying || !!scanResult}
                     facingMode={facingMode}
                 />
-                 { isVerifying && (
+                 { isVerifying && !scanResult && ( // Show verifying overlay only before result
                     <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
                         <Loader2 className="w-12 h-12 animate-spin" />
                         <p className="text-xl font-semibold">Memverifikasi Absensi...</p>
-                        {lastScannedData && (
-                            <p className="text-sm bg-gray-700/50 px-2 py-1 rounded-md max-w-full truncate">
-                                {lastScannedData}
-                            </p>
-                        )}
                     </div>
-                )}
-                 {scanResult && isAutoScan && !isVerifying && (
-                  <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
-                      {scanResult.status === 'success' ? <UserCheck className="w-12 h-12 text-green-500" /> : <XCircle className="w-12 h-12 text-red-500" />}
-                      <p className="text-xl font-semibold">{scanResult.message}</p>
-                      <p className="text-lg font-bold">{scanResult.student?.name}</p>
-                      <Loader2 className="w-6 h-6 animate-spin mt-4" />
-                  </div>
                 )}
                 { cameraError && (
                      <div className="absolute inset-0 bg-destructive/90 flex flex-col items-center justify-center text-destructive-foreground z-20 p-4 text-center">
@@ -333,7 +312,7 @@ export default function ScannerPage() {
        <audio ref={successAudioRef} src="https://app.maudigi.com/audio/diterima.mp3" preload="auto" />
        <audio ref={errorAudioRef} src="https://app.maudigi.com/audio/tidakterdaftar.mp3" preload="auto" />
 
-        {isUnlocked && (
+        {(isUnlocked || isPinRequired === false) && (
             <>
                 <div className="absolute top-4 left-4 z-50">
                      <Button variant="secondary" size="icon" onClick={handleOpenSettings} className="rounded-full h-12 w-12 p-0">
@@ -361,6 +340,7 @@ export default function ScannerPage() {
             isOpen={showPinDialog}
             onClose={() => {
                 setShowPinDialog(false)
+                // If user closes PIN dialog on initial open, send them back
                 if(pinDialogAction === 'open' && !isUnlocked) router.push('/')
             }}
             onSuccess={onPinSuccess}

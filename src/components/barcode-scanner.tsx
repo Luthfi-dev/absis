@@ -80,6 +80,11 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
       setCameraError(null);
       
       try {
+        // Stop any existing streams before starting a new one
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
         if (isActive) {
           streamRef.current = stream;
@@ -88,7 +93,6 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
             await videoRef.current.play();
           }
           setIsInitializing(false);
-          startScanLoop();
         } else {
             stream.getTracks().forEach((track) => track.stop());
         }
@@ -104,57 +108,11 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
         }
       } 
     };
-
-    const stopScanLoop = () => {
-        if(animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current)
-            animationFrameId.current = undefined
-        }
-    }
-
-    const startScanLoop = () => {
-        if (animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current);
-        }
-
-        const tick = () => {
-          if (isPaused || !isActive) {
-            animationFrameId.current = requestAnimationFrame(tick);
-            return;
-          }
-          if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-            const canvas = canvasRef.current;
-            const video = videoRef.current;
-            if(canvas) {
-              const context = canvas.getContext("2d", { willReadFrequently: true });
-              if (context) {
-                canvas.height = video.videoHeight;
-                canvas.width = video.videoWidth;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                try {
-                  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                  const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                  });
-                  if (code && code.data) {
-                    handleCheckIn(code.data);
-                  }
-                } catch (error) {
-                  // Ignore getImageData errors which can happen if canvas is not ready
-                }
-              }
-            }
-          }
-          animationFrameId.current = requestAnimationFrame(tick);
-        };
-        animationFrameId.current = requestAnimationFrame(tick);
-    }
     
     startCamera();
 
     return () => {
       isActive = false;
-      stopScanLoop();
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -163,17 +121,53 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
         videoRef.current.srcObject = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [facingMode]); // Rerun effect when facingMode changes
+  }, [facingMode, setCameraError]); 
 
   useEffect(() => {
-    if (isPaused) {
-        if (animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current);
-            animationFrameId.current = undefined;
+    const tick = () => {
+      if (isPaused || isInitializing || !videoRef.current || videoRef.current.readyState !== videoRef.current.HAVE_ENOUGH_DATA) {
+        animationFrameId.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      if (canvas) {
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (context) {
+          canvas.height = video.videoHeight;
+          canvas.width = video.videoWidth;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          try {
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "dontInvert",
+            });
+            if (code && code.data) {
+              handleCheckIn(code.data);
+            }
+          } catch (error) {
+            // Ignore getImageData errors
+          }
+        }
+      }
+      animationFrameId.current = requestAnimationFrame(tick);
+    };
+
+    if (!isPaused) {
+      animationFrameId.current = requestAnimationFrame(tick);
+    } else {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    }
+    
+    return () => {
+        if(animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current)
         }
     }
-  }, [isPaused])
+  }, [isPaused, isInitializing, handleCheckIn]);
 
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden rounded-md">
@@ -188,8 +182,9 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
       
       {!isInitializing && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-            <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg" style={{ boxSizing: 'border-box' }}/>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[280px] h-px bg-red-500 animate-scan-y shadow-lg" />
+            <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg relative overflow-hidden">
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-px bg-red-500 animate-scan-y shadow-lg" />
+            </div>
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/50 text-white text-center p-3 rounded-lg animate-pulse-slow">
               <p className="font-medium">Arahkan QR Code Kartu Siswa ke Kamera</p>
             </div>
