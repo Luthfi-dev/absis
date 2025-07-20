@@ -1,12 +1,37 @@
+
+'use client'
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Header } from "@/components/header"
+import { AuthProvider } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
+import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
-export default function AppLayout({
+function AppLayoutContent({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && (!user || (user.role !== 'superadmin' && user.role !== 'admin'))) {
+      router.replace('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user || (user.role !== 'superadmin' && user.role !== 'admin')) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+  
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
@@ -19,5 +44,18 @@ export default function AppLayout({
         </SidebarInset>
       </div>
     </SidebarProvider>
+  )
+}
+
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AuthProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </AuthProvider>
   )
 }

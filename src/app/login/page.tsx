@@ -13,39 +13,44 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CheckSquare, LogIn, UserPlus } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { mockTeachers, type Teacher } from "@/lib/mock-data"
+import { useAuth } from "@/hooks/use-auth"
 
 type AuthMode = "login" | "register"
 
 const getTeachersFromStorage = (): Teacher[] => {
-    if (typeof window === 'undefined') return mockTeachers; // Return default if server-side
+    if (typeof window === 'undefined') return mockTeachers;
     const saved = localStorage.getItem('mockTeachers');
     if (!saved) {
       localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
       return mockTeachers;
     }
     try {
-        const parsed = JSON.parse(saved);
-        const hasSuperAdmin = parsed.some((u: Teacher) => u.email === 'superadmin@gmail.com');
-        if (!hasSuperAdmin) {
-            localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
-            return mockTeachers;
-        }
-        return parsed;
+        return JSON.parse(saved);
     } catch {
         localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
         return mockTeachers;
     }
 }
 
-
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>("login")
   const router = useRouter()
   const { toast } = useToast()
+  const { user, login } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin' || user.role === 'superadmin') {
+        router.replace("/dashboard");
+      } else if (user.role === 'teacher') {
+        router.replace("/teacher-dashboard");
+      }
+    }
+  }, [user, router]);
 
   const handleAuthAction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +61,10 @@ export default function LoginPage() {
     const currentUsers = getTeachersFromStorage();
 
     if (authMode === "login") {
-      const user = currentUsers.find(u => u.email.toLowerCase() === email && u.password === password);
+      const foundUser = currentUsers.find(u => u.email.toLowerCase() === email && u.password === password);
 
-      if (user) {
-          if (user.status !== 'active') {
+      if (foundUser) {
+          if (foundUser.status !== 'active') {
               toast({
                   variant: "destructive",
                   title: "Login Gagal",
@@ -67,18 +72,7 @@ export default function LoginPage() {
               });
               return;
           }
-
-          if (user.role === 'admin' || user.role === 'superadmin') {
-              router.push("/dashboard");
-          } else if (user.role === 'teacher') {
-              router.push("/teacher-dashboard");
-          } else {
-             toast({
-              variant: "destructive",
-              title: "Login Gagal",
-              description: "Peran pengguna tidak dikenali.",
-            });
-          }
+          login(foundUser); // Save session
       } else {
           toast({
               variant: "destructive",
@@ -90,7 +84,6 @@ export default function LoginPage() {
       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
       const nip = (form.elements.namedItem('nip') as HTMLInputElement).value;
       const registerPassword = (form.elements.namedItem('password') as HTMLInputElement).value;
-
 
       const newUser: Teacher = {
         id: `t-${Date.now()}`,
@@ -114,6 +107,10 @@ export default function LoginPage() {
 
       setAuthMode("login");
     }
+  }
+
+  if (user) {
+    return null; // Or a loading spinner
   }
 
   return (
