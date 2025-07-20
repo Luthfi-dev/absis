@@ -3,7 +3,7 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,6 +15,18 @@ import { useRouter } from 'next/navigation';
 import type { CameraFacingMode } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+
 
 type PinAction = 'open' | 'close' | 'switch-camera' | 'toggle-auto-scan';
 
@@ -39,8 +51,11 @@ export default function ScannerPage() {
   const [facingMode, setFacingMode] = useState<CameraFacingMode>('environment');
   const [isAutoScan, setIsAutoScan] = useState(false);
   const [autoScanTimeoutMinutes, setAutoScanTimeoutMinutes] = useState(1);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+
 
   useEffect(() => {
+    // Load settings from localStorage
     const pinEnabled = localStorage.getItem('scanner-pin-enabled') === 'true';
     setIsPinRequired(pinEnabled);
     if (!pinEnabled) {
@@ -49,8 +64,16 @@ export default function ScannerPage() {
       setShowPinDialog(true);
       setPinDialogAction('open');
     }
+
     const savedTimeout = parseInt(localStorage.getItem('auto-scan-timeout') || '1', 10);
     setAutoScanTimeoutMinutes(savedTimeout);
+    
+    const savedFacingMode = localStorage.getItem('scanner-facing-mode') as CameraFacingMode | null;
+    if (savedFacingMode) setFacingMode(savedFacingMode);
+    
+    const savedAutoScan = localStorage.getItem('scanner-auto-scan') === 'true';
+    setIsAutoScan(savedAutoScan);
+
   }, []);
 
   const resetIdleTimer = useCallback(() => {
@@ -61,7 +84,6 @@ export default function ScannerPage() {
       idleTimerRef.current = setTimeout(() => {
         toast({ title: 'Sesi Auto-Scan Berakhir', description: 'Sesi ditutup karena tidak ada aktivitas.' });
         setIsScanning(false);
-        setIsAutoScan(false);
       }, autoScanTimeoutMinutes * 60 * 1000);
     }
   }, [isScanning, isAutoScan, autoScanTimeoutMinutes, toast]);
@@ -115,21 +137,25 @@ export default function ScannerPage() {
     }
   };
 
-  const handleControlClick = (action: 'switch-camera' | 'toggle-auto-scan') => {
-    if (isPinRequired) {
-      setPinDialogAction(action);
-      setShowPinDialog(true);
-    } else {
-      // If no PIN, execute directly
-      if (action === 'switch-camera') {
-        setFacingMode(prev => (prev === 'user' ? 'environment' : 'user'));
-        toast({ title: `Kamera diubah ke ${facingMode === 'user' ? 'belakang' : 'depan'}` });
-      } else if (action === 'toggle-auto-scan') {
-        setIsAutoScan(prev => !prev);
-        toast({ title: `Mode Auto-Scan ${!isAutoScan ? 'Aktif' : 'Nonaktif'}` });
-      }
+  const executeCameraSwitch = () => {
+    const newMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newMode);
+    localStorage.setItem('scanner-facing-mode', newMode);
+    toast({ title: `Kamera diubah ke ${newMode === 'user' ? 'depan (selfie)' : 'belakang (utama)'}` });
+    // If scanning, we need to stop and restart to apply camera change
+    if(isScanning) {
+        setIsScanning(false);
+        setTimeout(() => setIsScanning(true), 100);
     }
   };
+
+  const executeAutoScanToggle = () => {
+    const newAutoScanState = !isAutoScan;
+    setIsAutoScan(newAutoScanState);
+    localStorage.setItem('scanner-auto-scan', String(newAutoScanState));
+    toast({ title: `Mode Auto-Scan ${newAutoScanState ? 'Aktif' : 'Nonaktif'}` });
+  };
+
 
   const onPinSuccess = () => {
     setShowPinDialog(false);
@@ -138,15 +164,25 @@ export default function ScannerPage() {
     } else if (pinDialogAction === 'close') {
       router.push('/');
     } else if (pinDialogAction === 'switch-camera') {
-      const newMode = facingMode === 'user' ? 'environment' : 'user';
-      setFacingMode(newMode);
-      toast({ title: `Kamera diubah ke ${newMode === 'user' ? 'depan (selfie)' : 'belakang (utama)'}` });
+      executeCameraSwitch();
     } else if (pinDialogAction === 'toggle-auto-scan') {
-      const newAutoScanState = !isAutoScan;
-      setIsAutoScan(newAutoScanState);
-      toast({ title: `Mode Auto-Scan ${newAutoScanState ? 'Aktif' : 'Nonaktif'}` });
+      executeAutoScanToggle();
     }
   };
+  
+  const handleControlClick = (action: 'switch-camera' | 'toggle-auto-scan') => {
+    if (isPinRequired) {
+      setPinDialogAction(action);
+      setShowPinDialog(true);
+    } else {
+      if (action === 'switch-camera') {
+        executeCameraSwitch();
+      } else if (action === 'toggle-auto-scan') {
+        executeAutoScanToggle();
+      }
+    }
+  };
+
 
   const renderContent = () => {
     if (!isUnlocked) {
@@ -236,7 +272,7 @@ export default function ScannerPage() {
                 )}
                 </CardContent>
                  <div className="p-4 bg-background border-t">
-                    <Button variant="outline" className="w-full" onClick={() => { setIsScanning(false); setIsAutoScan(false); }}>
+                    <Button variant="outline" className="w-full" onClick={() => { setIsScanning(false); }}>
                         <CameraOff className="mr-2 h-4 w-4" />
                         Hentikan Sesi
                     </Button>
@@ -253,22 +289,10 @@ export default function ScannerPage() {
                 </div>
                 <CardTitle className="text-3xl font-bold">Halaman Absensi</CardTitle>
                 <CardDescription>
-                    Pilih mode, lalu mulai sesi absensi.
+                    Pindai QR Code pada kartu siswa untuk mencatat kehadiran.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex justify-center gap-4 mb-4">
-                    <Button variant="outline" size="lg" className="flex-col h-20" onClick={() => handleControlClick('switch-camera')}>
-                        <Repeat className="h-6 w-6 mb-1" />
-                        <span>Ganti Kamera</span>
-                        <span className="text-xs text-muted-foreground">{facingMode === 'user' ? 'Depan' : 'Belakang'}</span>
-                    </Button>
-                     <Button variant="outline" size="lg" className={cn("flex-col h-20", isAutoScan && "border-primary text-primary")} onClick={() => handleControlClick('toggle-auto-scan')}>
-                        <RefreshCw className={cn("h-6 w-6 mb-1", isAutoScan && "animate-spin")} />
-                        <span>Auto-Scan</span>
-                        <span className="text-xs text-muted-foreground">{isAutoScan ? 'Aktif' : 'Nonaktif'}</span>
-                    </Button>
-                </div>
+            <CardContent>
                 <Button size="lg" className="w-full" onClick={() => { setIsScanning(true); resetIdleTimer(); }}>
                     <Camera className="mr-2 h-5 w-5" />
                     Mulai Absensi
@@ -278,24 +302,69 @@ export default function ScannerPage() {
     )
   };
 
+  const SettingsDialog = () => (
+    <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Pengaturan Pemindai</DialogTitle>
+                <DialogDescription>
+                    Atur perilaku pemindai absensi. Perlu verifikasi PIN jika diaktifkan.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="auto-scan-mode" className="flex flex-col gap-1">
+                        <span>Mode Auto-Scan</span>
+                        <span className="text-xs font-normal text-muted-foreground">
+                            Pemindai akan aktif terus setelah setiap pemindaian.
+                        </span>
+                    </Label>
+                    <Switch
+                        id="auto-scan-mode"
+                        checked={isAutoScan}
+                        onCheckedChange={() => handleControlClick('toggle-auto-scan')}
+                    />
+                </div>
+                 <Button variant="outline" className="w-full" onClick={() => handleControlClick('switch-camera')}>
+                    <Repeat className="mr-2 h-4 w-4" />
+                    Ganti ke Kamera {facingMode === 'user' ? 'Belakang' : 'Depan'}
+                </Button>
+            </div>
+            <DialogFooter>
+                <Button onClick={() => setShowSettingsDialog(false)}>Tutup</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+  )
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
        <audio ref={successAudioRef} src="https://app.maudigi.com/audio/diterima.mp3" preload="auto" />
        <audio ref={errorAudioRef} src="https://app.maudigi.com/audio/tidakterdaftar.mp3" preload="auto" />
 
         {isUnlocked && (
-            <div className="absolute top-4 right-4 z-50">
-                <Button variant="destructive" size="icon" onClick={handleClosePage} className="rounded-full h-12 w-12 p-0">
-                    <X className="h-6 w-6" />
-                    <span className="sr-only">Tutup Halaman Absensi</span>
-                </Button>
-            </div>
+            <>
+                <div className="absolute top-4 left-4 z-50">
+                     <Button variant="secondary" size="icon" onClick={() => setShowSettingsDialog(true)} className="rounded-full h-12 w-12 p-0">
+                        <Settings className="h-6 w-6" />
+                        <span className="sr-only">Buka Pengaturan</span>
+                    </Button>
+                </div>
+                <div className="absolute top-4 right-4 z-50">
+                    <Button variant="destructive" size="icon" onClick={handleClosePage} className="rounded-full h-12 w-12 p-0">
+                        <X className="h-6 w-6" />
+                        <span className="sr-only">Tutup Halaman Absensi</span>
+                    </Button>
+                </div>
+            </>
         )}
 
         <div className="w-full h-screen sm:h-auto sm:max-w-md flex items-center justify-center">
             {renderContent()}
         </div>
         
+        <SettingsDialog />
+
         {isPinRequired !== undefined && (
           <PinDialog 
             isOpen={showPinDialog}

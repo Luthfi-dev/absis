@@ -11,10 +11,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UploadCloud, Trash2, Lock, Unlock, Timer } from "lucide-react"
+import { UploadCloud, Trash2, Lock, Unlock, Timer, MessageSquare, Save } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function SettingsPage() {
   const { toast } = useToast()
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const [pin, setPin] = useState('')
   const [isPinEnabled, setIsPinEnabled] = useState(false)
   const [autoScanTimeout, setAutoScanTimeout] = useState('1');
+  const [cardLostMessage, setCardLostMessage] = useState('');
 
   useEffect(() => {
     const savedBackground = localStorage.getItem('card-background')
@@ -36,7 +38,8 @@ export default function SettingsPage() {
     setIsPinEnabled(savedIsPinEnabled)
     const savedTimeout = localStorage.getItem('auto-scan-timeout') || '1';
     setAutoScanTimeout(savedTimeout);
-
+    const savedMessage = localStorage.getItem('card-lost-message') || 'Jika kartu ini ditemukan, harap kembalikan ke administrasi sekolah.';
+    setCardLostMessage(savedMessage);
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +100,14 @@ export default function SettingsPage() {
     });
   }
 
+  const handleCardMessageSave = () => {
+    localStorage.setItem('card-lost-message', cardLostMessage);
+    toast({
+      title: "Pesan Kartu Disimpan",
+      description: "Pesan pada bagian belakang kartu siswa telah diperbarui."
+    });
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -105,17 +116,17 @@ export default function SettingsPage() {
           Kelola pengaturan umum untuk aplikasi.
         </p>
       </div>
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Kustomisasi Kartu Siswa</CardTitle>
             <CardDescription>
-              Unggah gambar latar belakang untuk kartu siswa digital.
+              Ubah tampilan dan informasi pada kartu siswa digital.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="card-background-file">File Gambar Latar</Label>
+              <Label htmlFor="card-background-file">Gambar Latar Belakang Kartu</Label>
               <Input id="card-background-file" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} />
               <p className="text-xs text-muted-foreground">
                 Direkomendasikan ukuran 856x540px. Maksimal 2MB.
@@ -147,6 +158,24 @@ export default function SettingsPage() {
                   </Button>
               )}
             </div>
+
+            <div className="space-y-2 pt-4 border-t">
+              <Label htmlFor="card-lost-message" className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" /> Pesan Bagian Belakang Kartu
+              </Label>
+              <Textarea
+                id="card-lost-message"
+                value={cardLostMessage}
+                onChange={(e) => setCardLostMessage(e.target.value)}
+                placeholder="cth. Jika kartu ini ditemukan, harap kembalikan..."
+                rows={3}
+              />
+               <Button onClick={handleCardMessageSave}>
+                <Save className="mr-2 h-4 w-4" />
+                Simpan Pesan
+              </Button>
+            </div>
+
           </CardContent>
         </Card>
         
@@ -154,7 +183,7 @@ export default function SettingsPage() {
             <CardHeader>
                 <CardTitle>Keamanan Halaman Absensi</CardTitle>
                 <CardDescription>
-                  Aktifkan PIN untuk membatasi akses ke halaman pemindaian absensi.
+                  Aktifkan PIN untuk membatasi akses ke halaman pemindaian dan pengaturannya.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -162,7 +191,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-3">
                     {isPinEnabled ? <Lock className="h-5 w-5 text-primary" /> : <Unlock className="h-5 w-5 text-muted-foreground" />}
                     <Label htmlFor="pin-enabled" className="font-medium">
-                      Aktifkan PIN
+                      Aktifkan Verifikasi PIN
                     </Label>
                 </div>
                 <Switch
@@ -191,7 +220,7 @@ export default function SettingsPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Pengaturan Pemindai</CardTitle>
+                <CardTitle>Pengaturan Pemindai Otomatis</CardTitle>
                 <CardDescription>
                 Atur perilaku mode pemindaian otomatis (auto-scan).
                 </CardDescription>
