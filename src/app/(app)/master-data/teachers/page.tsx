@@ -45,7 +45,7 @@ export default function TeachersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nama Guru</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead>NIP</TableHead>
               </TableRow>
             </TableHeader>
@@ -53,7 +53,7 @@ export default function TeachersPage() {
               {mockTeachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
-                  <TableCell>{teacher.email}</TableCell>
+                  <TableCell className="hidden md:table-cell">{teacher.email}</TableCell>
                   <TableCell>{teacher.nip}</TableCell>
                 </TableRow>
               ))}
