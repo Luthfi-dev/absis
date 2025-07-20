@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -19,12 +19,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search } from "lucide-react"
 import { mockStudents, type Student } from "@/lib/mock-data"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
 import { useRouter } from "next/navigation"
 import { Checkbox } from "./ui/checkbox"
+import { Input } from "./ui/input"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,11 +40,12 @@ import {
 import { StudentCardDialog } from "./student-card-dialog"
 import { encryptId } from "@/lib/crypto"
 
+const ITEMS_PER_PAGE = 10;
+
 export function StudentTable() {
   const [students, setStudents] = useState<Student[]>(() => {
     if (typeof window !== 'undefined') {
       const savedStudents = localStorage.getItem('mockStudents');
-      // Initialize with mockStudents if localStorage is empty
       if (!savedStudents) {
         localStorage.setItem('mockStudents', JSON.stringify(mockStudents));
         return mockStudents;
@@ -54,6 +56,8 @@ export function StudentTable() {
   });
   
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
   const router = useRouter()
 
   useEffect(() => {
@@ -70,6 +74,23 @@ export function StudentTable() {
     };
   }, []);
 
+  const filteredStudents = useMemo(() => {
+    return students.filter(student => 
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.nis.includes(searchTerm) ||
+      student.nisn.includes(searchTerm) ||
+      student.kelas.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [students, searchTerm]);
+
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredStudents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredStudents, currentPage]);
+
+
   const updateLocalStorage = (updatedStudents: Student[]) => {
     if (typeof window !== 'undefined') {
         localStorage.setItem('mockStudents', JSON.stringify(updatedStudents));
@@ -78,7 +99,7 @@ export function StudentTable() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedStudents(new Set(students.map(s => s.id)))
+      setSelectedStudents(new Set(paginatedStudents.map(s => s.id)))
     } else {
       setSelectedStudents(new Set())
     }
@@ -108,18 +129,30 @@ export function StudentTable() {
     const encryptedIds = idsToPrint.map(id => encryptId(id));
     router.push(`/students/print?ids=${encryptedIds.join(',')}`)
   }
-
-  const isAllSelected = selectedStudents.size > 0 && selectedStudents.size === students.length
+  
+  const isAllSelected = selectedStudents.size > 0 && selectedStudents.size === paginatedStudents.length && paginatedStudents.length > 0;
 
   return (
-    <>
-      {selectedStudents.size > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border bg-card p-2 shadow-sm">
-            <span className="text-sm font-medium pl-2">{selectedStudents.size} siswa terpilih</span>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center gap-4">
+        <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+                placeholder="Cari siswa (nama, ID, NIS, kelas...)"
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1); // Reset to first page on search
+                }}
+            />
+        </div>
+        {selectedStudents.size > 0 && (
             <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{selectedStudents.size} terpilih</span>
                 <Button variant="outline" size="sm" onClick={() => handlePrint(Array.from(selectedStudents))}>
                     <Printer className="mr-2 h-4 w-4" />
-                    Cetak QR
+                    Cetak
                 </Button>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -144,8 +177,9 @@ export function StudentTable() {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </div>
-      )}
+        )}
+      </div>
+
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <Table>
           <TableHeader>
@@ -155,6 +189,7 @@ export function StudentTable() {
                     checked={isAllSelected}
                     onCheckedChange={handleSelectAll}
                     aria-label="Pilih semua"
+                    disabled={paginatedStudents.length === 0}
                 />
               </TableHead>
               <TableHead>Nama</TableHead>
@@ -167,7 +202,7 @@ export function StudentTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {students.map((student) => (
+            {paginatedStudents.length > 0 ? paginatedStudents.map((student) => (
               <TableRow key={student.id} data-state={selectedStudents.has(student.id) ? "selected" : ""}>
                  <TableCell>
                     <Checkbox
@@ -244,10 +279,43 @@ export function StudentTable() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            )) : (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Tidak ada hasil.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
-    </>
+
+       <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Menampilkan {paginatedStudents.length} dari {filteredStudents.length} siswa.
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Sebelumnya
+          </Button>
+          <span className="text-sm font-medium">
+            Halaman {currentPage} dari {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Berikutnya
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

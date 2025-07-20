@@ -1,6 +1,7 @@
 
 'use client'
 
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -18,6 +19,11 @@ import {
   } from "@/components/ui/table"
 import { mockStudents, mockAttendance } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { Search } from 'lucide-react';
+
+const ITEMS_PER_PAGE = 10;
 
 const getStatusVariant = (status: string) => {
     switch (status) {
@@ -32,7 +38,7 @@ const getStatusVariant = (status: string) => {
     }
 }
 
-const allAttendance = Object.entries(mockAttendance).flatMap(([studentId, records]) => {
+const allAttendanceRecords = Object.entries(mockAttendance).flatMap(([studentId, records]) => {
     const student = mockStudents.find(s => s.id === studentId)
     return records.map(record => ({
         ...record,
@@ -43,8 +49,6 @@ const allAttendance = Object.entries(mockAttendance).flatMap(([studentId, record
     const dateA = new Date(a.date).getTime();
     const dateB = new Date(b.date).getTime();
     if (dateA !== dateB) return dateB - dateA;
-
-    // If dates are the same, sort by checkInTime
     const timeA = a.checkInTime ? a.checkInTime.split(':').join('') : '999999';
     const timeB = b.checkInTime ? b.checkInTime.split(':').join('') : '999999';
     return Number(timeA) - Number(timeB);
@@ -52,39 +56,107 @@ const allAttendance = Object.entries(mockAttendance).flatMap(([studentId, record
 
 
 export function AttendanceList() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filteredRecords = useMemo(() => {
+    return allAttendanceRecords.filter(record =>
+        record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        new Date(record.date).toLocaleDateString('id-ID').includes(searchTerm)
+    );
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredRecords.length / ITEMS_PER_PAGE);
+  const paginatedRecords = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredRecords.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredRecords, currentPage]);
+
   return (
     <Card>
         <CardHeader>
-            <CardTitle>Semua Catatan Kehadiran</CardTitle>
-            <CardDescription>Menampilkan semua data kehadiran yang tercatat dalam sistem, diurutkan berdasarkan yang terbaru.</CardDescription>
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div>
+                    <CardTitle>Semua Catatan Kehadiran</CardTitle>
+                    <CardDescription>Menampilkan semua data kehadiran yang tercatat dalam sistem.</CardDescription>
+                </div>
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Cari (nama, pelajaran, tanggal...)"
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                    />
+                </div>
+            </div>
         </CardHeader>
         <CardContent>
-        <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Nama Siswa</TableHead>
-                <TableHead>Mata Pelajaran</TableHead>
-                <TableHead>Jam Masuk</TableHead>
-                <TableHead>Jam Pulang</TableHead>
-                <TableHead className="text-right">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allAttendance.map((record) => (
-                <TableRow key={`${record.id}-${record.studentId}`}>
-                  <TableCell>{new Date(record.date).toLocaleDateString('id-ID')}</TableCell>
-                  <TableCell className="font-medium">{record.studentName}</TableCell>
-                  <TableCell>{record.subject}</TableCell>
-                  <TableCell>{record.checkInTime || '-'}</TableCell>
-                  <TableCell>{record.checkOutTime || '-'}</TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tanggal</TableHead>
+                        <TableHead>Nama Siswa</TableHead>
+                        <TableHead>Mata Pelajaran</TableHead>
+                        <TableHead>Jam Masuk</TableHead>
+                        <TableHead>Jam Pulang</TableHead>
+                        <TableHead className="text-right">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedRecords.length > 0 ? paginatedRecords.map((record) => (
+                        <TableRow key={`${record.id}-${record.studentId}`}>
+                          <TableCell>{new Date(record.date).toLocaleDateString('id-ID')}</TableCell>
+                          <TableCell className="font-medium">{record.studentName}</TableCell>
+                          <TableCell>{record.subject}</TableCell>
+                          <TableCell>{record.checkInTime || '-'}</TableCell>
+                          <TableCell>{record.checkOutTime || '-'}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      )) : (
+                        <TableRow>
+                            <TableCell colSpan={6} className="h-24 text-center">
+                                Tidak ada hasil.
+                            </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                </Table>
+            </div>
+
+            <div className="flex items-center justify-between pt-4">
+                <div className="text-sm text-muted-foreground">
+                    Menampilkan {paginatedRecords.length} dari {filteredRecords.length} catatan.
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Sebelumnya
+                    </Button>
+                    <span className="text-sm font-medium">
+                        Halaman {currentPage} dari {totalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Berikutnya
+                    </Button>
+                </div>
+            </div>
         </CardContent>
       </Card>
   )
