@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Button } from "@/components/ui/button"
@@ -11,8 +12,8 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CheckSquare, LogIn, User, Shield, UserPlus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { CheckSquare, LogIn, UserPlus } from "lucide-react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { mockTeachers, type Teacher } from "@/lib/mock-data"
@@ -20,24 +21,32 @@ import { mockTeachers, type Teacher } from "@/lib/mock-data"
 type AuthMode = "login" | "register"
 
 const getTeachersFromStorage = (): Teacher[] => {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === 'undefined') return mockTeachers; // Return default if server-side
     const saved = localStorage.getItem('mockTeachers');
     if (!saved) {
       localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
       return mockTeachers;
     }
-    return JSON.parse(saved);
+    try {
+        // A quick check to see if the new admin users exist. If not, reset with mock data.
+        const parsed = JSON.parse(saved);
+        const hasSuperAdmin = parsed.some((u: Teacher) => u.email === 'superadmin@gmail.com');
+        if (!hasSuperAdmin) {
+            localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
+            return mockTeachers;
+        }
+        return parsed;
+    } catch {
+        localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
+        return mockTeachers;
+    }
 }
+
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>("login")
   const router = useRouter()
   const { toast } = useToast()
-  const [users, setUsers] = useState<Teacher[]>([]);
-
-  useEffect(() => {
-    setUsers(getTeachersFromStorage());
-  }, []);
 
   const handleAuthAction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +54,11 @@ export default function LoginPage() {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value.toLowerCase();
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     
+    // Always get the latest user data from storage right before auth action
+    const currentUsers = getTeachersFromStorage();
+
     if (authMode === "login") {
-      const user = users.find(u => u.email.toLowerCase() === email && u.password === password);
+      const user = currentUsers.find(u => u.email.toLowerCase() === email && u.password === password);
 
       if (user) {
           if (user.status !== 'active') {
@@ -92,7 +104,7 @@ export default function LoginPage() {
         role: 'teacher' // All new registrations are teachers by default
       };
 
-      const updatedUsers = [...users, newUser];
+      const updatedUsers = [...currentUsers, newUser];
       localStorage.setItem('mockTeachers', JSON.stringify(updatedUsers));
       
       window.dispatchEvent(new Event('usersUpdated'));
