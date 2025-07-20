@@ -1,3 +1,4 @@
+
 export type Student = {
   id: string; // Internal unique ID
   studentId: string; // Auto-generated e.g., S001
@@ -9,7 +10,7 @@ export type Student = {
   avatar: string;
 };
 
-export type UserRole = 'admin' | 'teacher';
+export type UserRole = 'superadmin' | 'admin' | 'teacher';
 
 export type Teacher = {
   id: string;
@@ -75,7 +76,7 @@ export const mockTeachers: Teacher[] = [
   { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com', status: 'active', role: 'teacher', password: 'password' },
   { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com', status: 'pending', role: 'teacher', password: 'password' },
   { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com', status: 'active', role: 'teacher', password: 'password' },
-  { id: 'sa', name: 'Super Admin', nip: 'A00000000', email: 'superadmin@gmail.com', status: 'active', role: 'admin', password: '123456'},
+  { id: 'sa', name: 'Super Admin', nip: 'A00000000', email: 'superadmin@gmail.com', status: 'active', role: 'superadmin', password: '123456'},
   { id: 'adm', name: 'Admin Biasa', nip: 'A00000001', email: 'admin@gmail.com', status: 'active', role: 'admin', password: 'admin*#'},
 ];
 

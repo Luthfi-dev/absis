@@ -28,7 +28,6 @@ const getTeachersFromStorage = (): Teacher[] => {
       return mockTeachers;
     }
     try {
-        // A quick check to see if the new admin users exist. If not, reset with mock data.
         const parsed = JSON.parse(saved);
         const hasSuperAdmin = parsed.some((u: Teacher) => u.email === 'superadmin@gmail.com');
         if (!hasSuperAdmin) {
@@ -54,7 +53,6 @@ export default function LoginPage() {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value.toLowerCase();
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     
-    // Always get the latest user data from storage right before auth action
     const currentUsers = getTeachersFromStorage();
 
     if (authMode === "login") {
@@ -70,7 +68,7 @@ export default function LoginPage() {
               return;
           }
 
-          if (user.role === 'admin') {
+          if (user.role === 'admin' || user.role === 'superadmin') {
               router.push("/dashboard");
           } else if (user.role === 'teacher') {
               router.push("/teacher-dashboard");
