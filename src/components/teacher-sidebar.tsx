@@ -21,6 +21,7 @@ import {
   CheckSquare,
   LogOut,
   LayoutDashboard,
+  Calendar,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -43,6 +44,7 @@ export function TeacherSidebar() {
 
   const menuItems = [
     { href: "/teacher-dashboard", label: "Dasbor", icon: LayoutDashboard },
+    { href: "/schedules", label: "Jadwal Mengajar", icon: Calendar },
   ]
   
   if (!user) return null;
@@ -62,7 +64,7 @@ export function TeacherSidebar() {
               <SidebarMenuButton
                 as={Link}
                 href={item.href}
-                isActive={pathname.startsWith(item.href)}
+                isActive={pathname === item.href || (item.href !== "/teacher-dashboard" && pathname.startsWith(item.href))}
                 icon={<item.icon />}
                 tooltip={item.label}
                 onClick={handleLinkClick}
