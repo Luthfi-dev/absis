@@ -183,7 +183,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
       {!isInitializing && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
             <div className="w-64 h-64 border-4 border-white/50 rounded-lg shadow-lg relative overflow-hidden">
-                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-px bg-red-500 animate-scan-y shadow-lg" />
+                 <div className="absolute top-0 left-0 w-full h-px bg-red-500 animate-scan-y shadow-[0_0_10px_1px_#ef4444]" />
             </div>
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/50 text-white text-center p-3 rounded-lg animate-pulse-slow">
               <p className="font-medium">Arahkan QR Code Kartu Siswa ke Kamera</p>
