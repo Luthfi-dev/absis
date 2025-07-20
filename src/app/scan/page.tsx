@@ -106,7 +106,7 @@ export default function ScannerPage() {
         }
         
         // This timer is for how long the result card is shown
-        const resultDisplayTime = 3000;
+        const resultDisplayTime = 2000;
         
         setTimeout(() => {
             setScanResult(null);
