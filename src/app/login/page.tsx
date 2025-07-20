@@ -60,8 +60,14 @@ export default function LoginPage() {
 
           if (user.role === 'admin') {
               router.push("/dashboard");
-          } else {
+          } else if (user.role === 'teacher') {
               router.push("/teacher-dashboard");
+          } else {
+             toast({
+              variant: "destructive",
+              title: "Login Gagal",
+              description: "Peran pengguna tidak dikenali.",
+            });
           }
       } else {
           toast({
