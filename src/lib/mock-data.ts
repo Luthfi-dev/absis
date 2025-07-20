@@ -9,12 +9,15 @@ export type Student = {
   avatar: string;
 };
 
+export type UserRole = 'admin' | 'teacher';
+
 export type Teacher = {
   id: string;
   name: string;
   nip: string;
   email: string;
   status: 'active' | 'pending';
+  role: UserRole;
 }
 
 export type Class = {
@@ -67,10 +70,11 @@ export const mockStudents: Student[] = [
 ];
 
 export const mockTeachers: Teacher[] = [
-  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com', status: 'active' },
-  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com', status: 'active' },
-  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com', status: 'pending' },
-  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com', status: 'active' },
+  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com', status: 'active', role: 'teacher' },
+  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com', status: 'active', role: 'teacher' },
+  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com', status: 'pending', role: 'teacher' },
+  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com', status: 'active', role: 'teacher' },
+  { id: 't5', name: 'Admin Utama', nip: 'A00000001', email: 'admin@attendease.com', status: 'active', role: 'admin' },
 ];
 
 export const mockClasses: Class[] = [

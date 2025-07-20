@@ -12,78 +12,82 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CheckSquare, LogIn, User, Shield, UserPlus } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { mockTeachers, type Teacher } from "@/lib/mock-data"
 
-type Role = "admin" | "teacher"
 type AuthMode = "login" | "register"
 
 const getTeachersFromStorage = (): Teacher[] => {
     if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('mockTeachers');
-    return saved ? JSON.parse(saved) : mockTeachers;
+    // Initialize with mockTeachers if localStorage is empty or doesn't exist
+    if (!saved) {
+      localStorage.setItem('mockTeachers', JSON.stringify(mockTeachers));
+      return mockTeachers;
+    }
+    return JSON.parse(saved);
 }
 
 export default function LoginPage() {
-  const [role, setRole] = useState<Role>("admin")
   const [authMode, setAuthMode] = useState<AuthMode>("login")
   const router = useRouter()
   const { toast } = useToast()
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [users, setUsers] = useState<Teacher[]>([]);
 
   useEffect(() => {
-    setTeachers(getTeachersFromStorage());
+    setUsers(getTeachersFromStorage());
   }, []);
 
   const handleAuthAction = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value.toLowerCase();
     
     if (authMode === "login") {
-      if (role === "admin") {
-        router.push("/dashboard")
-      } else {
-        const teacher = teachers.find(t => t.email.toLowerCase() === email.toLowerCase());
+      const user = users.find(u => u.email.toLowerCase() === email);
 
-        if (teacher) {
-            if (teacher.status === 'active') {
-                router.push("/teacher-dashboard");
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Login Gagal",
-                    description: "Akun Anda masih menunggu persetujuan admin.",
-                });
-            }
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Login Gagal",
-                description: "Email atau kata sandi salah.",
-            });
-        }
+      if (user) {
+          if (user.status !== 'active') {
+              toast({
+                  variant: "destructive",
+                  title: "Login Gagal",
+                  description: "Akun Anda masih menunggu persetujuan admin.",
+              });
+              return;
+          }
+
+          if (user.role === 'admin') {
+              router.push("/dashboard");
+          } else {
+              router.push("/teacher-dashboard");
+          }
+      } else {
+          toast({
+              variant: "destructive",
+              title: "Login Gagal",
+              description: "Email atau kata sandi salah.",
+          });
       }
-    } else {
+    } else { // Register mode
       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
       const nip = (form.elements.namedItem('nip') as HTMLInputElement).value;
 
-      const newTeacher: Teacher = {
+      const newUser: Teacher = {
         id: `t-${Date.now()}`,
         name,
         nip,
         email,
-        status: 'pending' // Set default status to pending
+        status: 'pending',
+        role: 'teacher' // All new registrations are teachers by default
       };
 
-      const updatedTeachers = [...teachers, newTeacher];
-      localStorage.setItem('mockTeachers', JSON.stringify(updatedTeachers));
+      const updatedUsers = [...users, newUser];
+      localStorage.setItem('mockTeachers', JSON.stringify(updatedUsers));
       
       // Notify other components if needed
-      window.dispatchEvent(new Event('teachersUpdated'));
+      window.dispatchEvent(new Event('usersUpdated'));
 
       toast({
         title: "Pendaftaran Berhasil",
@@ -94,6 +98,16 @@ export default function LoginPage() {
     }
   }
 
+  const getLoginIcon = () => {
+    if (authMode === 'login') {
+      const email = (document.getElementById('email') as HTMLInputElement)?.value.toLowerCase();
+      const user = users.find(u => u.email.toLowerCase() === email);
+      if (user?.role === 'admin') return <Shield className="mb-3 h-6 w-6" />;
+      return <User className="mb-3 h-6 w-6" />;
+    }
+    return <UserPlus className="mb-3 h-6 w-6" />;
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">
@@ -102,37 +116,11 @@ export default function LoginPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <CheckSquare className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="font-headline text-3xl font-bold">{authMode === 'login' ? 'Selamat Datang!' : 'Buat Akun Guru'}</CardTitle>
-            <CardDescription>{authMode === 'login' ? 'Silakan masuk untuk melanjutkan.' : 'Isi form untuk mendaftar.'}</CardDescription>
+            <CardTitle className="font-headline text-3xl font-bold">{authMode === 'login' ? 'Selamat Datang!' : 'Buat Akun Baru'}</CardTitle>
+            <CardDescription>{authMode === 'login' ? 'Silakan masuk untuk melanjutkan.' : 'Isi form untuk mendaftar sebagai guru.'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-              {authMode === 'login' ? (
-                <div className="space-y-3">
-                     <Label>Pilih Peran Anda</Label>
-                    <RadioGroup defaultValue="admin" value={role} onValueChange={(value: Role) => setRole(value)} className="grid grid-cols-2 gap-4">
-                        <div>
-                            <RadioGroupItem value="admin" id="admin" className="peer sr-only" />
-                            <Label
-                            htmlFor="admin"
-                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                            >
-                            <Shield className="mb-3 h-6 w-6" />
-                            Admin
-                            </Label>
-                        </div>
-                        <div>
-                            <RadioGroupItem value="teacher" id="teacher" className="peer sr-only" />
-                            <Label
-                            htmlFor="teacher"
-                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                            >
-                            <User className="mb-3 h-6 w-6" />
-                            Guru
-                            </Label>
-                        </div>
-                    </RadioGroup>
-                </div>
-              ) : (
+              {authMode === 'register' && (
                 <>
                   <div className="space-y-2">
                       <Label htmlFor="name">Nama Lengkap</Label>
@@ -146,11 +134,11 @@ export default function LoginPage() {
               )}
               <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder={role === 'admin' ? "admin@example.com" : "guru@example.com"} required defaultValue={authMode === 'login' ? (role === 'admin' ? "admin@attendease.com" : "guru@attendease.com") : ""} />
+                  <Input id="email" type="email" placeholder="email@example.com" required defaultValue="admin@attendease.com" />
               </div>
               <div className="space-y-2">
                   <Label htmlFor="password">Kata Sandi</Label>
-                  <Input id="password" type="password" required defaultValue={authMode === 'login' ? "password" : ""} />
+                  <Input id="password" type="password" required defaultValue="password" />
               </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

@@ -28,8 +28,8 @@ import {
   User,
   School,
   Book,
-  Clock,
-  Database
+  Database,
+  Users2,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -47,10 +47,10 @@ export function AppSidebar() {
     { href: "/students", label: "Siswa", icon: Users },
     { href: "/roster", label: "Roster Kelas", icon: CalendarDays },
     { href: "/attendance", label: "Kehadiran", icon: ClipboardCheck },
+    { href: "/users", label: "Manajemen Pengguna", icon: Users2 },
   ]
   
   const masterDataItems = [
-    { href: "/master-data/teachers", label: "Data Guru", icon: User },
     { href: "/master-data/classes", label: "Data Kelas", icon: School },
     { href: "/master-data/subjects", label: "Data Pelajaran", icon: Book },
   ]
