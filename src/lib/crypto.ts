@@ -29,14 +29,20 @@ export function encryptId(text: string): string {
 
 // Decrypts a string using AES
 export function decryptId(ciphertextUrlSafe: string): string {
-  if (!ciphertextUrlSafe) return '';
+  if (!ciphertextUrlSafe) return 'decryption_error';
   try {
     // Restore the standard Base64 string
-    let ciphertext = atob(ciphertextUrlSafe.replace(/-/g, '+').replace(/_/g, '/'));
+    let base64 = ciphertextUrlSafe.replace(/-/g, '+').replace(/_/g, '/');
+    // Pad the string with '=' characters if necessary
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const ciphertext = atob(base64);
     const bytes = CryptoJS.AES.decrypt(ciphertext, secretKey);
     const originalText = bytes.toString(CryptoJS.enc.Utf8);
     if (!originalText) {
-      throw new Error("Decryption resulted in empty string. Check key or ciphertext.");
+      // This can happen if the key is wrong or the ciphertext is corrupt
+      return 'decryption_error';
     }
     return originalText;
   } catch (error) {

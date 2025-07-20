@@ -31,23 +31,21 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
   const [isInitializing, setIsInitializing] = useState(true);
 
   const handleCheckIn = useCallback((scannedData: string) => {
-    let studentId: string;
     const now = new Date();
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
     
-    if (scannedData.length < 5) {
+    // Basic validation to check if the scanned data could be a valid encrypted string.
+    if (!scannedData || scannedData.length < 10) { 
+        // Silently ignore short or empty scans to avoid user friction
         return; 
     }
 
-    try {
-      studentId = decryptId(scannedData);
-       if (studentId === 'decryption_error') {
-         throw new Error("Invalid QR Code content");
-       }
-    } catch (e) {
+    const studentId = decryptId(scannedData);
+
+    if (studentId === 'decryption_error') {
       onScanComplete({
           status: "error",
-          message: `QR Code tidak valid.`,
+          message: `QR Code tidak valid atau rusak.`,
           timestamp: timestamp,
           scannedData: scannedData,
       });
