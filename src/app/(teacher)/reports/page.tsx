@@ -79,7 +79,7 @@ export default function TeacherReportsPage() {
             return {
                 student: student,
                 total: filteredRecords.length,
-                hadir: filteredRecords.filter(r => r.status === 'Tepat Waktu').length,
+                hadir: filteredRecords.filter(r => r.status === 'Hadir' || r.status === 'Excellent').length,
                 terlambat: filteredRecords.filter(r => r.status === 'Terlambat').length,
                 absen: filteredRecords.filter(r => r.status === 'Absen').length,
             };
@@ -137,7 +137,7 @@ export default function TeacherReportsPage() {
                                 <TableRow>
                                     <TableHead>Nama Siswa</TableHead>
                                     <TableHead className="text-center">Total Pertemuan</TableHead>
-                                    <TableHead className="text-center">Hadir Tepat Waktu</TableHead>
+                                    <TableHead className="text-center">Hadir</TableHead>
                                     <TableHead className="text-center">Terlambat</TableHead>
                                     <TableHead className="text-center">Absen</TableHead>
                                 </TableRow>

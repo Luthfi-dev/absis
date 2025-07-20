@@ -70,7 +70,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
 
     const attendanceData = getAttendanceFromStorage();
     const studentRecords = attendanceData[studentId] || [];
-    const todaysRecord = studentRecords.find(r => r.date === todayStr);
+    const todaysRecord = studentRecords.find(r => r.date === todayStr && r.subject === 'Absensi Pagi');
 
     const checkInTimeSetting = localStorage.getItem('school-check-in-time') || '07:00';
     const checkOutTimeSetting = localStorage.getItem('school-check-out-time') || '15:00';
@@ -96,7 +96,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
         }
     } else {
         // This is a new check-in scan
-        const newStatus = now <= checkInTime ? 'Tepat Waktu' : 'Terlambat';
+        const newStatus = now <= checkInTime ? 'Excellent' : 'Terlambat';
         const newRecord: AttendanceRecord = {
             id: `att-${Date.now()}`,
             subject: 'Absensi Pagi', // Special subject for morning attendance
@@ -111,7 +111,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
         attendanceData[studentId].push(newRecord);
         saveAttendanceToStorage(attendanceData);
 
-        const message = newStatus === 'Tepat Waktu' ? 'Absensi diterima. Tepat waktu!' : 'Absensi diterima. Terlambat.';
+        const message = newStatus === 'Excellent' ? 'Absensi diterima. Excellent!' : 'Absensi diterima. Terlambat.';
         onScanComplete({ status: "success", message, student, timestamp, scannedData });
     }
   }, [onScanComplete]);

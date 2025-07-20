@@ -60,7 +60,7 @@ export type AttendanceRecord = {
   id: string;
   subject: string;
   date: string;
-  status: 'Tepat Waktu' | 'Terlambat' | 'Absen' | 'Hadir'; // 'Hadir' is for per-subject, others for morning
+  status: 'Excellent' | 'Terlambat' | 'Absen' | 'Hadir'; // 'Hadir' is for per-subject, 'Excellent' for on-time
   checkInTime?: string;
   checkOutTime?: string;
 };
@@ -120,19 +120,19 @@ export const mockRoster: Roster = {
 
 export let mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [
-    { id: 'a1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:55:12' },
+    { id: 'a1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Excellent', checkInTime: '06:55:12', checkOutTime: '15:02:00' },
     { id: 'a2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Hadir' },
     { id: 'a3', subject: 'Absensi Pagi', date: '2024-05-19', status: 'Terlambat', checkInTime: '07:15:30' },
   ],
   '2': [
-    { id: 'b1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Terlambat', checkInTime: '07:05:02' },
+    { id: 'b1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Terlambat', checkInTime: '07:05:02', checkOutTime: '15:01:15' },
     { id: 'b2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Absen' },
   ],
   '3': [
-    { id: 'c1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:58:41' },
+    { id: 'c1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Excellent', checkInTime: '06:58:41', checkOutTime: '15:05:30'},
   ],
   '4': [
-    { id: 'd1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:50:00' },
+    { id: 'd1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Excellent', checkInTime: '06:50:00', checkOutTime: '14:59:00' },
     { id: 'd2', subject: 'Matematika 101', date: '2024-05-20', status: 'Absen' },
   ],
   '5': [
