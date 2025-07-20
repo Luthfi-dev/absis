@@ -1,8 +1,9 @@
+
 'use client';
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, CameraRotate, RefreshCw } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -258,7 +259,7 @@ export default function ScannerPage() {
             <CardContent className="space-y-4">
                 <div className="flex justify-center gap-4 mb-4">
                     <Button variant="outline" size="lg" className="flex-col h-20" onClick={() => handleControlClick('switch-camera')}>
-                        <CameraRotate className="h-6 w-6 mb-1" />
+                        <Repeat className="h-6 w-6 mb-1" />
                         <span>Ganti Kamera</span>
                         <span className="text-xs text-muted-foreground">{facingMode === 'user' ? 'Depan' : 'Belakang'}</span>
                     </Button>
