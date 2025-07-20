@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Button } from "@/components/ui/button"
@@ -48,11 +49,11 @@ export default function TeacherDashboardPage() {
           {teacherSchedule.length > 0 ? (
             <ul className="space-y-4">
               {teacherSchedule.map((item) => (
-                <li key={item.id} className="flex items-center gap-4 p-3 rounded-lg transition-colors hover:bg-muted/50 border">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <li key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg transition-colors hover:bg-muted/50 border">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
                     <Clock className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                     <div className="flex items-center justify-between">
                       <p className="font-semibold">{item.subject}</p>
                        <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
@@ -60,7 +61,7 @@ export default function TeacherDashboardPage() {
                     <p className="text-sm text-muted-foreground">{item.class}</p>
                     <p className="text-sm text-muted-foreground">{item.time}</p>
                   </div>
-                  <Button asChild disabled={item.status !== 'Sedang Berlangsung'}>
+                  <Button asChild disabled={item.status !== 'Sedang Berlangsung'} className="w-full sm:w-auto">
                     <Link href={`/attendance/${item.id}`}>
                       <ScanLine className="mr-2 h-4 w-4" />
                       Mulai Absensi
