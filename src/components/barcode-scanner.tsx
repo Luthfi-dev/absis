@@ -5,8 +5,8 @@ import { useEffect, useRef, useCallback, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { mockStudents, Student } from "@/lib/mock-data"
 import jsQR from "jsqr"
-import type { CameraFacingMode } from "@/app/(app)/settings/page"
 import { decryptId } from "@/lib/crypto"
+import type { CameraFacingMode } from "@/lib/types"
 
 export type ScanResult = {
   status: "success" | "error";
@@ -20,9 +20,10 @@ type BarcodeScannerProps = {
   onScanComplete: (result: ScanResult) => void;
   setCameraError: (error: string | null) => void;
   isPaused: boolean;
+  facingMode: CameraFacingMode;
 }
 
-export function BarcodeScanner({ onScanComplete, setCameraError, isPaused }: BarcodeScannerProps) {
+export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facingMode }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null);
@@ -80,10 +81,8 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused }: Bar
       setIsInitializing(true);
       setCameraError(null);
       
-      const savedMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode || 'environment';
-
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: savedMode } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
         if (isActive) {
           streamRef.current = stream;
           if (videoRef.current) {
@@ -121,7 +120,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused }: Bar
         }
 
         const tick = () => {
-          if (isPaused) {
+          if (isPaused || !isActive) {
             animationFrameId.current = requestAnimationFrame(tick);
             return;
           }
@@ -167,7 +166,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused }: Bar
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [facingMode]); // Rerun effect when facingMode changes
 
   useEffect(() => {
     if (isPaused) {

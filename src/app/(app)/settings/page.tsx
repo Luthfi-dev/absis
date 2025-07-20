@@ -11,21 +11,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UploadCloud, Trash2, Camera, Smartphone, Lock, Unlock } from "lucide-react"
+import { UploadCloud, Trash2, Lock, Unlock, Timer } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
-
-export type CameraFacingMode = "user" | "environment"
 
 export default function SettingsPage() {
   const { toast } = useToast()
   const [cardBackground, setCardBackground] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [cameraMode, setCameraMode] = useState<CameraFacingMode>('user')
   const [pin, setPin] = useState('')
   const [isPinEnabled, setIsPinEnabled] = useState(false)
+  const [autoScanTimeout, setAutoScanTimeout] = useState('1');
 
   useEffect(() => {
     const savedBackground = localStorage.getItem('card-background')
@@ -33,14 +30,13 @@ export default function SettingsPage() {
       setCardBackground(savedBackground)
       setPreview(savedBackground)
     }
-    const savedCameraMode = localStorage.getItem('camera-facing-mode') as CameraFacingMode | null
-    if (savedCameraMode) {
-        setCameraMode(savedCameraMode)
-    }
     const savedPin = localStorage.getItem('scanner-pin') || ''
     setPin(savedPin)
     const savedIsPinEnabled = localStorage.getItem('scanner-pin-enabled') === 'true'
     setIsPinEnabled(savedIsPinEnabled)
+    const savedTimeout = localStorage.getItem('auto-scan-timeout') || '1';
+    setAutoScanTimeout(savedTimeout);
+
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,15 +80,6 @@ export default function SettingsPage() {
       })
   }
 
-  const handleCameraModeChange = (value: CameraFacingMode) => {
-    setCameraMode(value)
-    localStorage.setItem('camera-facing-mode', value)
-    toast({
-        title: "Pengaturan Disimpan",
-        description: `Kamera pemindai diatur ke kamera ${value === 'user' ? 'depan' : 'belakang'}.`,
-      })
-  }
-
   const handlePinSettingsSave = () => {
     localStorage.setItem('scanner-pin', pin)
     localStorage.setItem('scanner-pin-enabled', String(isPinEnabled))
@@ -100,6 +87,14 @@ export default function SettingsPage() {
       title: "Pengaturan PIN Disimpan",
       description: `PIN halaman absensi telah diperbarui.`
     })
+  }
+
+  const handleAutoScanSettingsSave = () => {
+    localStorage.setItem('auto-scan-timeout', autoScanTimeout);
+    toast({
+        title: "Pengaturan Auto-Scan Disimpan",
+        description: `Batas waktu auto-scan diatur ke ${autoScanTimeout} menit.`
+    });
   }
 
   return (
@@ -154,30 +149,7 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Pengaturan Pemindai</CardTitle>
-                <CardDescription>
-                Pilih kamera default yang akan digunakan untuk memindai QR code.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RadioGroup value={cameraMode} onValueChange={handleCameraModeChange}>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="user" id="front-camera" />
-                        <Label htmlFor="front-camera" className="flex items-center gap-2">
-                            <Camera className="h-5 w-5" /> Kamera Depan (Selfie)
-                        </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="environment" id="back-camera" />
-                        <Label htmlFor="back-camera" className="flex items-center gap-2">
-                            <Smartphone className="h-5 w-5" /> Kamera Belakang (Utama)
-                        </Label>
-                    </div>
-                </RadioGroup>
-            </CardContent>
-        </Card>
+        
         <Card>
             <CardHeader>
                 <CardTitle>Keamanan Halaman Absensi</CardTitle>
@@ -214,6 +186,36 @@ export default function SettingsPage() {
                <Button onClick={handlePinSettingsSave} disabled={isPinEnabled && (pin.length < 4 || pin.length > 6)}>
                 Simpan Pengaturan PIN
               </Button>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Pengaturan Pemindai</CardTitle>
+                <CardDescription>
+                Atur perilaku mode pemindaian otomatis (auto-scan).
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2">
+                    <Label htmlFor="auto-scan-timeout" className="flex items-center gap-2">
+                        <Timer className="h-5 w-5" /> Batas Waktu Auto-Scan (menit)
+                    </Label>
+                     <Input
+                        id="auto-scan-timeout"
+                        type="number"
+                        value={autoScanTimeout}
+                        onChange={(e) => setAutoScanTimeout(e.target.value)}
+                        placeholder="cth. 1"
+                        min="1"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Sesi scan akan berhenti otomatis jika tidak ada aktivitas selama waktu ini.
+                    </p>
+                </div>
+                 <Button onClick={handleAutoScanSettingsSave}>
+                    Simpan Pengaturan Pemindai
+                </Button>
             </CardContent>
         </Card>
       </div>

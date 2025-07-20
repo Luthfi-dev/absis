@@ -13,11 +13,13 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
+type PinAction = 'open' | 'close' | 'switch-camera' | 'toggle-auto-scan';
+
 interface PinDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  action: 'open' | 'close';
+  action: PinAction;
 }
 
 export function PinDialog({ isOpen, onClose, onSuccess, action }: PinDialogProps) {
@@ -25,6 +27,28 @@ export function PinDialog({ isOpen, onClose, onSuccess, action }: PinDialogProps
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const getDialogDescription = () => {
+    switch (action) {
+      case 'open':
+        return 'Masukkan PIN untuk membuka halaman absensi.';
+      case 'close':
+        return 'Masukkan PIN untuk menutup halaman absensi.';
+      case 'switch-camera':
+        return 'Masukkan PIN untuk mengganti kamera.';
+      case 'toggle-auto-scan':
+        return 'Masukkan PIN untuk mengubah mode auto-scan.';
+      default:
+        return 'Masukkan PIN untuk melanjutkan.';
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPin('');
+      setError('');
+    }
+  }, [isOpen]);
 
   const handleVerifyPin = () => {
     setIsLoading(true);
@@ -54,9 +78,6 @@ export function PinDialog({ isOpen, onClose, onSuccess, action }: PinDialogProps
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     setPin(value);
-    if (value.length === (localStorage.getItem('scanner-pin')?.length || 4)) {
-        // Automatically submit when length matches
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,9 +91,7 @@ export function PinDialog({ isOpen, onClose, onSuccess, action }: PinDialogProps
         <DialogHeader>
           <DialogTitle>Verifikasi PIN</DialogTitle>
           <DialogDescription>
-            {action === 'open'
-              ? 'Masukkan PIN untuk membuka halaman absensi.'
-              : 'Masukkan PIN untuk menutup halaman absensi.'}
+            {getDialogDescription()}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

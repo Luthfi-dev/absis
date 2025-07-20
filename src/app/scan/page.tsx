@@ -2,7 +2,7 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, CameraRotate, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,10 +11,16 @@ import { PinDialog } from '@/components/pin-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import type { CameraFacingMode } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+type PinAction = 'open' | 'close' | 'switch-camera' | 'toggle-auto-scan';
 
 export default function ScannerPage() {
   const successAudioRef = useRef<HTMLAudioElement>(null);
   const errorAudioRef = useRef<HTMLAudioElement>(null);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
@@ -24,11 +30,14 @@ export default function ScannerPage() {
   const [isPinRequired, setIsPinRequired] = useState<boolean | undefined>(undefined);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showPinDialog, setShowPinDialog] = useState(false);
-  const [pinDialogAction, setPinDialogAction] = useState<'open' | 'close'>('open');
+  const [pinDialogAction, setPinDialogAction] = useState<PinAction>('open');
   const router = useRouter();
+  const { toast } = useToast();
 
   const [isScanning, setIsScanning] = useState(false);
-
+  const [facingMode, setFacingMode] = useState<CameraFacingMode>('environment');
+  const [isAutoScan, setIsAutoScan] = useState(false);
+  const [autoScanTimeoutMinutes, setAutoScanTimeoutMinutes] = useState(1);
 
   useEffect(() => {
     const pinEnabled = localStorage.getItem('scanner-pin-enabled') === 'true';
@@ -39,15 +48,29 @@ export default function ScannerPage() {
       setShowPinDialog(true);
       setPinDialogAction('open');
     }
+    const savedTimeout = parseInt(localStorage.getItem('auto-scan-timeout') || '1', 10);
+    setAutoScanTimeoutMinutes(savedTimeout);
   }, []);
 
-  const resetState = useCallback(() => {
-    setScanResult(null);
-    setLastScannedData(null);
-    setIsVerifying(false);
-    setCameraError(null);
-    setIsScanning(false); // Kembali ke halaman intro setelah selesai
-  }, []);
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    if (isScanning && isAutoScan) {
+      idleTimerRef.current = setTimeout(() => {
+        toast({ title: 'Sesi Auto-Scan Berakhir', description: 'Sesi ditutup karena tidak ada aktivitas.' });
+        setIsScanning(false);
+        setIsAutoScan(false);
+      }, autoScanTimeoutMinutes * 60 * 1000);
+    }
+  }, [isScanning, isAutoScan, autoScanTimeoutMinutes, toast]);
+
+  useEffect(() => {
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [resetIdleTimer]);
   
   const handleScanComplete = useCallback((result: ScanResult) => {
     if (!result.scannedData || isVerifying) return;
@@ -65,28 +88,62 @@ export default function ScannerPage() {
           errorAudioRef.current?.play().catch(err => console.error("Gagal memutar suara error:", err));
         }
         
-        setTimeout(() => {
-          resetState();
-        }, 5000);
+        if (isAutoScan) {
+          setTimeout(() => {
+            setScanResult(null);
+            setLastScannedData(null);
+            resetIdleTimer(); // Reset timer on new scan
+          }, 3000);
+        } else {
+          setTimeout(() => {
+            setIsScanning(false); // Kembali ke halaman intro setelah selesai jika bukan auto-scan
+            setScanResult(null);
+            setLastScannedData(null);
+          }, 5000);
+        }
 
     }, 1500);
-  }, [isVerifying, resetState]);
+  }, [isVerifying, isAutoScan, resetIdleTimer]);
 
   const handleClosePage = () => {
     if (isPinRequired) {
-      setShowPinDialog(true);
       setPinDialogAction('close');
+      setShowPinDialog(true);
     } else {
       router.push('/');
     }
   };
 
+  const handleControlClick = (action: 'switch-camera' | 'toggle-auto-scan') => {
+    if (isPinRequired) {
+      setPinDialogAction(action);
+      setShowPinDialog(true);
+    } else {
+      // If no PIN, execute directly
+      if (action === 'switch-camera') {
+        setFacingMode(prev => (prev === 'user' ? 'environment' : 'user'));
+        toast({ title: `Kamera diubah ke ${facingMode === 'user' ? 'belakang' : 'depan'}` });
+      } else if (action === 'toggle-auto-scan') {
+        setIsAutoScan(prev => !prev);
+        toast({ title: `Mode Auto-Scan ${!isAutoScan ? 'Aktif' : 'Nonaktif'}` });
+      }
+    }
+  };
+
   const onPinSuccess = () => {
+    setShowPinDialog(false);
     if (pinDialogAction === 'open') {
       setIsUnlocked(true);
-      setShowPinDialog(false);
-    } else { // 'close'
+    } else if (pinDialogAction === 'close') {
       router.push('/');
+    } else if (pinDialogAction === 'switch-camera') {
+      const newMode = facingMode === 'user' ? 'environment' : 'user';
+      setFacingMode(newMode);
+      toast({ title: `Kamera diubah ke ${newMode === 'user' ? 'depan (selfie)' : 'belakang (utama)'}` });
+    } else if (pinDialogAction === 'toggle-auto-scan') {
+      const newAutoScanState = !isAutoScan;
+      setIsAutoScan(newAutoScanState);
+      toast({ title: `Mode Auto-Scan ${newAutoScanState ? 'Aktif' : 'Nonaktif'}` });
     }
   };
 
@@ -101,7 +158,7 @@ export default function ScannerPage() {
         )
     }
 
-    if (scanResult) {
+    if (scanResult && (!isAutoScan || isVerifying)) {
       return (
         <Card className="w-full max-w-md mx-auto animate-in fade-in zoom-in-95">
           <CardHeader>
@@ -139,10 +196,12 @@ export default function ScannerPage() {
         return (
             <Card className="w-full h-full sm:w-full sm:h-auto sm:max-w-md mx-auto animate-in fade-in zoom-in-95 flex flex-col">
                 <CardContent className="p-0 relative flex-grow">
-                <BarcodeScanner 
+                <BarcodeScanner
+                    key={facingMode} // Force re-mount on camera change
                     onScanComplete={handleScanComplete}
                     setCameraError={setCameraError}
                     isPaused={isVerifying || !!scanResult}
+                    facingMode={facingMode}
                 />
                  { isVerifying && (
                     <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
@@ -154,6 +213,14 @@ export default function ScannerPage() {
                             </p>
                         )}
                     </div>
+                )}
+                 {scanResult && isAutoScan && !isVerifying && (
+                  <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20 space-y-4 p-4">
+                      {scanResult.status === 'success' ? <UserCheck className="w-12 h-12 text-green-500" /> : <XCircle className="w-12 h-12 text-red-500" />}
+                      <p className="text-xl font-semibold">{scanResult.message}</p>
+                      <p className="text-lg font-bold">{scanResult.student?.name}</p>
+                      <Loader2 className="w-6 h-6 animate-spin mt-4" />
+                  </div>
                 )}
                 { cameraError && (
                      <div className="absolute inset-0 bg-destructive/90 flex flex-col items-center justify-center text-destructive-foreground z-20 p-4 text-center">
@@ -168,9 +235,9 @@ export default function ScannerPage() {
                 )}
                 </CardContent>
                  <div className="p-4 bg-background border-t">
-                    <Button variant="outline" className="w-full" onClick={() => setIsScanning(false)}>
+                    <Button variant="outline" className="w-full" onClick={() => { setIsScanning(false); setIsAutoScan(false); }}>
                         <CameraOff className="mr-2 h-4 w-4" />
-                        Batalkan Pemindaian
+                        Hentikan Sesi
                     </Button>
                 </div>
             </Card>
@@ -185,11 +252,23 @@ export default function ScannerPage() {
                 </div>
                 <CardTitle className="text-3xl font-bold">Halaman Absensi</CardTitle>
                 <CardDescription>
-                    Halaman ini siap untuk memulai sesi absensi. Klik tombol di bawah untuk mengaktifkan kamera.
+                    Pilih mode, lalu mulai sesi absensi.
                 </CardDescription>
             </CardHeader>
-            <CardContent>
-                <Button size="lg" className="w-full" onClick={() => setIsScanning(true)}>
+            <CardContent className="space-y-4">
+                <div className="flex justify-center gap-4 mb-4">
+                    <Button variant="outline" size="lg" className="flex-col h-20" onClick={() => handleControlClick('switch-camera')}>
+                        <CameraRotate className="h-6 w-6 mb-1" />
+                        <span>Ganti Kamera</span>
+                        <span className="text-xs text-muted-foreground">{facingMode === 'user' ? 'Depan' : 'Belakang'}</span>
+                    </Button>
+                     <Button variant="outline" size="lg" className={cn("flex-col h-20", isAutoScan && "border-primary text-primary")} onClick={() => handleControlClick('toggle-auto-scan')}>
+                        <RefreshCw className={cn("h-6 w-6 mb-1", isAutoScan && "animate-spin")} />
+                        <span>Auto-Scan</span>
+                        <span className="text-xs text-muted-foreground">{isAutoScan ? 'Aktif' : 'Nonaktif'}</span>
+                    </Button>
+                </div>
+                <Button size="lg" className="w-full" onClick={() => { setIsScanning(true); resetIdleTimer(); }}>
                     <Camera className="mr-2 h-5 w-5" />
                     Mulai Absensi
                 </Button>
