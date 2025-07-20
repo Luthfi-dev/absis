@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CheckSquare, LogIn, User, Shield, UserPlus } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { mockTeachers, type Teacher } from "@/lib/mock-data"
@@ -21,48 +21,73 @@ import { mockTeachers, type Teacher } from "@/lib/mock-data"
 type Role = "admin" | "teacher"
 type AuthMode = "login" | "register"
 
+const getTeachersFromStorage = (): Teacher[] => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem('mockTeachers');
+    return saved ? JSON.parse(saved) : mockTeachers;
+}
+
 export default function LoginPage() {
   const [role, setRole] = useState<Role>("admin")
   const [authMode, setAuthMode] = useState<AuthMode>("login")
   const router = useRouter()
   const { toast } = useToast()
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+
+  useEffect(() => {
+    setTeachers(getTeachersFromStorage());
+  }, []);
 
   const handleAuthAction = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
     
     if (authMode === "login") {
-      // Login logic
       if (role === "admin") {
         router.push("/dashboard")
       } else {
-        router.push("/teacher-dashboard")
+        const teacher = teachers.find(t => t.email.toLowerCase() === email.toLowerCase());
+
+        if (teacher) {
+            if (teacher.status === 'active') {
+                router.push("/teacher-dashboard");
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Login Gagal",
+                    description: "Akun Anda masih menunggu persetujuan admin.",
+                });
+            }
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Login Gagal",
+                description: "Email atau kata sandi salah.",
+            });
+        }
       }
     } else {
-      // Registration logic for teachers
       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
       const nip = (form.elements.namedItem('nip') as HTMLInputElement).value;
-      const email = (form.elements.namedItem('email') as HTMLInputElement).value;
 
       const newTeacher: Teacher = {
         id: `t-${Date.now()}`,
         name,
         nip,
-        email
+        email,
+        status: 'pending' // Set default status to pending
       };
 
-      // In a real app, you would make an API call here.
-      // For this mock, we'll update localStorage.
-      const updatedTeachers = [...mockTeachers, newTeacher];
-      // Note: This would need a more robust solution in a real app,
-      // as localStorage doesn't persist across different mock data initializations.
-      // For prototype purposes, this demonstrates the flow.
-      console.log("New teacher registered:", newTeacher);
-      console.log("Updated teacher list (conceptual):", updatedTeachers);
+      const updatedTeachers = [...teachers, newTeacher];
+      localStorage.setItem('mockTeachers', JSON.stringify(updatedTeachers));
+      
+      // Notify other components if needed
+      window.dispatchEvent(new Event('teachersUpdated'));
 
       toast({
         title: "Pendaftaran Berhasil",
-        description: `Akun untuk ${name} telah dibuat. Silakan masuk.`,
+        description: `Akun untuk ${name} telah dibuat dan menunggu persetujuan admin.`,
       });
 
       setAuthMode("login"); // Switch back to login mode

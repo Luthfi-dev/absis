@@ -14,6 +14,7 @@ export type Teacher = {
   name: string;
   nip: string;
   email: string;
+  status: 'active' | 'pending';
 }
 
 export type Class = {
@@ -66,10 +67,10 @@ export const mockStudents: Student[] = [
 ];
 
 export const mockTeachers: Teacher[] = [
-  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com' },
-  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com' },
-  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com' },
-  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com' },
+  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com', status: 'active' },
+  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com', status: 'active' },
+  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com', status: 'pending' },
+  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com', status: 'active' },
 ];
 
 export const mockClasses: Class[] = [
