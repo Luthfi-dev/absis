@@ -60,7 +60,9 @@ export type AttendanceRecord = {
   id: string;
   subject: string;
   date: string;
-  status: 'Hadir' | 'Absen' | 'Terlambat';
+  status: 'Tepat Waktu' | 'Terlambat' | 'Absen' | 'Hadir'; // 'Hadir' is for per-subject, others for morning
+  checkInTime?: string;
+  checkOutTime?: string;
 };
 
 export const mockStudents: Student[] = [
@@ -116,25 +118,35 @@ export const mockRoster: Roster = {
 }
 
 
-export const mockAttendance: Record<string, AttendanceRecord[]> = {
+export let mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [
-    { id: 'a1', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
+    { id: 'a1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:55:12' },
     { id: 'a2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Hadir' },
-    { id: 'a3', subject: 'Matematika 101', date: '2024-05-19', status: 'Terlambat' },
+    { id: 'a3', subject: 'Absensi Pagi', date: '2024-05-19', status: 'Terlambat', checkInTime: '07:15:30' },
   ],
   '2': [
-    { id: 'b1', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
+    { id: 'b1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Terlambat', checkInTime: '07:05:02' },
     { id: 'b2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Absen' },
   ],
   '3': [
-    { id: 'c1', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
+    { id: 'c1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:58:41' },
   ],
   '4': [
-    { id: 'd1', subject: 'Fisika untuk Pemula', date: '2024-05-20', status: 'Hadir' },
+    { id: 'd1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:50:00' },
     { id: 'd2', subject: 'Matematika 101', date: '2024-05-20', status: 'Absen' },
   ],
   '5': [
-    { id: 'e1', subject: 'Lokakarya Penulisan Kreatif', date: '2024-05-20', status: 'Terlambat' },
+    { id: 'e1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Terlambat', checkInTime: '07:30:11' },
     { id: 'e2', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
   ],
 };
+
+// Function to update mock attendance in localStorage if in browser context
+if (typeof window !== 'undefined') {
+    const savedAttendance = localStorage.getItem('mockAttendance');
+    if (savedAttendance) {
+        mockAttendance = JSON.parse(savedAttendance);
+    } else {
+        localStorage.setItem('mockAttendance', JSON.stringify(mockAttendance));
+    }
+}

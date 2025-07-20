@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react"
 import { Loader2 } from "lucide-react"
-import { mockStudents, Student } from "@/lib/mock-data"
+import { mockStudents, Student, mockAttendance, AttendanceRecord } from "@/lib/mock-data"
 import jsQR from "jsqr"
 import { decryptId } from "@/lib/crypto"
 import type { CameraFacingMode } from "@/lib/types"
@@ -23,6 +23,21 @@ type BarcodeScannerProps = {
   facingMode: CameraFacingMode;
 }
 
+const getAttendanceFromStorage = (): Record<string, AttendanceRecord[]> => {
+    if (typeof window === 'undefined') return mockAttendance;
+    const saved = localStorage.getItem('mockAttendance');
+    if (!saved) {
+        localStorage.setItem('mockAttendance', JSON.stringify(mockAttendance));
+        return mockAttendance;
+    }
+    return JSON.parse(saved);
+}
+
+const saveAttendanceToStorage = (attendance: Record<string, AttendanceRecord[]>) => {
+    localStorage.setItem('mockAttendance', JSON.stringify(attendance));
+    window.dispatchEvent(new Event('attendanceUpdated')); // For real-time updates elsewhere if needed
+}
+
 export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facingMode }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -32,43 +47,72 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
 
   const handleCheckIn = useCallback((scannedData: string) => {
     const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
     const timestamp = `${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${now.toLocaleTimeString('id-ID')}`;
     
-    // Basic validation to check if the scanned data could be a valid encrypted string.
     if (!scannedData || scannedData.length < 10) { 
-        // Silently ignore short or empty scans to avoid user friction
         return; 
     }
 
     const studentId = decryptId(scannedData);
 
     if (studentId === 'decryption_error') {
-      onScanComplete({
-          status: "error",
-          message: `QR Code tidak valid atau rusak.`,
-          timestamp: timestamp,
-          scannedData: scannedData,
-      });
+      onScanComplete({ status: "error", message: `QR Code tidak valid atau rusak.`, timestamp: timestamp, scannedData: scannedData });
       return;
     }
 
     const student = mockStudents.find(s => s.id === studentId);
 
-    if (student) {
-        onScanComplete({
-            status: "success",
-            message: "Absensi diterima.",
-            student: student,
-            timestamp: timestamp,
-            scannedData: scannedData,
-        });
+    if (!student) {
+      onScanComplete({ status: "error", message: `Siswa tidak ditemukan.`, timestamp: timestamp, scannedData: scannedData });
+      return;
+    }
+
+    const attendanceData = getAttendanceFromStorage();
+    const studentRecords = attendanceData[studentId] || [];
+    const todaysRecord = studentRecords.find(r => r.date === todayStr);
+
+    const checkInTimeSetting = localStorage.getItem('school-check-in-time') || '07:00';
+    const checkOutTimeSetting = localStorage.getItem('school-check-out-time') || '15:00';
+
+    const [inHours, inMinutes] = checkInTimeSetting.split(':').map(Number);
+    const checkInTime = new Date(now);
+    checkInTime.setHours(inHours, inMinutes, 0, 0);
+
+    const [outHours, outMinutes] = checkOutTimeSetting.split(':').map(Number);
+    const checkOutTime = new Date(now);
+    checkOutTime.setHours(outHours, outMinutes, 0, 0);
+
+    if (todaysRecord) {
+        // Already checked in today
+        if (now >= checkOutTime && !todaysRecord.checkOutTime) {
+            // This is a check-out scan
+            todaysRecord.checkOutTime = now.toLocaleTimeString('id-ID');
+            saveAttendanceToStorage(attendanceData);
+            onScanComplete({ status: "success", message: "Absensi pulang berhasil.", student, timestamp, scannedData });
+        } else {
+            // This is a repeated scan before check-out time
+            onScanComplete({ status: "success", message: "Siswa sudah absen masuk hari ini.", student, timestamp, scannedData });
+        }
     } else {
-        onScanComplete({
-            status: "error",
-            message: `Siswa tidak ditemukan.`,
-            timestamp: timestamp,
-            scannedData: scannedData,
-        });
+        // This is a new check-in scan
+        const newStatus = now <= checkInTime ? 'Tepat Waktu' : 'Terlambat';
+        const newRecord: AttendanceRecord = {
+            id: `att-${Date.now()}`,
+            subject: 'Absensi Pagi', // Special subject for morning attendance
+            date: todayStr,
+            status: newStatus,
+            checkInTime: now.toLocaleTimeString('id-ID'),
+        };
+
+        if (!attendanceData[studentId]) {
+            attendanceData[studentId] = [];
+        }
+        attendanceData[studentId].push(newRecord);
+        saveAttendanceToStorage(attendanceData);
+
+        const message = newStatus === 'Tepat Waktu' ? 'Absensi diterima. Tepat waktu!' : 'Absensi diterima. Terlambat.';
+        onScanComplete({ status: "success", message, student, timestamp, scannedData });
     }
   }, [onScanComplete]);
   
@@ -80,7 +124,6 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
       setCameraError(null);
       
       try {
-        // Stop any existing streams before starting a new one
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
@@ -120,13 +163,16 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
     };
   }, [facingMode, setCameraError]); 
 
   useEffect(() => {
     const tick = () => {
-      if (isPaused || isInitializing || !videoRef.current || videoRef.current.readyState !== videoRef.current.HAVE_ENOUGH_DATA) {
-        animationFrameId.current = requestAnimationFrame(tick);
+      if (isPaused || isInitializing || !videoRef.current || !videoRef.current.videoWidth) {
+        if(!isPaused) animationFrameId.current = requestAnimationFrame(tick);
         return;
       }
 
@@ -151,7 +197,7 @@ export function BarcodeScanner({ onScanComplete, setCameraError, isPaused, facin
           }
         }
       }
-      animationFrameId.current = requestAnimationFrame(tick);
+      if(!isPaused) animationFrameId.current = requestAnimationFrame(tick);
     };
 
     if (!isPaused) {

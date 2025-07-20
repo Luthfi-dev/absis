@@ -22,6 +22,7 @@ import {
   LogOut,
   LayoutDashboard,
   Calendar,
+  BarChart,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -45,6 +46,7 @@ export function TeacherSidebar() {
   const menuItems = [
     { href: "/teacher-dashboard", label: "Dasbor", icon: LayoutDashboard },
     { href: "/schedules", label: "Jadwal Mengajar", icon: Calendar },
+    { href: "/reports", label: "Laporan", icon: BarChart },
   ]
   
   if (!user) return null;

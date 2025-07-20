@@ -2,7 +2,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { notFound } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -27,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockSchedule, mockStudents, mockClasses } from "@/lib/mock-data"
+import { mockSchedule, mockStudents, mockClasses, mockAttendance } from "@/lib/mock-data"
 import type { Student, ScheduleItem } from '@/lib/mock-data'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -49,9 +48,9 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   const [schedule, setSchedule] = useState<ScheduleItem | null>(null)
   const [students, setStudents] = useState<Student[]>([])
   const [attendance, setAttendance] = useState<Record<string, StudentAttendance>>({})
+  const { scheduleId } = params;
 
   useEffect(() => {
-    const { scheduleId } = params;
     const foundSchedule = mockSchedule.find(s => s.id === scheduleId)
     if (foundSchedule) {
       setSchedule(foundSchedule)
@@ -60,22 +59,31 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
         const classStudents = mockStudents.filter(s => s.kelas === classInfo.name)
         setStudents(classStudents)
         
-        // Initialize attendance state
+        // Initialize attendance state based on morning check-in
+        const todayStr = new Date().toISOString().split('T')[0];
+        const studentsWhoCheckedIn = new Set(
+          Object.entries(mockAttendance)
+            .filter(([studentId, records]) => {
+              const morningCheckIn = records.find(r => r.date === todayStr && (r.status === 'Tepat Waktu' || r.status === 'Terlambat'));
+              return !!morningCheckIn;
+            })
+            .map(([studentId]) => studentId)
+        );
+
         const initialAttendance = classStudents.reduce((acc, student) => {
-          // Here you could integrate with morning attendance
-          // For now, default to Hadir
+          const hasCheckedIn = studentsWhoCheckedIn.has(student.id);
           acc[student.id] = {
             studentId: student.id,
-            status: 'Hadir',
+            status: hasCheckedIn ? 'Hadir' : 'Alpa',
             notes: '',
-            isPresent: true,
+            isPresent: hasCheckedIn,
           }
           return acc
         }, {} as Record<string, StudentAttendance>)
         setAttendance(initialAttendance)
       }
     }
-  }, [params])
+  }, [scheduleId])
 
   const handlePresenceChange = (studentId: string, isPresent: boolean) => {
     setAttendance(prev => ({
@@ -148,7 +156,7 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
           <CardDescription>
-            Ceklis siswa yang hadir. Berikan status dan keterangan jika siswa tidak hadir.
+            Centang siswa yang hadir. Kehadiran pagi telah terisi otomatis.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UploadCloud, Trash2, Lock, Unlock, Timer, MessageSquare, Save } from "lucide-react"
+import { UploadCloud, Trash2, Lock, Unlock, Timer, MessageSquare, Save, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 import { Switch } from "@/components/ui/switch"
@@ -25,6 +25,9 @@ export default function SettingsPage() {
   const [isPinEnabled, setIsPinEnabled] = useState(false)
   const [autoScanTimeout, setAutoScanTimeout] = useState('1');
   const [cardLostMessage, setCardLostMessage] = useState('');
+  const [checkInTime, setCheckInTime] = useState('07:00');
+  const [checkOutTime, setCheckOutTime] = useState('15:00');
+
 
   useEffect(() => {
     const savedBackground = localStorage.getItem('card-background')
@@ -40,6 +43,11 @@ export default function SettingsPage() {
     setAutoScanTimeout(savedTimeout);
     const savedMessage = localStorage.getItem('card-lost-message') || 'Jika kartu ini ditemukan, harap kembalikan ke administrasi sekolah.';
     setCardLostMessage(savedMessage);
+
+    const savedCheckInTime = localStorage.getItem('school-check-in-time') || '07:00';
+    setCheckInTime(savedCheckInTime);
+    const savedCheckOutTime = localStorage.getItem('school-check-out-time') || '15:00';
+    setCheckOutTime(savedCheckOutTime);
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +113,15 @@ export default function SettingsPage() {
     toast({
       title: "Pesan Kartu Disimpan",
       description: "Pesan pada bagian belakang kartu siswa telah diperbarui."
+    });
+  }
+
+  const handleSchoolHoursSave = () => {
+    localStorage.setItem('school-check-in-time', checkInTime);
+    localStorage.setItem('school-check-out-time', checkOutTime);
+    toast({
+      title: "Jam Sekolah Disimpan",
+      description: `Jam masuk diatur ke ${checkInTime} dan jam pulang diatur ke ${checkOutTime}.`
     });
   }
 
@@ -179,71 +196,109 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
         
-        <Card>
-            <CardHeader>
-                <CardTitle>Keamanan Halaman Absensi</CardTitle>
-                <CardDescription>
-                  Aktifkan PIN untuk membatasi akses ke halaman pemindaian dan pengaturannya.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                    {isPinEnabled ? <Lock className="h-5 w-5 text-primary" /> : <Unlock className="h-5 w-5 text-muted-foreground" />}
-                    <Label htmlFor="pin-enabled" className="font-medium">
-                      Aktifkan Verifikasi PIN
-                    </Label>
+        <div className="flex flex-col gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Keamanan Halaman Absensi</CardTitle>
+                    <CardDescription>
+                    Aktifkan PIN untuk membatasi akses ke halaman pemindaian dan pengaturannya.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                    <div className="flex items-center gap-3">
+                        {isPinEnabled ? <Lock className="h-5 w-5 text-primary" /> : <Unlock className="h-5 w-5 text-muted-foreground" />}
+                        <Label htmlFor="pin-enabled" className="font-medium">
+                        Aktifkan Verifikasi PIN
+                        </Label>
+                    </div>
+                    <Switch
+                    id="pin-enabled"
+                    checked={isPinEnabled}
+                    onCheckedChange={setIsPinEnabled}
+                    />
                 </div>
-                <Switch
-                  id="pin-enabled"
-                  checked={isPinEnabled}
-                  onCheckedChange={setIsPinEnabled}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="scanner-pin">Atur PIN (4-6 digit)</Label>
-                <Input
-                  id="scanner-pin"
-                  type="password"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} // only allow digits
-                  maxLength={6}
-                  placeholder="••••••"
-                  disabled={!isPinEnabled}
-                />
-              </div>
-               <Button onClick={handlePinSettingsSave} disabled={isPinEnabled && (pin.length < 4 || pin.length > 6)}>
-                Simpan Pengaturan PIN
-              </Button>
-            </CardContent>
-        </Card>
+                <div className="space-y-2">
+                    <Label htmlFor="scanner-pin">Atur PIN (4-6 digit)</Label>
+                    <Input
+                    id="scanner-pin"
+                    type="password"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} // only allow digits
+                    maxLength={6}
+                    placeholder="••••••"
+                    disabled={!isPinEnabled}
+                    />
+                </div>
+                <Button onClick={handlePinSettingsSave} disabled={isPinEnabled && (pin.length < 4 || pin.length > 6)}>
+                    Simpan Pengaturan PIN
+                </Button>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Pengaturan Pemindai Otomatis</CardTitle>
+                    <CardDescription>
+                    Atur perilaku mode pemindaian otomatis (auto-scan).
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="auto-scan-timeout" className="flex items-center gap-2">
+                            <Timer className="h-5 w-5" /> Batas Waktu Auto-Scan (menit)
+                        </Label>
+                        <Input
+                            id="auto-scan-timeout"
+                            type="number"
+                            value={autoScanTimeout}
+                            onChange={(e) => setAutoScanTimeout(e.target.value)}
+                            placeholder="cth. 1"
+                            min="1"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Sesi scan akan berhenti otomatis jika tidak ada aktivitas selama waktu ini.
+                        </p>
+                    </div>
+                    <Button onClick={handleAutoScanSettingsSave}>
+                        Simpan Pengaturan Pemindai
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
 
         <Card>
             <CardHeader>
-                <CardTitle>Pengaturan Pemindai Otomatis</CardTitle>
+                <CardTitle>Jam Operasional Sekolah</CardTitle>
                 <CardDescription>
-                Atur perilaku mode pemindaian otomatis (auto-scan).
+                    Atur jam masuk dan pulang untuk menentukan status absensi (tepat waktu, terlambat).
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="space-y-2">
-                    <Label htmlFor="auto-scan-timeout" className="flex items-center gap-2">
-                        <Timer className="h-5 w-5" /> Batas Waktu Auto-Scan (menit)
+                    <Label htmlFor="check-in-time" className="flex items-center gap-2">
+                        <Clock className="h-5 w-5" /> Jam Masuk
                     </Label>
-                     <Input
-                        id="auto-scan-timeout"
-                        type="number"
-                        value={autoScanTimeout}
-                        onChange={(e) => setAutoScanTimeout(e.target.value)}
-                        placeholder="cth. 1"
-                        min="1"
+                    <Input
+                        id="check-in-time"
+                        type="time"
+                        value={checkInTime}
+                        onChange={(e) => setCheckInTime(e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground">
-                        Sesi scan akan berhenti otomatis jika tidak ada aktivitas selama waktu ini.
-                    </p>
                 </div>
-                 <Button onClick={handleAutoScanSettingsSave}>
-                    Simpan Pengaturan Pemindai
+                <div className="space-y-2">
+                    <Label htmlFor="check-out-time" className="flex items-center gap-2">
+                        <Clock className="h-5 w-5" /> Jam Pulang
+                    </Label>
+                    <Input
+                        id="check-out-time"
+                        type="time"
+                        value={checkOutTime}
+                        onChange={(e) => setCheckOutTime(e.target.value)}
+                    />
+                </div>
+                <Button onClick={handleSchoolHoursSave}>
+                    Simpan Jam Sekolah
                 </Button>
             </CardContent>
         </Card>
