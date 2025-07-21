@@ -7,7 +7,7 @@ import { RankingLeaderboard } from "@/components/ranking-leaderboard"
 
 export default function AttendancePage() {
   return (
-    <>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Kehadiran</h1>
         <p className="text-muted-foreground">Lacak dan analisis data kehadiran siswa secara keseluruhan.</p>
@@ -24,6 +24,6 @@ export default function AttendancePage() {
           <RankingLeaderboard />
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   )
 }

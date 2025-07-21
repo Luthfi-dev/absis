@@ -99,7 +99,7 @@ export default function UsersPage() {
     }
 
   return (
-    <>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Pengguna</h1>
         <p className="text-muted-foreground">Kelola pengguna, peran, dan status akun.</p>
@@ -213,6 +213,6 @@ export default function UsersPage() {
             </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   )
 }
