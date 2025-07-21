@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -15,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockClasses, mockSubjects, mockTeachers, type Roster, type RosterEntry } from "@/lib/mock-data"
+import { mockClasses, mockSubjects, mockTeachers, type Roster, type RosterEntry, type Teacher } from "@/lib/mock-data"
 import { Button } from '@/components/ui/button'
 import { Calendar, PlusCircle } from 'lucide-react'
 import { AddRosterEntryDialog } from '@/components/add-roster-entry-dialog'
@@ -25,6 +26,7 @@ const daysOfWeek = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 export default function RosterPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [rosterData, setRosterData] = useState<Roster>({});
+  const [allTeachers, setAllTeachers] = useState<Teacher[]>([]);
 
   useEffect(() => {
     // Load initial data or from localStorage
@@ -39,6 +41,14 @@ export default function RosterPage() {
       }
     }
     
+    // Load teachers dynamically
+    const savedUsers = typeof window !== 'undefined' ? localStorage.getItem('mockTeachers') : null;
+    if (savedUsers) {
+      setAllTeachers(JSON.parse(savedUsers));
+    } else {
+      setAllTeachers(mockTeachers);
+    }
+    
     const handleRosterUpdated = () => {
         const updatedRoster = localStorage.getItem('mockRoster');
         if (updatedRoster) {
@@ -46,13 +56,24 @@ export default function RosterPage() {
         }
     };
     window.addEventListener('rosterUpdated', handleRosterUpdated);
+    
+    const handleUsersUpdated = () => {
+        const updatedUsers = localStorage.getItem('mockTeachers');
+        if (updatedUsers) {
+            setAllTeachers(JSON.parse(updatedUsers));
+        }
+    };
+    window.addEventListener('usersUpdated', handleUsersUpdated);
+
+
     return () => {
         window.removeEventListener('rosterUpdated', handleRosterUpdated);
+        window.removeEventListener('usersUpdated', handleUsersUpdated);
     };
   }, []);
 
   const getSubjectName = (id: string) => mockSubjects.find(s => s.id === id)?.name || 'N/A';
-  const getTeacherName = (id: string) => mockTeachers.find(t => t.id === id)?.name || 'N/A';
+  const getTeacherName = (id: string) => allTeachers.find(t => t.id === id)?.name || 'N/A';
 
   const selectedRoster = selectedClassId ? rosterData[selectedClassId] || [] : [];
   

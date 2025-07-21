@@ -9,21 +9,44 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { mockSchedule, type ScheduleItem } from "@/lib/mock-data"
+import { mockSchedule, type ScheduleItem, mockRoster, mockTeachers, type Teacher, type Roster } from "@/lib/mock-data"
 import { CalendarClock, Clock, ScanLine } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function TeacherDashboardPage() {
+  const { user } = useAuth();
   const [activeSchedule, setActiveSchedule] = useState<ScheduleItem[]>([]);
+  const [allTeachers, setAllTeachers] = useState<Teacher[]>(mockTeachers);
+  const [rosterData, setRosterData] = useState<Roster>({});
+  
+  useEffect(() => {
+    const savedUsers = localStorage.getItem('mockTeachers');
+    if (savedUsers) {
+      setAllTeachers(JSON.parse(savedUsers));
+    }
+    const savedRoster = localStorage.getItem('mockRoster');
+    if(savedRoster) {
+        setRosterData(JSON.parse(savedRoster));
+    } else {
+        setRosterData(require('@/lib/mock-data').mockRoster);
+    }
+  }, []);
 
   useEffect(() => {
+    if (!user) return;
+
     const getActiveSchedule = () => {
       const now = new Date();
-      // In a real app, this would be filtered by the logged-in teacher's ID
-      const teacherSchedule = mockSchedule.filter(item => item.teacher === 'Bpk. Smith');
+      const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const currentDayName = dayNames[now.getDay()];
 
-      const currentSchedule = teacherSchedule.filter(item => {
+      const teacherSchedules = Object.values(rosterData).flat().filter(
+        (entry) => entry.teacherId === user.id && entry.day === currentDayName
+      );
+      
+      const currentSchedule = teacherSchedules.filter(item => {
         const [startTime, endTime] = item.time.split(' - ');
         const [startHours, startMinutes] = startTime.split(':').map(Number);
         const [endHours, endMinutes] = endTime.split(':').map(Number);
@@ -36,21 +59,36 @@ export default function TeacherDashboardPage() {
 
         return now >= startDate && now <= endDate;
       });
+
+      const scheduleItems: ScheduleItem[] = currentSchedule.map(cs => {
+         const subject = require('@/lib/mock-data').mockSubjects.find(s => s.id === cs.subjectId)?.name || 'N/A';
+         const className = require('@/lib/mock-data').mockClasses.find(c => {
+            return Object.entries(rosterData).some(([classId, entries]) => classId === c.id && entries.some(e => e.id === cs.id))
+         })?.name || 'N/A';
+         const teacherName = allTeachers.find(t => t.id === cs.teacherId)?.name || 'N/A'
+         return {
+            id: cs.id,
+            time: cs.time,
+            subject: subject,
+            class: className,
+            teacher: teacherName
+         }
+      })
       
-      setActiveSchedule(currentSchedule);
+      setActiveSchedule(scheduleItems);
     };
 
     getActiveSchedule();
     const interval = setInterval(getActiveSchedule, 60000); // Check every minute
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user, allTeachers, rosterData]);
 
   return (
     <div className="space-y-8">
        <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor Guru</h1>
-        <p className="text-muted-foreground">Selamat datang, Bpk. Smith! Berikut jadwal mengajar Anda saat ini.</p>
+        <p className="text-muted-foreground">Selamat datang, {user?.name}! Berikut jadwal mengajar Anda saat ini.</p>
       </div>
       <Card>
         <CardHeader>

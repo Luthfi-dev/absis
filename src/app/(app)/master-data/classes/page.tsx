@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -15,11 +16,42 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockClasses } from "@/lib/mock-data"
+import { mockClasses, mockTeachers, type Teacher } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function ClassesPage() {
+  const [allTeachers, setAllTeachers] = useState<Teacher[]>([]);
+
+  useEffect(() => {
+    // Load teachers dynamically to show correct wali kelas name
+    const savedUsers = typeof window !== 'undefined' ? localStorage.getItem('mockTeachers') : null;
+    if (savedUsers) {
+      setAllTeachers(JSON.parse(savedUsers));
+    } else {
+      setAllTeachers(mockTeachers);
+    }
+
+    const handleUsersUpdated = () => {
+        const updatedUsers = localStorage.getItem('mockTeachers');
+        if (updatedUsers) {
+            setAllTeachers(JSON.parse(updatedUsers));
+        }
+    };
+    window.addEventListener('usersUpdated', handleUsersUpdated);
+
+    return () => {
+        window.removeEventListener('usersUpdated', handleUsersUpdated);
+    };
+  }, []);
+
+  const getWaliKelasName = (teacherName: string) => {
+    // This logic assumes the name is unique. In a real app, you'd use an ID.
+    const teacher = allTeachers.find(t => t.name === teacherName);
+    return teacher ? teacher.name : 'N/A (Guru tidak ditemukan)';
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -52,7 +84,7 @@ export default function ClassesPage() {
               {mockClasses.map((cls) => (
                 <TableRow key={cls.id}>
                   <TableCell className="font-medium">{cls.name}</TableCell>
-                  <TableCell>{cls.waliKelas}</TableCell>
+                  <TableCell>{getWaliKelasName(cls.waliKelas)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
