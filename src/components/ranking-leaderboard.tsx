@@ -1,11 +1,11 @@
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockStudents, mockAttendance, mockClasses, Student, AttendanceRecord } from '@/lib/mock-data';
-import { startOfWeek, startOfMonth, startOfToday } from 'date-fns';
+import { mockStudents, mockAttendance, mockClasses, Student } from '@/lib/mock-data';
+import { startOfWeek, startOfMonth, startOfToday, endOfToday, endOfWeek, endOfMonth } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Crown, Medal } from 'lucide-react';
 
@@ -30,22 +30,25 @@ const getMedalColor = (rank: number) => {
 export function RankingLeaderboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
   const [scope, setScope] = useState<Scope>('all');
-  const [rankings, setRankings] = useState<RankingData[]>([]);
 
   const filteredRankings = useMemo(() => {
     const now = new Date();
     let startDate: Date;
+    let endDate: Date;
 
     switch (timeRange) {
         case 'week':
             startDate = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+            endDate = endOfWeek(now, { weekStartsOn: 1 });
             break;
         case 'month':
             startDate = startOfMonth(now);
+            endDate = endOfMonth(now);
             break;
         case 'today':
         default:
             startDate = startOfToday();
+            endDate = endOfToday();
             break;
     }
 
@@ -55,25 +58,38 @@ export function RankingLeaderboard() {
             const classInfo = mockClasses.find(c => c.id === scope);
             return s.kelas === classInfo?.name;
         });
+    
+    const relevantStudentIds = new Set(relevantStudents.map(s => s.id));
 
+    const allCheckInRecords = Object.entries(mockAttendance).flatMap(([studentId, records]) => {
+        if (!relevantStudentIds.has(studentId)) return [];
+
+        const student = mockStudents.find(s => s.id === studentId);
+        if (!student) return [];
+
+        return records
+            .filter(record => {
+                const recordDate = new Date(record.date);
+                return record.subject === 'Absensi Pagi' && 
+                       record.checkInTime &&
+                       recordDate >= startDate && 
+                       recordDate <= endDate;
+            })
+            .map(record => ({
+                student: student,
+                checkInTime: record.checkInTime!,
+                checkInDate: new Date(record.date)
+            }));
+    });
+    
+    // Find the single fastest check-in for each student within the time range
     const studentFastestCheckIns: { [studentId: string]: RankingData } = {};
 
-    relevantStudents.forEach(student => {
-        const records = mockAttendance[student.id] || [];
-        
-        records.forEach(record => {
-            const recordDate = new Date(record.date);
-            if (record.checkInTime && recordDate >= startDate) {
-                const currentFastest = studentFastestCheckIns[student.id];
-                if (!currentFastest || record.checkInTime < currentFastest.checkInTime) {
-                    studentFastestCheckIns[student.id] = {
-                        student,
-                        checkInTime: record.checkInTime,
-                        checkInDate: recordDate,
-                    };
-                }
-            }
-        });
+    allCheckInRecords.forEach(record => {
+        const existingRecord = studentFastestCheckIns[record.student.id];
+        if (!existingRecord || record.checkInTime < existingRecord.checkInTime) {
+            studentFastestCheckIns[record.student.id] = record;
+        }
     });
 
     return Object.values(studentFastestCheckIns)
@@ -120,7 +136,7 @@ export function RankingLeaderboard() {
       <CardContent>
         {filteredRankings.length > 0 ? (
             <ul className="space-y-3">
-                {filteredRankings.map((item, index) => {
+                {filteredRankings.slice(0, 10).map((item, index) => { // Show top 10
                     const rank = index + 1;
                     return (
                         <li key={item.student.id} className={`flex items-center gap-4 p-3 rounded-lg border ${rank <= 3 ? 'bg-muted/50 font-semibold' : ''}`}>
@@ -146,7 +162,7 @@ export function RankingLeaderboard() {
         ) : (
             <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
                 <p className="text-lg font-medium">Tidak Ada Data Peringkat</p>
-                <p>Belum ada data kehadiran yang tercatat untuk filter yang dipilih.</p>
+                <p>Belum ada data absensi pagi yang tercatat untuk filter yang dipilih.</p>
             </div>
         )}
       </CardContent>
