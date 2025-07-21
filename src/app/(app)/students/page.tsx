@@ -1,6 +1,8 @@
+
 import { StudentTable } from "@/components/student-table"
 import { RosterImporter } from "@/components/roster-importer"
 import { AddStudentDialog } from "@/components/add-student-dialog"
+import { Card } from "@/components/ui/card"
 
 export default function StudentsPage() {
   return (
@@ -16,7 +18,9 @@ export default function StudentsPage() {
         </div>
       </div>
       
-      <StudentTable />
+      <Card>
+        <StudentTable />
+      </Card>
     </div>
   )
 }
