@@ -3,7 +3,7 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings, AlertTriangle } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings, AlertTriangle, Maximize, Minimize } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,6 +48,7 @@ export default function ScannerPage() {
   const [isAutoScan, setIsAutoScan] = useState(false);
   const [autoScanTimeoutMinutes, setAutoScanTimeoutMinutes] = useState(1);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
 
   useEffect(() => {
@@ -167,8 +168,33 @@ export default function ScannerPage() {
     }
   };
 
+  // Fullscreen logic
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            toast({
+                variant: 'destructive',
+                title: 'Gagal Masuk Mode Layar Penuh',
+                description: err.message
+            });
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const renderContent = () => {
-    if (!isUnlocked) {
+    if (isPinRequired === undefined || (!isUnlocked && isPinRequired)) {
         return (
             <div className="flex flex-col items-center justify-center text-center">
                 <Loader2 className="w-12 h-12 animate-spin mb-4 text-white" />
@@ -281,7 +307,7 @@ export default function ScannerPage() {
                     Atur perilaku pemindai absensi. Pengaturan akan disimpan di perangkat ini.
                 </DialogDescription>
             </DialogHeader>
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-4">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                     <Label htmlFor="auto-scan-mode" className="flex flex-col gap-1">
                         <span>Mode Auto-Scan</span>
@@ -295,10 +321,16 @@ export default function ScannerPage() {
                         onCheckedChange={executeAutoScanToggle}
                     />
                 </div>
-                 <Button variant="outline" className="w-full" onClick={executeCameraSwitch}>
-                    <Repeat className="mr-2 h-4 w-4" />
-                    Ganti ke Kamera {facingMode === 'user' ? 'Belakang' : 'Depan'}
-                </Button>
+                <div className="grid grid-cols-2 gap-4">
+                     <Button variant="outline" className="w-full" onClick={executeCameraSwitch}>
+                        <Repeat className="mr-2 h-4 w-4" />
+                        Ganti Kamera
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={toggleFullscreen}>
+                        {isFullscreen ? <Minimize className="mr-2 h-4 w-4" /> : <Maximize className="mr-2 h-4 w-4" />}
+                        {isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
+                    </Button>
+                </div>
             </div>
             <DialogFooter>
                 <Button onClick={() => setShowSettingsDialog(false)}>Tutup</Button>
@@ -350,3 +382,5 @@ export default function ScannerPage() {
     </div>
   );
 }
+
+    
