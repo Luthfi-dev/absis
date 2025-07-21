@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from "react"
@@ -126,7 +127,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+    <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Pengaturan</h1>
         <p className="text-muted-foreground">
@@ -303,6 +304,6 @@ export default function SettingsPage() {
             </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   )
 }

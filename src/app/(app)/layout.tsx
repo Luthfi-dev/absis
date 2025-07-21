@@ -39,7 +39,7 @@ export default function AppLayout({
           <Header>
              <SidebarTrigger className="md:hidden" />
           </Header>
-          <main>{children}</main>
+          <main className="p-4 sm:p-6 lg:p-8 space-y-8">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

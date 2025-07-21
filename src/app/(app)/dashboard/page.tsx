@@ -18,7 +18,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+    <>
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor Super Admin</h1>
           <p className="text-muted-foreground">Selamat datang kembali! Berikut adalah ringkasan sistem Anda.</p>
@@ -39,6 +39,6 @@ export default function DashboardPage() {
         <div>
           <DynamicSchedule />
         </div>
-    </div>
+    </>
   )
 }
