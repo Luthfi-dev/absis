@@ -7,7 +7,15 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { mockSchedule, type ScheduleItem } from "@/lib/mock-data"
-import { CalendarClock, Clock } from "lucide-react"
+import { CalendarClock } from "lucide-react"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
 
 function getStatusVariant(status: ScheduleItem['status']) {
   switch (status) {
@@ -33,23 +41,38 @@ export function DynamicSchedule() {
         <CardDescription>Kelas yang sedang berlangsung dan akan datang hari ini.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4">
-          {mockSchedule.map((item) => (
-            <li key={item.id} className="flex items-start gap-4 p-3 rounded-lg transition-colors hover:bg-muted/50">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Clock className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold">{item.subject}</p>
-                   <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">{item.teacher}</p>
-                <p className="text-sm text-muted-foreground">{item.time}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-md border">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Waktu</TableHead>
+                        <TableHead>Pelajaran</TableHead>
+                        <TableHead>Kelas</TableHead>
+                        <TableHead>Guru</TableHead>
+                        <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                {mockSchedule.length > 0 ? mockSchedule.map((item) => (
+                    <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.time}</TableCell>
+                        <TableCell>{item.subject}</TableCell>
+                        <TableCell>{item.class}</TableCell>
+                        <TableCell>{item.teacher}</TableCell>
+                        <TableCell className="text-right">
+                            <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
+                        </TableCell>
+                    </TableRow>
+                )) : (
+                    <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                            Tidak ada jadwal untuk hari ini.
+                        </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+        </div>
       </CardContent>
     </Card>
   )
