@@ -48,9 +48,10 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   const [schedule, setSchedule] = useState<ScheduleItem | null>(null)
   const [students, setStudents] = useState<Student[]>([])
   const [attendance, setAttendance] = useState<Record<string, StudentAttendance>>({})
+  const { scheduleId } = params;
   
   useEffect(() => {
-    const foundSchedule = mockSchedule.find(s => s.id === params.scheduleId)
+    const foundSchedule = mockSchedule.find(s => s.id === scheduleId)
     if (foundSchedule) {
       setSchedule(foundSchedule)
       const classInfo = mockClasses.find(c => c.name === foundSchedule.class)
@@ -82,7 +83,7 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
         setAttendance(initialAttendance)
       }
     }
-  }, [params])
+  }, [scheduleId])
 
   const handlePresenceChange = (studentId: string, isPresent: boolean) => {
     setAttendance(prev => ({
