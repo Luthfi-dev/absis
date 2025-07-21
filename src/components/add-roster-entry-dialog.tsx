@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from "react"
@@ -27,7 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { mockSubjects, mockTeachers, type RosterEntry } from "@/lib/mock-data"
+import { mockSubjects, mockTeachers as initialTeachers, type RosterEntry, type Teacher } from "@/lib/mock-data"
 
 const daysOfWeek = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
@@ -53,6 +54,7 @@ interface AddRosterEntryDialogProps {
 
 export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButton }: AddRosterEntryDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [availableTeachers, setAvailableTeachers] = useState<Teacher[]>([]);
   const { toast } = useToast()
 
   const form = useForm<RosterFormValues>({
@@ -67,6 +69,18 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
   })
   
   useEffect(() => {
+    // Load users from localStorage and filter for teachers
+    const savedUsers = localStorage.getItem('mockTeachers');
+    let allUsers: Teacher[] = [];
+    if (savedUsers) {
+      allUsers = JSON.parse(savedUsers);
+    } else {
+      allUsers = initialTeachers;
+    }
+    const teachers = allUsers.filter(user => user.role === 'teacher');
+    setAvailableTeachers(teachers);
+
+    // Reset form when dialog opens
     if (isOpen) {
         form.reset({
             day: day || "",
@@ -198,7 +212,7 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        {mockTeachers.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                        {availableTeachers.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <FormMessage />
