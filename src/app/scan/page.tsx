@@ -124,6 +124,9 @@ export default function ScannerPage() {
   }, [isVerifying, isAutoScan, resetIdleTimer]);
 
   const handleClosePage = () => {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
     if (isPinRequired) {
       setPinDialogAction('close');
       setShowPinDialog(true);
@@ -382,5 +385,3 @@ export default function ScannerPage() {
     </div>
   );
 }
-
-    
