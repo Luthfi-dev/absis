@@ -48,7 +48,7 @@ export function TeacherSidebar() {
     { href: "/teacher-dashboard", label: "Dasbor", icon: LayoutDashboard },
     { href: "/schedules", label: "Jadwal Mengajar", icon: Calendar },
     { href: "/reports", label: "Laporan", icon: BarChart },
-    { href: "/rankings", label: "Peringkat", icon: Crown },
+    { href: "/rankings", label: "Peringkat Kehadiran", icon: Crown },
   ]
   
   if (!user) return null;

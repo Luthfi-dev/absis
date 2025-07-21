@@ -37,7 +37,7 @@ const allMorningRecords = Object.entries(mockAttendance).flatMap(([studentId, re
         .map(record => ({
             student: student,
             checkInTime: record.checkInTime!,
-            checkInDate: new Date(record.date)
+            checkInDate: new Date(`${record.date}T00:00:00`) // Ensure consistent date parsing without time
         }));
 });
 
