@@ -85,7 +85,7 @@ export default function TeacherDashboardPage() {
   }, [user, allTeachers, rosterData]);
 
   return (
-    <div className="space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
        <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor Guru</h1>
         <p className="text-muted-foreground">Selamat datang, {user?.name}! Berikut jadwal mengajar Anda saat ini.</p>

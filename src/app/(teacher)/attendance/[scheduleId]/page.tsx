@@ -48,9 +48,9 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   const [schedule, setSchedule] = useState<ScheduleItem | null>(null)
   const [students, setStudents] = useState<Student[]>([])
   const [attendance, setAttendance] = useState<Record<string, StudentAttendance>>({})
+  const { scheduleId } = params;
   
   useEffect(() => {
-    const { scheduleId } = params;
     const foundSchedule = mockSchedule.find(s => s.id === scheduleId)
     if (foundSchedule) {
       setSchedule(foundSchedule)
@@ -83,7 +83,7 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
         setAttendance(initialAttendance)
       }
     }
-  }, [params])
+  }, [scheduleId])
 
   const handlePresenceChange = (studentId: string, isPresent: boolean) => {
     setAttendance(prev => ({
@@ -134,7 +134,7 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   }
 
   return (
-    <div className="space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
         <div className="flex justify-between items-center">
              <div>
                 <Button variant="outline" asChild>
