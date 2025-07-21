@@ -39,7 +39,6 @@ export type ScheduleItem = {
   time: string;
   subject: string;
   class: string;
-  status: 'Sedang Berlangsung' | 'Akan Datang' | 'Selesai';
   teacher: string;
 };
 
@@ -97,10 +96,10 @@ export const mockSubjects: Subject[] = [
 ];
 
 export const mockSchedule: ScheduleItem[] = [
-  { id: 'c1', time: '09:00 - 10:30', subject: 'Matematika 101', class: '12 IPA 1', status: 'Sedang Berlangsung', teacher: 'Bpk. Smith' },
-  { id: 'c2', time: '11:00 - 12:30', subject: 'Sejarah Seni', class: '11 IPS 2', status: 'Akan Datang', teacher: 'Ibu Jones' },
-  { id: 'c3', time: '13:30 - 15:00', subject: 'Fisika untuk Pemula', class: '12 IPA 1', status: 'Akan Datang', teacher: 'Dr. Quantum' },
-  { id: 'c4', time: '15:30 - 17:00', subject: 'Lokakarya Penulisan Kreatif', class: '11 IPS 2', status: 'Akan Datang', teacher: 'Prof. Verse' },
+  { id: 'c1', time: '09:00 - 10:30', subject: 'Matematika 101', class: '12 IPA 1', teacher: 'Bpk. Smith' },
+  { id: 'c2', time: '11:00 - 12:30', subject: 'Sejarah Seni', class: '11 IPS 2', teacher: 'Ibu Jones' },
+  { id: 'c3', time: '13:30 - 15:00', subject: 'Fisika untuk Pemula', class: '12 IPA 1', teacher: 'Dr. Quantum' },
+  { id: 'c4', time: '15:30 - 17:00', subject: 'Lokakarya Penulisan Kreatif', class: '11 IPS 2', teacher: 'Prof. Verse' },
 ];
 
 export const mockRoster: Roster = {
