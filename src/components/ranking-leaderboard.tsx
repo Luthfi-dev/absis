@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockStudents, mockAttendance, mockClasses, Student } from '@/lib/mock-data';
-import { startOfWeek, startOfMonth, startOfToday, endOfToday, endOfWeek, endOfMonth } from 'date-fns';
+import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, startOfDay, endOfDay } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Crown, Medal } from 'lucide-react';
 
@@ -27,28 +27,51 @@ const getMedalColor = (rank: number) => {
     }
 }
 
+// Get all morning attendance records once
+const allMorningRecords = Object.entries(mockAttendance).flatMap(([studentId, records]) => {
+    const student = mockStudents.find(s => s.id === studentId);
+    if (!student) return [];
+
+    return records
+        .filter(record => record.subject === 'Absensi Pagi' && record.checkInTime)
+        .map(record => ({
+            student: student,
+            checkInTime: record.checkInTime!,
+            checkInDate: new Date(record.date)
+        }));
+});
+
+// Determine the most recent date from the available data to use as "today"
+const getMostRecentDate = () => {
+    if (allMorningRecords.length === 0) return new Date();
+    return allMorningRecords.reduce((latest, record) => {
+        return record.checkInDate > latest ? record.checkInDate : latest;
+    }, new Date(0));
+};
+
+const mostRecentDate = getMostRecentDate();
+
 export function RankingLeaderboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
   const [scope, setScope] = useState<Scope>('all');
 
   const filteredRankings = useMemo(() => {
-    const now = new Date();
     let startDate: Date;
     let endDate: Date;
 
     switch (timeRange) {
         case 'week':
-            startDate = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-            endDate = endOfWeek(now, { weekStartsOn: 1 });
+            startDate = startOfWeek(mostRecentDate, { weekStartsOn: 1 }); // Monday
+            endDate = endOfWeek(mostRecentDate, { weekStartsOn: 1 });
             break;
         case 'month':
-            startDate = startOfMonth(now);
-            endDate = endOfMonth(now);
+            startDate = startOfMonth(mostRecentDate);
+            endDate = endOfMonth(mostRecentDate);
             break;
         case 'today':
         default:
-            startDate = startOfToday();
-            endDate = endOfToday();
+            startDate = startOfDay(mostRecentDate);
+            endDate = endOfDay(mostRecentDate);
             break;
     }
 
@@ -61,39 +84,34 @@ export function RankingLeaderboard() {
     
     const relevantStudentIds = new Set(relevantStudents.map(s => s.id));
 
-    const allCheckInRecords = Object.entries(mockAttendance).flatMap(([studentId, records]) => {
-        if (!relevantStudentIds.has(studentId)) return [];
-
-        const student = mockStudents.find(s => s.id === studentId);
-        if (!student) return [];
-
-        return records
-            .filter(record => {
-                const recordDate = new Date(record.date);
-                return record.subject === 'Absensi Pagi' && 
-                       record.checkInTime &&
-                       recordDate >= startDate && 
-                       recordDate <= endDate;
-            })
-            .map(record => ({
-                student: student,
-                checkInTime: record.checkInTime!,
-                checkInDate: new Date(record.date)
-            }));
+    const recordsInDateRange = allMorningRecords.filter(record => {
+        return record.checkInDate >= startDate && record.checkInDate <= endDate && relevantStudentIds.has(record.student.id);
     });
     
     // Find the single fastest check-in for each student within the time range
     const studentFastestCheckIns: { [studentId: string]: RankingData } = {};
 
-    allCheckInRecords.forEach(record => {
+    recordsInDateRange.forEach(record => {
         const existingRecord = studentFastestCheckIns[record.student.id];
-        if (!existingRecord || record.checkInTime < existingRecord.checkInTime) {
-            studentFastestCheckIns[record.student.id] = record;
+        // Combine date and time for accurate comparison across different days in a week/month view
+        const recordDateTime = new Date(`${record.checkInDate.toISOString().split('T')[0]}T${record.checkInTime}`).getTime();
+        
+        if (!existingRecord) {
+             studentFastestCheckIns[record.student.id] = record;
+        } else {
+            const existingDateTime = new Date(`${existingRecord.checkInDate.toISOString().split('T')[0]}T${existingRecord.checkInTime}`).getTime();
+            if(recordDateTime < existingDateTime) {
+                studentFastestCheckIns[record.student.id] = record;
+            }
         }
     });
 
     return Object.values(studentFastestCheckIns)
-        .sort((a, b) => a.checkInTime.localeCompare(b.checkInTime));
+        .sort((a, b) => {
+             const aDateTime = new Date(`${a.checkInDate.toISOString().split('T')[0]}T${a.checkInTime}`);
+             const bDateTime = new Date(`${b.checkInDate.toISOString().split('T')[0]}T${b.checkInTime}`);
+             return aDateTime.getTime() - bDateTime.getTime();
+        });
         
   }, [timeRange, scope]);
 
