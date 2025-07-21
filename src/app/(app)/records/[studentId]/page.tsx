@@ -43,7 +43,7 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
   }
 
   return (
-    <div className="space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20 border-2 border-primary">
           <AvatarImage src={student.avatar} />

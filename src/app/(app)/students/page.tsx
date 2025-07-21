@@ -4,7 +4,7 @@ import { AddStudentDialog } from "@/components/add-student-dialog"
 
 export default function StudentsPage() {
   return (
-    <div className="space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex justify-between items-start">
         <div>
             <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Siswa</h1>

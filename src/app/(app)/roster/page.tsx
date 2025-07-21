@@ -101,7 +101,7 @@ export default function RosterPage() {
 
 
   return (
-    <div className="space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="md:flex md:justify-between md:items-start space-y-4 md:space-y-0">
         <div>
             <h1 className="text-3xl font-bold tracking-tight font-headline">Roster Kelas</h1>
