@@ -50,8 +50,7 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   const [attendance, setAttendance] = useState<Record<string, StudentAttendance>>({})
   
   useEffect(() => {
-    const { scheduleId } = params;
-    const foundSchedule = mockSchedule.find(s => s.id === scheduleId)
+    const foundSchedule = mockSchedule.find(s => s.id === params.scheduleId)
     if (foundSchedule) {
       setSchedule(foundSchedule)
       const classInfo = mockClasses.find(c => c.name === foundSchedule.class)
