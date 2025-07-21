@@ -12,7 +12,6 @@ export default function AttendancePage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">Kehadiran</h1>
         <p className="text-muted-foreground">Lacak dan analisis data kehadiran siswa secara keseluruhan.</p>
       </div>
-
       <Tabs defaultValue="list" className="space-y-4">
         <TabsList>
           <TabsTrigger value="list">Daftar Kehadiran</TabsTrigger>

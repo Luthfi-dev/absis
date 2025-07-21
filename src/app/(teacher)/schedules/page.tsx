@@ -52,7 +52,7 @@ export default function TeacherSchedulesPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+    <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Jadwal Mengajar</h1>
         <p className="text-muted-foreground">Berikut adalah seluruh jadwal mengajar Anda untuk minggu ini.</p>
@@ -87,6 +87,6 @@ export default function TeacherSchedulesPage() {
             </Card>
         ))}
       </div>
-    </div>
+    </>
   )
 }

@@ -134,24 +134,23 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-        <div className="flex justify-between items-center">
-             <div>
-                <Button variant="outline" asChild>
-                    <Link href="/teacher-dashboard">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Kembali ke Dasbor
-                    </Link>
-                </Button>
-                <h1 className="text-3xl font-bold tracking-tight font-headline mt-4">Absensi Kelas: {schedule.subject}</h1>
-                <p className="text-muted-foreground">Kelas {schedule.class} - {schedule.time}</p>
-            </div>
-            <Button onClick={handleSaveAttendance}>
-                <Save className="mr-2 h-4 w-4"/>
-                Simpan Absensi
-            </Button>
-        </div>
-
+    <>
+      <div className="flex justify-between items-center">
+            <div>
+              <Button variant="outline" asChild>
+                  <Link href="/teacher-dashboard">
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Kembali ke Dasbor
+                  </Link>
+              </Button>
+              <h1 className="text-3xl font-bold tracking-tight font-headline mt-4">Absensi Kelas: {schedule.subject}</h1>
+              <p className="text-muted-foreground">Kelas {schedule.class} - {schedule.time}</p>
+          </div>
+          <Button onClick={handleSaveAttendance}>
+              <Save className="mr-2 h-4 w-4"/>
+              Simpan Absensi
+          </Button>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
@@ -221,6 +220,6 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </>
   )
 }

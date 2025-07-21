@@ -9,15 +9,14 @@ export default function StudentsPage() {
     <>
       <div className="flex justify-between items-start">
         <div>
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Siswa</h1>
-            <p className="text-muted-foreground">Tambah, ubah, dan kelola daftar siswa Anda.</p>
+          <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Siswa</h1>
+          <p className="text-muted-foreground">Tambah, ubah, dan kelola daftar siswa Anda.</p>
         </div>
         <div className="flex items-center gap-2">
-            <AddStudentDialog />
-            <RosterImporter />
+          <AddStudentDialog />
+          <RosterImporter />
         </div>
       </div>
-      
       <Card>
         <StudentTable />
       </Card>

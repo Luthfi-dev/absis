@@ -27,7 +27,6 @@ export default function SubjectsPage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Mata Pelajaran</h1>
         <p className="text-muted-foreground">Tambah, ubah, atau hapus data mata pelajaran.</p>
       </div>
-
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">

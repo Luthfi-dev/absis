@@ -105,7 +105,7 @@ export default function TeacherReportsPage() {
     }, [selectedSubjectId, timeRange, user]);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+        <>
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Laporan Kehadiran</h1>
                 <p className="text-muted-foreground">Analisis data kehadiran siswa per mata pelajaran.</p>
@@ -201,6 +201,6 @@ export default function TeacherReportsPage() {
                     </CardContent>
                 </Card>
             )}
-        </div>
+        </>
     )
 }

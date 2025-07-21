@@ -58,7 +58,6 @@ export default function ClassesPage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Kelas</h1>
         <p className="text-muted-foreground">Tambah, ubah, atau hapus data kelas.</p>
       </div>
-
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
