@@ -1,6 +1,7 @@
+
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from '@/hooks/use-auth';
-import { mockStudents, mockSubjects, mockAttendance, type Student } from '@/lib/mock-data';
+import { mockStudents, mockSubjects, mockAttendance, type Student, mockRoster } from '@/lib/mock-data';
 import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, startOfISOWeek } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { BarChart } from 'lucide-react';
@@ -38,10 +39,24 @@ export default function TeacherReportsPage() {
     const [timeRange, setTimeRange] = useState<TimeRange>('week');
     const [reportData, setReportData] = useState<ReportData[]>([]);
 
-    const teacherSubjects = mockSubjects; // In a real app, filter by teacher
+    const teacherSubjects = useMemo(() => {
+        if (!user) return [];
+
+        // Find all unique subject IDs taught by the current teacher from the roster
+        const subjectIds = new Set<string>();
+        Object.values(mockRoster).flat().forEach(entry => {
+            if (entry.teacherId === user.id) {
+                subjectIds.add(entry.subjectId);
+            }
+        });
+
+        // Filter the main subjects list based on the IDs found
+        return mockSubjects.filter(subject => subjectIds.has(subject.id));
+
+    }, [user]);
 
     useEffect(() => {
-        if (!selectedSubjectId) {
+        if (!selectedSubjectId || !user) {
             setReportData([]);
             return;
         }
@@ -132,30 +147,38 @@ export default function TeacherReportsPage() {
                 </CardHeader>
                 <CardContent>
                     {selectedSubjectId ? (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nama Siswa</TableHead>
-                                    <TableHead className="text-center">Total Pertemuan</TableHead>
-                                    <TableHead className="text-center">Hadir</TableHead>
-                                    <TableHead className="text-center">Terlambat</TableHead>
-                                    <TableHead className="text-center">Absen</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {reportData.map(({ student, total, hadir, terlambat, absen }) => (
-                                    <TableRow key={student.id}>
-                                        <TableCell className="font-medium">{student.name}</TableCell>
-                                        <TableCell className="text-center">{total}</TableCell>
-                                        <TableCell className="text-center text-green-600 font-semibold">{hadir}</TableCell>
-                                        <TableCell className="text-center text-orange-600 font-semibold">{terlambat}</TableCell>
-                                        <TableCell className="text-center text-red-600 font-semibold">{absen}</TableCell>
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Nama Siswa</TableHead>
+                                        <TableHead className="text-center">Total Pertemuan</TableHead>
+                                        <TableHead className="text-center">Hadir</TableHead>
+                                        <TableHead className="text-center">Terlambat</TableHead>
+                                        <TableHead className="text-center">Absen</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {reportData.length > 0 ? reportData.map(({ student, total, hadir, terlambat, absen }) => (
+                                        <TableRow key={student.id}>
+                                            <TableCell className="font-medium">{student.name}</TableCell>
+                                            <TableCell className="text-center">{total}</TableCell>
+                                            <TableCell className="text-center text-green-600 font-semibold">{hadir}</TableCell>
+                                            <TableCell className="text-center text-orange-600 font-semibold">{terlambat}</TableCell>
+                                            <TableCell className="text-center text-red-600 font-semibold">{absen}</TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center">
+                                                Tidak ada data laporan untuk filter yang dipilih.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     ) : (
-                        <div className="text-center py-10 text-muted-foreground">
+                        <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
                             <p>Silakan pilih mata pelajaran untuk menampilkan laporan.</p>
                         </div>
                     )}
