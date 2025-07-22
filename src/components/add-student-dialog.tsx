@@ -1,6 +1,7 @@
+
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -27,6 +28,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import type { Student } from "@/lib/mock-data"
+import { mockClasses } from "@/lib/mock-data"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 const getStudentsFromStorage = (): Student[] => {
     if (typeof window === 'undefined') return [];
@@ -38,7 +41,7 @@ const studentSchema = z.object({
   namaLengkap: z.string().min(3, "Nama lengkap harus memiliki setidaknya 3 karakter."),
   nis: z.string().min(1, "NIS tidak boleh kosong."),
   nisn: z.string().min(1, "NISN tidak boleh kosong."),
-  kelas: z.string().min(1, "Kelas tidak boleh kosong."),
+  kelas: z.string().min(1, "Kelas harus dipilih."),
   nomorOrangTua: z.string().optional(),
 }).refine((data) => {
     const students = getStudentsFromStorage();
@@ -89,6 +92,12 @@ export function AddStudentDialog() {
       nomorOrangTua: "",
     },
   })
+  
+  useEffect(() => {
+    if (isOpen) {
+        form.reset();
+    }
+  }, [isOpen, form]);
 
   const onSubmit = (data: StudentFormValues) => {
     const students = getStudentsFromStorage();
@@ -183,9 +192,16 @@ export function AddStudentDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kelas</FormLabel>
-                  <FormControl>
-                    <Input placeholder="cth. 10 IPA 1" {...field} />
-                  </FormControl>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Pilih kelas..." />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {mockClasses.map(cls => <SelectItem key={cls.id} value={cls.name}>{cls.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
