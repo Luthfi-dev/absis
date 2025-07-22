@@ -1,4 +1,6 @@
 
+'use client'
+
 import {
   Card,
   CardContent,
@@ -7,15 +9,59 @@ import {
 } from "@/components/ui/card"
 import { DynamicSchedule } from "@/components/dynamic-schedule"
 import { Users, UserCheck, UserX, BookOpen, UserCircle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { mockStudents, mockTeachers, mockSubjects, mockAttendance } from "@/lib/mock-data"
+import type { Student, Teacher, AttendanceRecord } from "@/lib/mock-data"
 
 export default function DashboardPage() {
-  const stats = [
-    { title: "Total Siswa", value: "152", icon: Users, color: "text-blue-500" },
-    { title: "Total Guru", value: "15", icon: UserCircle, color: "text-purple-500" },
-    { title: "Total Mata Pelajaran", value: "20", icon: BookOpen, color: "text-yellow-500" },
-    { title: "Hadir Hari Ini", value: "140", icon: UserCheck, color: "text-green-500" },
-    { title: "Absen Hari Ini", value: "12", icon: UserX, color: "text-red-500" },
-  ]
+    const [stats, setStats] = useState([
+        { title: "Total Siswa", value: "0", icon: Users, color: "text-blue-500" },
+        { title: "Total Guru", value: "0", icon: UserCircle, color: "text-purple-500" },
+        { title: "Total Mata Pelajaran", value: "0", icon: BookOpen, color: "text-yellow-500" },
+        { title: "Hadir Hari Ini", value: "0", icon: UserCheck, color: "text-green-500" },
+        { title: "Absen Hari Ini", value: "0", icon: UserX, color: "text-red-500" },
+    ]);
+
+    useEffect(() => {
+        // In a real app, you'd fetch this data. For now, we use mock data which might
+        // be updated in localStorage by other components.
+        const students: Student[] = JSON.parse(localStorage.getItem('mockStudents') || JSON.stringify(mockStudents));
+        const teachers: Teacher[] = JSON.parse(localStorage.getItem('mockTeachers') || JSON.stringify(mockTeachers));
+        const subjects = mockSubjects;
+        const attendance: Record<string, AttendanceRecord[]> = JSON.parse(localStorage.getItem('mockAttendance') || JSON.stringify(mockAttendance));
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const studentsPresentToday = new Set(
+            Object.values(attendance).flat().filter(record => 
+                record.date === todayStr && 
+                (record.status === 'Excellent' || record.status === 'Terlambat' || record.status === 'Hadir')
+            ).map(record => {
+                // Find studentId from the key of the attendance object
+                for(const studentId in attendance){
+                    if(attendance[studentId].some(att => att.id === record.id)){
+                        return studentId;
+                    }
+                }
+                return null;
+            }).filter(Boolean)
+        );
+        
+        const totalStudents = students.length;
+        const presentTodayCount = studentsPresentToday.size;
+        const absentTodayCount = totalStudents - presentTodayCount;
+        const totalTeachers = teachers.filter(t => t.role === 'teacher').length;
+        const totalSubjects = subjects.length;
+
+        setStats([
+            { title: "Total Siswa", value: String(totalStudents), icon: Users, color: "text-blue-500" },
+            { title: "Total Guru", value: String(totalTeachers), icon: UserCircle, color: "text-purple-500" },
+            { title: "Total Mata Pelajaran", value: String(totalSubjects), icon: BookOpen, color: "text-yellow-500" },
+            { title: "Hadir Hari Ini", value: String(presentTodayCount), icon: UserCheck, color: "text-green-500" },
+            { title: "Absen Hari Ini", value: String(absentTodayCount), icon: UserX, color: "text-red-500" },
+        ]);
+
+    }, []);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
