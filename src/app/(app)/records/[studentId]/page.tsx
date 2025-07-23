@@ -25,17 +25,18 @@ import { generateAvatarColor } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import { type Student, type AttendanceRecord } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, User } from "lucide-react"
 
-type StatusVariant = "default" | "secondary" | "destructive" | "outline"
+type StatusVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
 
 function getStatusVariant(status: string): StatusVariant {
     switch (status) {
         case 'Hadir':
-        case 'Excellent':
             return 'default'
+        case 'Excellent':
+            return 'success'
         case 'Terlambat':
-            return 'outline'
+            return 'warning'
         case 'Absen':
         case 'Izin':
         case 'Sakit':
@@ -51,9 +52,11 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  const { studentId: encryptedStudentId } = params;
+
   useEffect(() => {
     try {
-      const decryptedId = decryptId(params.studentId)
+      const decryptedId = decryptId(encryptedStudentId)
       if (decryptedId === 'decryption_error') {
         notFound()
         return
@@ -72,7 +75,7 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
     } finally {
       setIsLoading(false)
     }
-  }, [params.studentId])
+  }, [encryptedStudentId])
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>
@@ -87,8 +90,9 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20 border-2 border-primary">
-            {student.avatar && <AvatarImage src={student.avatar} />}
-            <AvatarFallback className="text-2xl" style={{ backgroundColor: generateAvatarColor(student.name) }}>{student.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="text-2xl" style={{ backgroundColor: generateAvatarColor(student.name) }}>
+                {student.name.charAt(0)}
+              </AvatarFallback>
             </Avatar>
             <div>
             <h1 className="text-3xl font-bold tracking-tight font-headline">{student.name}</h1>
