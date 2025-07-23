@@ -27,10 +27,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { generateAvatarColor } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 
 const ITEMS_PER_PAGE = 10;
 
-const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; onRoleChange: (id: string, role: UserRole) => void; onStatusChange: (id: string, status: 'active' | 'pending') => void }) => {
+const ResponsiveRow = ({ user, currentUserRole, onRoleChange, onStatusChange }: { user: Teacher; currentUserRole: UserRole | undefined; onRoleChange: (id: string, role: UserRole) => void; onStatusChange: (id: string, status: 'active' | 'pending') => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
@@ -46,7 +47,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{user.email}</TableCell>
                 <TableCell className="hidden lg:table-cell">
-                    <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
+                    <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)} disabled={currentUserRole !== 'superadmin'}>
                         <SelectTrigger className="w-[120px]" onClick={(e) => e.stopPropagation()}>
                             <SelectValue />
                         </SelectTrigger>
@@ -78,12 +79,12 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                     <TableCell colSpan={5}>
                         <div className="grid grid-cols-2 gap-4 p-2 text-sm">
                              <div className="md:hidden">
-                                <div>Email</div>
+                                <div className="font-medium text-muted-foreground">Email</div>
                                 <div className="truncate">{user.email}</div>
                             </div>
                             <div>
                                 <div className="font-medium text-muted-foreground">Peran</div>
-                                <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
+                                <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)} disabled={currentUserRole !== 'superadmin'}>
                                     <SelectTrigger className="w-[120px] h-8 mt-1" onClick={(e) => e.stopPropagation()}>
                                         <SelectValue />
                                     </SelectTrigger>
@@ -122,6 +123,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
 export default function UsersPage() {
     const [users, setUsers] = useState<Teacher[]>([]);
     const { toast } = useToast()
+    const { user: currentUser } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -148,11 +150,16 @@ export default function UsersPage() {
     }, []);
 
     const filteredUsers = useMemo(() => {
-        return users.filter(user =>
+        let displayableUsers = users;
+        if (currentUser?.role === 'admin') {
+            displayableUsers = users.filter(user => user.role === 'teacher');
+        }
+
+        return displayableUsers.filter(user =>
             user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [users, searchTerm]);
+    }, [users, searchTerm, currentUser]);
 
     const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
     const paginatedUsers = useMemo(() => {
@@ -178,6 +185,14 @@ export default function UsersPage() {
     };
 
     const handleRoleChange = (userId: string, newRole: UserRole) => {
+        if (currentUser?.role !== 'superadmin') {
+            toast({
+                variant: "destructive",
+                title: "Akses Ditolak",
+                description: "Anda tidak memiliki izin untuk mengubah peran pengguna.",
+            });
+            return;
+        }
         const updatedUsers = users.map(user =>
             user.id === userId ? { ...user, role: newRole } : user
         );
@@ -229,7 +244,7 @@ export default function UsersPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedUsers.length > 0 ? paginatedUsers.map((user) => (
-                    <ResponsiveRow key={user.id} user={user} onRoleChange={handleRoleChange} onStatusChange={handleStatusChange} />
+                    <ResponsiveRow key={user.id} user={user} currentUserRole={currentUser?.role} onRoleChange={handleRoleChange} onStatusChange={handleStatusChange} />
                   )) : (
                     <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center">

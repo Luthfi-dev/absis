@@ -12,8 +12,10 @@ import { Users, UserCheck, UserX, BookOpen, UserCircle } from "lucide-react"
 import { useEffect, useState } from "react"
 import { mockStudents, mockTeachers, mockSubjects, mockAttendance } from "@/lib/mock-data"
 import type { Student, Teacher, AttendanceRecord } from "@/lib/mock-data"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function DashboardPage() {
+    const { user } = useAuth();
     const [stats, setStats] = useState([
         { title: "Total Siswa", value: "0", icon: Users, color: "text-blue-500" },
         { title: "Total Guru", value: "0", icon: UserCircle, color: "text-purple-500" },
@@ -35,7 +37,7 @@ export default function DashboardPage() {
         const studentsPresentToday = new Set(
             Object.values(attendance).flat().filter(record => 
                 record.date === todayStr && 
-                (record.status === 'Excellent' || record.status === 'Terlambat' || record.status === 'Hadir')
+                (record.status === 'Tepat Waktu' || record.status === 'Hadir')
             ).map(record => {
                 // Find studentId from the key of the attendance object
                 for(const studentId in attendance){
@@ -66,7 +68,9 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor Super Admin</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-headline">
+            {user?.role === 'superadmin' ? 'Dasbor Super Admin' : 'Dasbor Admin'}
+        </h1>
         <p className="text-muted-foreground">Selamat datang kembali! Berikut adalah ringkasan sistem Anda.</p>
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
