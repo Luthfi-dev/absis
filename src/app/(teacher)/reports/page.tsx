@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import {
   Card,
   CardContent,
@@ -22,7 +22,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { mockStudents, mockSubjects, mockAttendance, type Student, mockRoster } from '@/lib/mock-data';
 import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, startOfISOWeek } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Info } from 'lucide-react';
+import { BarChart, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { generateAvatarColor } from '@/lib/utils';
 
 type TimeRange = 'week' | 'month' | 'semester';
 type ReportData = {
@@ -32,6 +35,60 @@ type ReportData = {
     terlambat: number;
     absen: number;
 };
+
+const ResponsiveRow = ({ data }: { data: ReportData }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const { student, total, hadir, terlambat, absen } = data;
+
+    return (
+        <Fragment>
+            <TableRow>
+                <TableCell>
+                     <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 hidden sm:flex">
+                            <AvatarFallback style={{ backgroundColor: generateAvatarColor(student.name) }}>{student.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{student.name}</div>
+                    </div>
+                </TableCell>
+                <TableCell className="text-center hidden md:table-cell">{total}</TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-green-600 font-semibold">{hadir}</TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-orange-600 font-semibold">{terlambat}</TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-red-600 font-semibold">{absen}</TableCell>
+                <TableCell className="text-right sm:hidden">
+                    <Button size="icon" variant="ghost" onClick={() => setIsExpanded(!isExpanded)}>
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        <span className="sr-only">Toggle details</span>
+                    </Button>
+                </TableCell>
+            </TableRow>
+            {isExpanded && (
+                <TableRow className="bg-muted/50 hover:bg-muted/50 sm:hidden">
+                    <TableCell colSpan={2}>
+                        <div className="grid grid-cols-3 gap-y-2 p-2 text-sm text-center">
+                             <div className="md:hidden">
+                                <p className="font-medium text-muted-foreground">Total</p>
+                                <p>{total}</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground">Hadir</p>
+                                <p className="text-green-600 font-semibold">{hadir}</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground">Terlambat</p>
+                                <p className="text-orange-600 font-semibold">{terlambat}</p>
+                            </div>
+                             <div>
+                                <p className="font-medium text-muted-foreground">Absen</p>
+                                <p className="text-red-600 font-semibold">{absen}</p>
+                            </div>
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )}
+        </Fragment>
+    )
+}
 
 export default function TeacherReportsPage() {
     const { user } = useAuth();
@@ -168,21 +225,16 @@ export default function TeacherReportsPage() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Nama Siswa</TableHead>
-                                            <TableHead className="text-center">Total Pertemuan</TableHead>
-                                            <TableHead className="text-center">Hadir</TableHead>
-                                            <TableHead className="text-center">Terlambat</TableHead>
-                                            <TableHead className="text-center">Absen</TableHead>
+                                            <TableHead className="text-center hidden md:table-cell">Total Pertemuan</TableHead>
+                                            <TableHead className="text-center hidden sm:table-cell">Hadir</TableHead>
+                                            <TableHead className="text-center hidden sm:table-cell">Terlambat</TableHead>
+                                            <TableHead className="text-center hidden sm:table-cell">Absen</TableHead>
+                                            <TableHead className="sm:hidden"><span className="sr-only">Details</span></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {reportData.length > 0 ? reportData.map(({ student, total, hadir, terlambat, absen }) => (
-                                            <TableRow key={student.id}>
-                                                <TableCell className="font-medium">{student.name}</TableCell>
-                                                <TableCell className="text-center">{total}</TableCell>
-                                                <TableCell className="text-center text-green-600 font-semibold">{hadir}</TableCell>
-                                                <TableCell className="text-center text-orange-600 font-semibold">{terlambat}</TableCell>
-                                                <TableCell className="text-center text-red-600 font-semibold">{absen}</TableCell>
-                                            </TableRow>
+                                        {reportData.length > 0 ? reportData.map((data) => (
+                                            <ResponsiveRow key={data.student.id} data={data} />
                                         )) : (
                                             <TableRow>
                                                 <TableCell colSpan={5} className="h-24 text-center">

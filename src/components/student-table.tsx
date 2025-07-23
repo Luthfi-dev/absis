@@ -1,12 +1,9 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, Fragment } from "react"
 import {
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import {
   Table,
@@ -25,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search, ChevronDown, ChevronUp } from "lucide-react"
 import { mockStudents, type Student } from "@/lib/mock-data"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
@@ -48,6 +45,116 @@ import { encryptId } from "@/lib/crypto"
 import { generateAvatarColor } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 10;
+
+const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewRecords }: { student: Student; selected: boolean; onSelect: (id: string, checked: boolean) => void; onDelete: (id: string) => void; onPrint: (id: string) => void; onViewRecords: (id: string) => void; }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const router = useRouter();
+
+    return (
+        <Fragment>
+            <TableRow data-state={selected ? "selected" : ""}>
+                <TableCell className="pl-4">
+                    <Checkbox
+                        checked={selected}
+                        onCheckedChange={(checked) => onSelect(student.id, !!checked)}
+                        aria-label={`Pilih ${student.name}`}
+                    />
+                </TableCell>
+                <TableCell>
+                    <div className="flex items-center gap-3">
+                        <Avatar>
+                            <AvatarFallback style={{ backgroundColor: generateAvatarColor(student.name) }}>
+                                {student.name.charAt(0)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{student.name}</div>
+                    </div>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                    <Badge variant="outline">{student.studentId}</Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{student.nisn}</TableCell>
+                <TableCell className="hidden lg:table-cell">{student.kelas}</TableCell>
+                <TableCell className="pr-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Buka menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                <StudentCardDialog student={student}>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <QrCode className="mr-2 h-4 w-4" />
+                                        Lihat Kartu Digital
+                                    </DropdownMenuItem>
+                                </StudentCardDialog>
+                                <DropdownMenuItem onSelect={() => onViewRecords(student.id)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Lihat Catatan
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Ubah
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onSelect={(e) => e.preventDefault()}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Hapus
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                                            <AlertDialogDescription>Tindakan ini akan menghapus data siswa bernama {student.name}.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onDelete(student.id)}>Ya, Hapus</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                           <span className="sr-only">Toggle details</span>
+                        </Button>
+                    </div>
+                </TableCell>
+            </TableRow>
+            {isExpanded && (
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableCell colSpan={6} className="p-0">
+                        <div className="p-4 grid grid-cols-2 gap-4 text-sm">
+                            <div className="lg:hidden">
+                                <p className="font-medium text-muted-foreground">ID Siswa</p>
+                                <p><Badge variant="outline">{student.studentId}</Badge></p>
+                            </div>
+                             <div className="md:hidden">
+                                <p className="font-medium text-muted-foreground">NISN</p>
+                                <p>{student.nisn}</p>
+                            </div>
+                            <div className="lg:hidden">
+                                <p className="font-medium text-muted-foreground">Kelas</p>
+                                <p>{student.kelas}</p>
+                            </div>
+                             <div>
+                                <p className="font-medium text-muted-foreground">NIS</p>
+                                <p>{student.nis}</p>
+                            </div>
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )}
+        </Fragment>
+    )
+}
 
 export function StudentTable() {
   const [students, setStudents] = useState<Student[]>(() => {
@@ -136,12 +243,16 @@ export function StudentTable() {
     const encryptedIds = idsToPrint.map(id => encryptId(id));
     router.push(`/students/print?ids=${encryptedIds.join(',')}`)
   }
+
+  const handleViewRecords = (studentId: string) => {
+    router.push(`/records/${encryptId(studentId)}`)
+  }
   
-  const isAllSelected = selectedStudents.size > 0 && selectedStudents.size === paginatedStudents.length && paginatedStudents.length > 0;
+  const isAllSelectedOnPage = selectedStudents.size > 0 && paginatedStudents.every(s => selectedStudents.has(s.id)) && paginatedStudents.length > 0;
 
   return (
     <>
-      <CardHeader>
+      <div className="p-4 sm:p-6 border-b">
         <div className="flex justify-between items-center gap-4">
             <div className="relative w-full max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -187,24 +298,24 @@ export function StudentTable() {
                 </div>
             )}
         </div>
-      </CardHeader>
+      </div>
       <CardContent className="p-0">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div className="rounded-lg bg-card text-card-foreground">
             <Table>
             <TableHeader>
                 <TableRow>
                 <TableHead className="w-[50px] pl-4">
                     <Checkbox
-                        checked={isAllSelected}
+                        checked={isAllSelectedOnPage}
                         onCheckedChange={handleSelectAll}
-                        aria-label="Pilih semua"
+                        aria-label="Pilih semua di halaman ini"
                         disabled={paginatedStudents.length === 0}
                     />
                 </TableHead>
                 <TableHead>Nama</TableHead>
-                <TableHead className="hidden md:table-cell">ID Siswa</TableHead>
-                <TableHead className="hidden sm:table-cell">NISN</TableHead>
-                <TableHead className="hidden sm:table-cell">Kelas</TableHead>
+                <TableHead className="hidden lg:table-cell">ID Siswa</TableHead>
+                <TableHead className="hidden md:table-cell">NISN</TableHead>
+                <TableHead className="hidden lg:table-cell">Kelas</TableHead>
                 <TableHead className="pr-4">
                     <span className="sr-only">Aksi</span>
                 </TableHead>
@@ -212,84 +323,15 @@ export function StudentTable() {
             </TableHeader>
             <TableBody>
                 {paginatedStudents.length > 0 ? paginatedStudents.map((student) => (
-                <TableRow key={student.id} data-state={selectedStudents.has(student.id) ? "selected" : ""}>
-                    <TableCell className="pl-4">
-                        <Checkbox
-                            checked={selectedStudents.has(student.id)}
-                            onCheckedChange={(checked) => handleSelectStudent(student.id, !!checked)}
-                            aria-label={`Pilih ${student.name}`}
-                        />
-                    </TableCell>
-                    <TableCell>
-                    <div className="flex items-center gap-3">
-                        <Avatar>
-                          {student.avatar && <AvatarImage src={student.avatar} alt={student.name} />}
-                          <AvatarFallback style={{ backgroundColor: generateAvatarColor(student.name) }}>
-                            {student.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="font-medium">{student.name}</div>
-                    </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                    <Badge variant="outline">{student.studentId}</Badge>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">{student.nisn}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{student.kelas}</TableCell>
-                    <TableCell className="pr-4">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Buka menu</span>
-                        </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                        <StudentCardDialog student={student}>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <QrCode className="mr-2 h-4 w-4" />
-                                Lihat Kartu Digital
-                            </DropdownMenuItem>
-                        </StudentCardDialog>
-                        <DropdownMenuItem onSelect={() => router.push(`/records/${encryptId(student.id)}`)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Lihat Catatan
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Ubah
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                            <DropdownMenuItem
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                onSelect={(e) => e.preventDefault()}
-                                >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Hapus
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Tindakan ini akan menghapus data siswa bernama {student.name}.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete([student.id])}>
-                                        Ya, Hapus
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    </TableCell>
-                </TableRow>
+                    <ResponsiveRow 
+                        key={student.id} 
+                        student={student}
+                        selected={selectedStudents.has(student.id)}
+                        onSelect={handleSelectStudent}
+                        onDelete={() => handleDelete([student.id])}
+                        onPrint={() => handlePrint([student.id])}
+                        onViewRecords={() => handleViewRecords(student.id)}
+                    />
                 )) : (
                 <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
@@ -300,9 +342,9 @@ export function StudentTable() {
             </TableBody>
             </Table>
         </div>
-        <div className="flex items-center justify-between pt-4 px-6 pb-6">
+        <div className="flex items-center justify-between p-4">
             <div className="text-sm text-muted-foreground">
-                Menampilkan {paginatedStudents.length} dari {filteredStudents.length} siswa.
+                Menampilkan {paginatedStudents.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedStudents.length} dari {filteredStudents.length} siswa.
             </div>
             <div className="flex items-center space-x-2">
             <Button
@@ -314,7 +356,7 @@ export function StudentTable() {
                 Sebelumnya
             </Button>
             <span className="text-sm font-medium">
-                Halaman {currentPage} dari {totalPages}
+                Halaman {currentPage} dari {totalPages || 1}
             </span>
             <Button
                 variant="outline"

@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ import { mockStudents, mockAttendance } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -54,6 +54,56 @@ const allAttendanceRecords = Object.entries(mockAttendance).flatMap(([studentId,
     return Number(timeA) - Number(timeB);
 });
 
+const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <Fragment>
+            <TableRow>
+                <TableCell className="md:hidden">
+                    <div className="flex flex-col">
+                       <span className="font-medium">{record.studentName}</span>
+                       <span className="text-xs text-muted-foreground">{new Date(record.date).toLocaleDateString('id-ID')}</span>
+                    </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{new Date(record.date).toLocaleDateString('id-ID')}</TableCell>
+                <TableCell className="hidden md:table-cell font-medium">{record.studentName}</TableCell>
+                <TableCell className="hidden lg:table-cell">{record.subject}</TableCell>
+                <TableCell className="hidden lg:table-cell">{record.checkInTime || '-'}</TableCell>
+                <TableCell className="hidden lg:table-cell">{record.checkOutTime || '-'}</TableCell>
+                <TableCell className="text-right">
+                   <div className="flex items-center justify-end gap-2">
+                        <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
+                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            <span className="sr-only">Toggle details</span>
+                        </Button>
+                    </div>
+                </TableCell>
+            </TableRow>
+            {isExpanded && (
+                 <TableRow className="bg-muted/50 hover:bg-muted/50 lg:hidden">
+                    <TableCell colSpan={7}>
+                        <div className="grid grid-cols-2 gap-4 p-2 text-sm">
+                            <div>
+                                <p className="font-medium text-muted-foreground">Mata Pelajaran</p>
+                                <p>{record.subject}</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground">Jam Masuk</p>
+                                <p>{record.checkInTime || '-'}</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground">Jam Pulang</p>
+                                <p>{record.checkOutTime || '-'}</p>
+                            </div>
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )}
+        </Fragment>
+    )
+}
 
 export function AttendanceList() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,29 +150,21 @@ export function AttendanceList() {
                 <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Tanggal</TableHead>
-                        <TableHead>Nama Siswa</TableHead>
-                        <TableHead>Mata Pelajaran</TableHead>
-                        <TableHead>Jam Masuk</TableHead>
-                        <TableHead>Jam Pulang</TableHead>
+                        <TableHead className="md:hidden">Siswa</TableHead>
+                        <TableHead className="hidden md:table-cell">Tanggal</TableHead>
+                        <TableHead className="hidden md:table-cell">Nama Siswa</TableHead>
+                        <TableHead className="hidden lg:table-cell">Mata Pelajaran</TableHead>
+                        <TableHead className="hidden lg:table-cell">Jam Masuk</TableHead>
+                        <TableHead className="hidden lg:table-cell">Jam Pulang</TableHead>
                         <TableHead className="text-right">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {paginatedRecords.length > 0 ? paginatedRecords.map((record) => (
-                        <TableRow key={`${record.id}-${record.studentId}`}>
-                          <TableCell>{new Date(record.date).toLocaleDateString('id-ID')}</TableCell>
-                          <TableCell className="font-medium">{record.studentName}</TableCell>
-                          <TableCell>{record.subject}</TableCell>
-                          <TableCell>{record.checkInTime || '-'}</TableCell>
-                          <TableCell>{record.checkOutTime || '-'}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
-                          </TableCell>
-                        </TableRow>
+                        <ResponsiveRow key={`${record.id}-${record.studentId}`} record={record} />
                       )) : (
                         <TableRow>
-                            <TableCell colSpan={6} className="h-24 text-center">
+                            <TableCell colSpan={7} className="h-24 text-center">
                                 Tidak ada hasil.
                             </TableCell>
                         </TableRow>

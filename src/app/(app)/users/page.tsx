@@ -18,17 +18,100 @@ import {
 } from "@/components/ui/table"
 import { mockTeachers, type Teacher, type UserRole } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Search } from "lucide-react"
-import { useEffect, useState, useMemo } from "react"
+import { ChevronDown, ChevronUp, Search } from "lucide-react"
+import { useEffect, useState, useMemo, Fragment } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { generateAvatarColor } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 10;
+
+const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; onRoleChange: (id: string, role: UserRole) => void; onStatusChange: (id: string, status: 'active' | 'pending') => void }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <Fragment>
+            <TableRow>
+                <TableCell>
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback style={{ backgroundColor: generateAvatarColor(user.name) }}>{user.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{user.name}</div>
+                    </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{user.email}</TableCell>
+                <TableCell className="hidden lg:table-cell">
+                    <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
+                        <SelectTrigger className="w-[120px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="superadmin">Super Admin</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="teacher">Guru</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                    <Badge variant={user.status === 'active' ? 'default' : 'outline'}>
+                        {user.status === 'active' ? 'Aktif' : 'Menunggu'}
+                    </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                        <Switch
+                            checked={user.status === 'active'}
+                            onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
+                            aria-label={`Aktifkan ${user.name}`}
+                        />
+                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            <span className="sr-only">Toggle details</span>
+                        </Button>
+                    </div>
+                </TableCell>
+            </TableRow>
+            {isExpanded && (
+                <TableRow className="bg-muted/50 hover:bg-muted/50 lg:hidden">
+                    <TableCell colSpan={5}>
+                        <div className="grid grid-cols-2 gap-4 p-2 text-sm">
+                             <div className="md:hidden">
+                                <p className="font-medium text-muted-foreground">Email</p>
+                                <p className="truncate">{user.email}</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground">Peran</p>
+                                <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
+                                    <SelectTrigger className="w-[120px] h-8 mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="superadmin">Super Admin</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
+                                        <SelectItem value="teacher">Guru</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="md:hidden">
+                                <p className="font-medium text-muted-foreground">Status</p>
+                                <p>
+                                    <Badge variant={user.status === 'active' ? 'default' : 'outline'}>
+                                        {user.status === 'active' ? 'Aktif' : 'Menunggu'}
+                                    </Badge>
+                                </p>
+                            </div>
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )}
+        </Fragment>
+    )
+}
 
 export default function UsersPage() {
     const [users, setUsers] = useState<Teacher[]>([]);
@@ -132,50 +215,15 @@ export default function UsersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nama</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Peran</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden md:table-cell">Email</TableHead>
+                    <TableHead className="hidden lg:table-cell">Peran</TableHead>
+                    <TableHead className="hidden md:table-cell">Status</TableHead>
                     <TableHead className="text-right">Aktifkan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedUsers.length > 0 ? paginatedUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                                {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-                                <AvatarFallback style={{ backgroundColor: generateAvatarColor(user.name) }}>{user.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{user.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Select value={user.role} onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}>
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="superadmin">Super Admin</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="teacher">Guru</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                       <TableCell>
-                          <Badge variant={user.status === 'active' ? 'default' : 'outline'}>
-                            {user.status === 'active' ? 'Aktif' : 'Menunggu'}
-                          </Badge>
-                       </TableCell>
-                      <TableCell className="text-right">
-                        <Switch
-                            checked={user.status === 'active'}
-                            onCheckedChange={(checked) => handleStatusChange(user.id, checked ? 'active' : 'pending')}
-                            aria-label={`Aktifkan ${user.name}`}
-                        />
-                      </TableCell>
-                    </TableRow>
+                    <ResponsiveRow key={user.id} user={user} onRoleChange={handleRoleChange} onStatusChange={handleStatusChange} />
                   )) : (
                     <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center">
