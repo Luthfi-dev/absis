@@ -21,7 +21,7 @@ import { mockStudents, mockAttendance } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Search } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -180,7 +180,8 @@ export function AttendanceList() {
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
                     >
-                        Sebelumnya
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Sebelumnya</span>
                     </Button>
                     <span className="text-sm font-medium">
                         Halaman {currentPage} dari {totalPages}
@@ -191,7 +192,8 @@ export function AttendanceList() {
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
                     >
-                        Berikutnya
+                        <span className="hidden sm:inline">Berikutnya</span>
+                        <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
             </div>

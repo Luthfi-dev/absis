@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table"
 import { mockTeachers, type Teacher, type UserRole } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useState, useMemo, Fragment } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
@@ -251,7 +251,8 @@ export default function UsersPage() {
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
                     >
-                        Sebelumnya
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Sebelumnya</span>
                     </Button>
                     <span className="text-sm font-medium">
                         Halaman {currentPage} dari {totalPages}
@@ -262,7 +263,8 @@ export default function UsersPage() {
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
                     >
-                        Berikutnya
+                        <span className="hidden sm:inline">Berikutnya</span>
+                        <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
             </div>

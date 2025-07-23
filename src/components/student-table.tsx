@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { mockStudents, type Student } from "@/lib/mock-data"
 import { Avatar, AvatarFallback } from "./ui/avatar"
 import { Badge } from "./ui/badge"
@@ -38,7 +38,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "./ui/alert-dialog"
 import { StudentCardDialog } from "./student-card-dialog"
 import { encryptId } from "@/lib/crypto"
@@ -154,18 +153,18 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                                 <StudentCardDialog student={student}>
                                     <Button variant="outline" size="sm" className="w-full justify-center">
                                         <QrCode />
-                                        <span className="sm:ml-2">Lihat Kartu</span>
+                                        <span className="sr-only sm:not-sr-only sm:ml-2">Lihat Kartu</span>
                                     </Button>
                                 </StudentCardDialog>
                                 <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => onViewRecords(student.id)}>
                                     <Eye />
-                                    <span className="sm:ml-2">Lihat Catatan</span>
+                                    <span className="sr-only sm:not-sr-only sm:ml-2">Lihat Catatan</span>
                                 </Button>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button variant="destructive" size="sm" className="w-full justify-center" onClick={(e) => e.stopPropagation()}>
                                             <Trash2 />
-                                            <span className="sm:ml-2">Hapus</span>
+                                            <span className="sr-only sm:not-sr-only sm:ml-2">Hapus</span>
                                         </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
@@ -390,7 +389,8 @@ export function StudentTable() {
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
             >
-                Sebelumnya
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Sebelumnya</span>
             </Button>
             <span className="text-sm font-medium">
                 Halaman {currentPage} dari {totalPages || 1}
@@ -401,7 +401,8 @@ export function StudentTable() {
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
             >
-                Berikutnya
+                <span className="hidden sm:inline">Berikutnya</span>
+                <ChevronRight className="h-4 w-4" />
             </Button>
             </div>
         </div>
