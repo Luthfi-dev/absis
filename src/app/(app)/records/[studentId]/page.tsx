@@ -46,13 +46,14 @@ function getStatusVariant(status: string): StatusVariant {
     }
 }
 
-export default function StudentRecordsPage({ params: { studentId: encryptedStudentId } }: { params: { studentId: string } }) {
+export default function StudentRecordsPage({ params }: { params: { studentId: string } }) {
   const router = useRouter()
   const [student, setStudent] = useState<Student | null>(null)
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    const encryptedStudentId = params.studentId;
     if (!encryptedStudentId) {
         setIsLoading(false);
         notFound();
@@ -79,7 +80,7 @@ export default function StudentRecordsPage({ params: { studentId: encryptedStude
     } finally {
       setIsLoading(false)
     }
-  }, [encryptedStudentId])
+  }, [params.studentId])
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>
