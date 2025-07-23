@@ -34,6 +34,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { generateAvatarColor } from '@/lib/utils'
+import { useParams } from 'next/navigation'
 
 type AttendanceStatus = "Hadir" | "Sakit" | "Izin" | "Alpa"
 
@@ -44,12 +45,13 @@ type StudentAttendance = {
   isPresent: boolean
 }
 
-export default function TeacherAttendancePage({ params }: { params: { scheduleId: string } }) {
+export default function TeacherAttendancePage() {
   const { toast } = useToast()
+  const params = useParams();
+  const scheduleId = params.scheduleId as string;
   const [schedule, setSchedule] = useState<ScheduleItem | null>(null)
   const [students, setStudents] = useState<Student[]>([])
   const [attendance, setAttendance] = useState<Record<string, StudentAttendance>>({})
-  const { scheduleId } = params;
   
   useEffect(() => {
     // This logic needs to be aware of delegated tasks now.
