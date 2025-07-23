@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -51,12 +52,12 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
                 <TableCell className="hidden lg:table-cell">{item.class}</TableCell>
                 <TableCell className="hidden md:table-cell">{item.teacher}</TableCell>
                 <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
+                   <div className="flex items-center justify-end">
                         <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
-                         <Button size="icon" variant="ghost" className="md:hidden">
+                         <div className="md:hidden ml-2">
                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                            <span className="sr-only">Toggle details</span>
-                        </Button>
+                        </div>
                     </div>
                 </TableCell>
             </TableRow>

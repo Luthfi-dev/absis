@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect, useMemo, Fragment } from "react"
@@ -65,7 +66,7 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                         Lihat Kartu Digital
                     </DropdownMenuItem>
                 </StudentCardDialog>
-                <DropdownMenuItem onSelect={() => onViewRecords(student.id)}>
+                <DropdownMenuItem onClick={() => onViewRecords(student.id)}>
                     <Eye className="mr-2 h-4 w-4" />
                     Lihat Catatan
                 </DropdownMenuItem>
@@ -126,35 +127,63 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                         <div className="hidden md:flex">
                            <ActionMenu />
                         </div>
-                        <Button size="icon" variant="ghost" className="lg:hidden">
+                         <div className="md:hidden">
                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                           <span className="sr-only">Toggle details</span>
-                        </Button>
+                        </div>
                     </div>
                 </TableCell>
             </TableRow>
             {isExpanded && (
-                <TableRow className="bg-muted/50 hover:bg-muted/50 lg:hidden">
+                <TableRow className="bg-muted/50 hover:bg-muted/50 md:hidden">
                     <TableCell colSpan={6} className="p-0">
-                        <div className="p-4 grid grid-cols-2 gap-4 text-sm">
-                            <div className="lg:hidden">
-                                <div className="font-medium text-muted-foreground">ID Siswa</div>
-                                <div><Badge variant="outline">{student.studentId}</Badge></div>
+                        <div className="p-4 space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <div className="font-medium text-muted-foreground">ID Siswa</div>
+                                    <div><Badge variant="outline">{student.studentId}</Badge></div>
+                                </div>
+                                 <div className="md:hidden">
+                                    <div className="font-medium text-muted-foreground">NISN</div>
+                                    <div>{student.nisn}</div>
+                                </div>
+                                <div>
+                                    <div className="font-medium text-muted-foreground">Kelas</div>
+                                    <div>{student.kelas}</div>
+                                </div>
+                                 <div>
+                                    <div className="font-medium text-muted-foreground">NIS</div>
+                                    <div>{student.nis}</div>
+                                </div>
                             </div>
-                             <div className="md:hidden">
-                                <div className="font-medium text-muted-foreground">NISN</div>
-                                <div>{student.nisn}</div>
-                            </div>
-                            <div className="lg:hidden">
-                                <div className="font-medium text-muted-foreground">Kelas</div>
-                                <div>{student.kelas}</div>
-                            </div>
-                             <div>
-                                <div className="font-medium text-muted-foreground">NIS</div>
-                                <div>{student.nis}</div>
-                            </div>
-                            <div className="col-span-2 flex justify-end">
-                                <ActionMenu />
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <StudentCardDialog student={student}>
+                                    <Button variant="outline" size="sm" className="w-full justify-center">
+                                        <QrCode className="mr-2 h-4 w-4" />
+                                        Lihat Kartu
+                                    </Button>
+                                </StudentCardDialog>
+                                <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => onViewRecords(student.id)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Lihat Catatan
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="sm" className="w-full justify-center" onClick={(e) => e.stopPropagation()}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Hapus
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                                            <AlertDialogDescription>Tindakan ini akan menghapus data siswa bernama {student.name}.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onDelete(student.id)}>Ya, Hapus</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </div>
                     </TableCell>

@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -71,15 +72,14 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                               aria-label={`Aktifkan ${user.name}`}
                           />
                         </div>
-                        <Button size="icon" variant="ghost" className="lg:hidden">
+                         <div className="md:hidden">
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                            <span className="sr-only">Toggle details</span>
-                        </Button>
+                        </div>
                     </div>
                 </TableCell>
             </TableRow>
             {isExpanded && (
-                <TableRow className="bg-muted/50 hover:bg-muted/50 lg:hidden">
+                <TableRow className="bg-muted/50 hover:bg-muted/50 md:hidden">
                     <TableCell colSpan={5}>
                         <div className="grid grid-cols-2 gap-4 p-2 text-sm">
                              <div className="md:hidden">

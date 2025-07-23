@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useMemo, Fragment } from 'react';
@@ -73,10 +74,10 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end">
                         <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
-                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                        <div className="md:hidden ml-2" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             <span className="sr-only">Toggle details</span>
-                        </Button>
+                        </div>
                     </div>
                 </TableCell>
             </TableRow>
