@@ -9,9 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { User, ShieldCheck, Hash, BookUser, Phone } from 'lucide-react'
+import { User, ShieldCheck, Hash, Phone } from 'lucide-react'
 import { decryptId } from '@/lib/crypto'
 import { useEffect, useState } from 'react'
+import { generateAvatarColor } from '@/lib/utils'
 
 export default function StudentProfilePage({ params }: { params: { id: string } }) {
   const [student, setStudent] = useState<typeof mockStudents[0] | null>(null);
@@ -62,7 +63,7 @@ export default function StudentProfilePage({ params }: { params: { id: string } 
         <CardHeader className="items-center text-center">
           <Avatar className="h-24 w-24 border-4 border-primary mb-4">
             {student.avatar && <AvatarImage src={student.avatar} alt={student.name} />}
-            <AvatarFallback className="text-4xl"><User className="h-10 w-10"/></AvatarFallback>
+            <AvatarFallback className="text-4xl" style={{ backgroundColor: generateAvatarColor(student.name) }}>{student.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <CardTitle className="font-headline text-3xl font-bold">{student.name}</CardTitle>
           <p className="text-muted-foreground">{student.kelas}</p>

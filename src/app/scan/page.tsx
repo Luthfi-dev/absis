@@ -3,7 +3,7 @@
 
 import { BarcodeScanner, type ScanResult } from '@/components/barcode-scanner';
 import { Button } from '@/components/ui/button';
-import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings, AlertTriangle, Maximize, Minimize, User } from 'lucide-react';
+import { UserCheck, XCircle, Loader2, X, ScanLine, CameraOff, Camera, Repeat, RefreshCw, Settings, AlertTriangle, Maximize, Minimize } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { generateAvatarColor } from '@/lib/utils';
 
 
 type PinAction = 'open' | 'close' | 'open-settings';
@@ -221,7 +222,9 @@ export default function ScannerPage() {
               <>
                 <Avatar className="w-24 h-24 border-4 border-green-500">
                   {scanResult.student.avatar && <AvatarImage src={scanResult.student.avatar} alt={scanResult.student.name} />}
-                  <AvatarFallback className="text-3xl"><User className="h-10 w-10"/></AvatarFallback>
+                  <AvatarFallback className="text-3xl" style={{ backgroundColor: generateAvatarColor(scanResult.student.name) }}>
+                    {scanResult.student.name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 <h2 className="text-2xl font-bold">{scanResult.student.name}</h2>
                 <Badge variant="outline">{scanResult.student.studentId}</Badge>

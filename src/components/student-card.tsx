@@ -2,10 +2,10 @@
 'use client'
 
 import { Student } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import { cn, generateAvatarColor } from "@/lib/utils"
 import QRCode from "react-qr-code"
 import { useState, useEffect } from "react"
-import { CheckSquare, User } from "lucide-react"
+import { CheckSquare } from "lucide-react"
 import { encryptId } from "@/lib/crypto"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 
@@ -91,10 +91,17 @@ export function StudentCard({ student, initialSide = 'front', isPrintMode = fals
                            <p className="font-medium text-base truncate">{student.nis}</p>
                         </div>
                         <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
+                            <Avatar className="w-24 h-24 border-4 bg-white">
+                                {student.avatar && <AvatarImage src={student.avatar} alt={student.name} />}
+                                <AvatarFallback className="text-5xl" style={{ backgroundColor: generateAvatarColor(student.name) }}>
+                                    {student.name.charAt(0)}
+                                </AvatarFallback>
+                            </Avatar>
+                           <p className="text-[10px] text-center mt-1">Profil Lengkap</p>
                            <div className="bg-white p-1 rounded-md shadow-md">
-                              {profileUrl && <QRCode value={profileUrl} size={96} bgColor="#ffffff" fgColor="#000000" level="L" />}
+                              {profileUrl && <QRCode value={profileUrl} size={64} bgColor="#ffffff" fgColor="#000000" level="L" />}
                            </div>
-                           <p className="text-[10px] text-center">Pindai untuk Profil</p>
+                           <p className="text-[10px] text-center">Pindai QR</p>
                         </div>
                     </div>
                     {customMessage && (

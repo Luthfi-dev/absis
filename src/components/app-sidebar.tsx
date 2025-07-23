@@ -31,11 +31,11 @@ import {
   Database,
   Users2,
   Server,
-  User
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { generateAvatarColor } from "@/lib/utils"
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -135,7 +135,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-2">
           <Avatar className="size-8">
             {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-            <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+            <AvatarFallback style={{ backgroundColor: generateAvatarColor(user.name) }}>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">
             <span className="font-semibold text-sidebar-foreground">{user.name}</span>

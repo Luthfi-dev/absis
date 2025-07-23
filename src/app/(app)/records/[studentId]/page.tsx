@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { notFound } from "next/navigation"
 import { decryptId } from "@/lib/crypto"
-import { User } from "lucide-react"
+import { generateAvatarColor } from "@/lib/utils"
 
 type StatusVariant = "default" | "secondary" | "destructive" | "outline"
 
@@ -48,7 +48,7 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20 border-2 border-primary">
           {student.avatar && <AvatarImage src={student.avatar} />}
-          <AvatarFallback className="text-2xl"><User className="h-8 w-8"/></AvatarFallback>
+          <AvatarFallback className="text-2xl" style={{ backgroundColor: generateAvatarColor(student.name) }}>{student.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">{student.name}</h1>

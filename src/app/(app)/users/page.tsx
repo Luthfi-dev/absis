@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table"
 import { mockTeachers, type Teacher, type UserRole } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Search, User } from "lucide-react"
+import { PlusCircle, Search } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { generateAvatarColor } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 10;
 
@@ -144,7 +145,7 @@ export default function UsersPage() {
                         <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                                 {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-                                <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                                <AvatarFallback style={{ backgroundColor: generateAvatarColor(user.name) }}>{user.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <span className="font-medium">{user.name}</span>
                         </div>
