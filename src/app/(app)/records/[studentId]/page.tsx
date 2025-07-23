@@ -17,15 +17,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { notFound, useRouter } from "next/navigation"
+import { notFound, useRouter, useParams } from "next/navigation"
 import { decryptId } from "@/lib/crypto"
 import { generateAvatarColor } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import { type Student, type AttendanceRecord } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, User } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 type StatusVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
 
@@ -46,14 +46,15 @@ function getStatusVariant(status: string): StatusVariant {
     }
 }
 
-export default function StudentRecordsPage({ params }: { params: { studentId: string } }) {
+export default function StudentRecordsPage() {
   const router = useRouter()
+  const params = useParams();
   const [student, setStudent] = useState<Student | null>(null)
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const encryptedStudentId = params.studentId;
+    const encryptedStudentId = params.studentId as string;
     if (!encryptedStudentId) {
         setIsLoading(false);
         notFound();
