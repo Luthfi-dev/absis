@@ -85,6 +85,26 @@ export default function LoginPage() {
       const nip = (form.elements.namedItem('nip') as HTMLInputElement).value;
       const registerPassword = (form.elements.namedItem('password') as HTMLInputElement).value;
 
+      // Validation for duplicate email
+      if (currentUsers.some(u => u.email.toLowerCase() === email)) {
+        toast({
+            variant: "destructive",
+            title: "Pendaftaran Gagal",
+            description: "Email ini sudah terdaftar. Silakan gunakan email lain.",
+        });
+        return;
+      }
+      
+      // Validation for duplicate NIP
+      if (currentUsers.some(u => u.nip === nip)) {
+        toast({
+            variant: "destructive",
+            title: "Pendaftaran Gagal",
+            description: "NIP ini sudah terdaftar.",
+        });
+        return;
+      }
+
       const newUser: Teacher = {
         id: `t-${Date.now()}`,
         name,
