@@ -119,7 +119,7 @@ export function AddStudentDialog() {
         nisn: data.nisn,
         kelas: data.kelas,
         nomorOrangTua: data.nomorOrangTua,
-        avatar: `https://api.dicebear.com/8.x/bottts/svg?seed=${newStudentId}` 
+        avatar: `https://placehold.co/128x128.png` 
     };
 
     localStorage.setItem('mockStudents', JSON.stringify([...students, newStudent]));

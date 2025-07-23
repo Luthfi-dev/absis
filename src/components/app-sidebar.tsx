@@ -30,6 +30,7 @@ import {
   Book,
   Database,
   Users2,
+  Server,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -115,6 +116,13 @@ export function AppSidebar() {
         </SidebarMenu>
         <SidebarSeparator />
         <SidebarMenu>
+            {user.role === 'superadmin' && (
+              <SidebarMenuItem>
+                  <SidebarMenuButton as={Link} href="/server-info" isActive={pathname.startsWith('/server-info')} icon={<Server/>} tooltip="Info Server" onClick={handleLinkClick}>
+                      Info Server
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
                 <SidebarMenuButton as={Link} href="/settings" isActive={pathname.startsWith('/settings')} icon={<Settings/>} tooltip="Pengaturan" onClick={handleLinkClick}>
                     Pengaturan
@@ -125,7 +133,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-2">
           <Avatar className="size-8">
-            <AvatarImage src={`https://api.dicebear.com/8.x/bottts/svg?seed=${user.email}`} alt={user.name} />
+            <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">
