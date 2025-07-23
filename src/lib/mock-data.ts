@@ -128,6 +128,7 @@ export const mockRoster: Roster = {
     ]
 }
 
+export const mockDelegations: DelegatedTask[] = [];
 
 export let mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [

@@ -26,8 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockSchedule, mockStudents, mockClasses, mockAttendance } from "@/lib/mock-data"
-import type { Student, ScheduleItem } from '@/lib/mock-data'
+import { mockRoster, mockStudents, mockClasses, mockAttendance, mockSubjects, mockDelegations } from "@/lib/mock-data"
+import type { Student, ScheduleItem, DelegatedTask } from '@/lib/mock-data'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ArrowLeft, Save } from 'lucide-react'
@@ -54,43 +54,84 @@ export default function TeacherAttendancePage() {
   const [attendance, setAttendance] = useState<Record<string, StudentAttendance>>({})
   
   useEffect(() => {
-    // This logic needs to be aware of delegated tasks now.
-    // For this prototype, we'll keep it simple and assume scheduleId is unique
-    // across original and delegated tasks. A real app would need a more robust way
-    // to fetch the correct schedule details (e.g., passing a date and delegation status).
-    const foundSchedule = mockSchedule.find(s => s.id === scheduleId)
-    if (foundSchedule) {
-      setSchedule(foundSchedule)
-      const classInfo = mockClasses.find(c => c.name === foundSchedule.class)
-      if (classInfo) {
-        const classStudents = mockStudents.filter(s => s.kelas === classInfo.name)
-        setStudents(classStudents)
-        
-        // Initialize attendance state based on morning check-in
-        const todayStr = new Date().toISOString().split('T')[0];
-        const studentsWhoCheckedIn = new Set(
-          Object.entries(mockAttendance)
-            .filter(([studentId, records]) => {
-              const morningCheckIn = records.find(r => r.date === todayStr && (r.status === 'Tepat Waktu' || r.status === 'Terlambat'));
-              return !!morningCheckIn;
-            })
-            .map(([studentId]) => studentId)
-        );
+    if (!scheduleId) return;
 
-        const initialAttendance = classStudents.reduce((acc, student) => {
-          const hasCheckedIn = studentsWhoCheckedIn.has(student.id);
-          acc[student.id] = {
-            studentId: student.id,
-            status: hasCheckedIn ? 'Hadir' : 'Alpa',
-            notes: '',
-            isPresent: hasCheckedIn,
-          }
-          return acc
-        }, {} as Record<string, StudentAttendance>)
-        setAttendance(initialAttendance)
-      }
+    let foundScheduleItem: ScheduleItem | null = null;
+    let rosterEntryIdForAttendance: string | undefined = undefined;
+
+    // Check if it's a delegated task first
+    const savedDelegations = localStorage.getItem('mockDelegations');
+    const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : mockDelegations;
+    const delegatedTask = delegations.find(d => d.id === scheduleId);
+
+    if (delegatedTask) {
+        const { rosterEntry } = delegatedTask;
+        const subjectName = mockSubjects.find(s => s.id === rosterEntry.subjectId)?.name || 'N/A';
+        const classInfo = Object.entries(mockRoster).find(([_, entries]) => entries.some(e => e.id === rosterEntry.id));
+        const className = classInfo ? mockClasses.find(c => c.id === classInfo[0])?.name || 'N/A' : 'N/A';
+        
+        foundScheduleItem = {
+            id: delegatedTask.id,
+            time: rosterEntry.time,
+            subject: subjectName,
+            class: className,
+            teacher: 'Delegated Task', // This isn't displayed on the page anyway
+            status: 'Sedang Berlangsung'
+        };
+        rosterEntryIdForAttendance = rosterEntry.id;
+    } else {
+        // If not a delegation, check the regular roster
+        Object.entries(mockRoster).forEach(([classId, entries]) => {
+            const rosterEntry = entries.find(e => e.id === scheduleId);
+            if (rosterEntry) {
+                const subjectName = mockSubjects.find(s => s.id === rosterEntry.subjectId)?.name || 'N/A';
+                const className = mockClasses.find(c => c.id === classId)?.name || 'N/A';
+                foundScheduleItem = {
+                    id: rosterEntry.id,
+                    time: rosterEntry.time,
+                    subject: subjectName,
+                    class: className,
+                    teacher: 'Regular Schedule',
+                    status: 'Sedang Berlangsung'
+                };
+                rosterEntryIdForAttendance = rosterEntry.id;
+            }
+        });
     }
-  }, [scheduleId])
+
+    if (foundScheduleItem) {
+        setSchedule(foundScheduleItem);
+        const classInfo = mockClasses.find(c => c.name === foundScheduleItem!.class);
+        if (classInfo) {
+            const classStudents = mockStudents.filter(s => s.kelas === classInfo.name);
+            setStudents(classStudents);
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const morningAttendance = JSON.parse(localStorage.getItem('mockAttendance') || JSON.stringify(mockAttendance));
+            
+            const studentsWhoCheckedIn = new Set(
+              Object.entries(morningAttendance)
+                .filter(([studentId, records] : [string, any]) => {
+                  const morningCheckIn = records.find((r:any) => r.date === todayStr && (r.status === 'Tepat Waktu' || r.status === 'Terlambat'));
+                  return !!morningCheckIn;
+                })
+                .map(([studentId]) => studentId)
+            );
+
+            const initialAttendance = classStudents.reduce((acc, student) => {
+              const hasCheckedIn = studentsWhoCheckedIn.has(student.id);
+              acc[student.id] = {
+                studentId: student.id,
+                status: hasCheckedIn ? 'Hadir' : 'Alpa',
+                notes: '',
+                isPresent: hasCheckedIn,
+              };
+              return acc;
+            }, {} as Record<string, StudentAttendance>);
+            setAttendance(initialAttendance);
+        }
+    }
+  }, [scheduleId]);
 
   const handlePresenceChange = (studentId: string, isPresent: boolean) => {
     setAttendance(prev => ({
@@ -98,7 +139,6 @@ export default function TeacherAttendancePage() {
       [studentId]: {
         ...prev[studentId],
         isPresent,
-        // If unchecked, set to Alpa, otherwise back to Hadir
         status: isPresent ? 'Hadir' : 'Alpa',
       },
     }))
@@ -110,7 +150,6 @@ export default function TeacherAttendancePage() {
       [studentId]: {
         ...prev[studentId],
         status,
-        // If status is anything other than Hadir, uncheck presence
         isPresent: status === 'Hadir',
       },
     }))
@@ -127,10 +166,6 @@ export default function TeacherAttendancePage() {
   }
   
   const handleSaveAttendance = () => {
-    // In a real app, this is where you'd check if it's a delegated task
-    // and save the attendance record under the ORIGINAL teacher's name/ID,
-    // but maybe with a flag indicating who recorded it.
-    // For now, we'll just log and toast.
     console.log("Saving attendance:", attendance)
     toast({
         title: "Absensi Disimpan",
@@ -139,8 +174,7 @@ export default function TeacherAttendancePage() {
   }
 
   if (!schedule) {
-    // a delay to allow useEffect to run
-    return <div>Loading...</div>
+    return <div className="p-8">Loading...</div>
   }
 
   return (
