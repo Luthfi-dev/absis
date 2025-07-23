@@ -38,6 +38,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "./ui/alert-dialog"
 import { StudentCardDialog } from "./student-card-dialog"
 import { encryptId } from "@/lib/crypto"
@@ -153,12 +154,12 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                                 <StudentCardDialog student={student}>
                                     <Button variant="outline" size="sm" className="w-full justify-center">
                                         <QrCode />
-                                        <span className="sr-only sm:not-sr-only sm:ml-2">Lihat Kartu</span>
+                                        <span className="sr-only sm:not-sr-only sm:ml-2">Kartu</span>
                                     </Button>
                                 </StudentCardDialog>
                                 <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => onViewRecords(student.id)}>
                                     <Eye />
-                                    <span className="sr-only sm:not-sr-only sm:ml-2">Lihat Catatan</span>
+                                    <span className="sr-only sm:not-sr-only sm:ml-2">Catatan</span>
                                 </Button>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
