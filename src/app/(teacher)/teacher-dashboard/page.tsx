@@ -16,26 +16,31 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 
+type ScheduleStatus = 'Akan Datang' | 'Sedang Berlangsung' | 'Selesai';
+
+const getStatusForSchedule = (time: string): ScheduleStatus => {
+    const now = new Date();
+    const [startTime, endTime] = time.split(' - ');
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+
+    const startDate = new Date();
+    startDate.setHours(startHours, startMinutes, 0, 0);
+
+    const endDate = new Date();
+    endDate.setHours(endHours, endMinutes, 0, 0);
+
+    if (now < startDate) return 'Akan Datang';
+    if (now >= startDate && now <= endDate) return 'Sedang Berlangsung';
+    return 'Selesai';
+}
+
 export default function TeacherDashboardPage() {
   const { user } = useAuth();
-  const [activeSchedule, setActiveSchedule] = useState<ScheduleItem[]>([]);
+  const [todaysSchedule, setTodaysSchedule] = useState<ScheduleItem[]>([]);
   const [delegatedSchedule, setDelegatedSchedule] = useState<ScheduleItem[]>([]);
-  const [allTeachers, setAllTeachers] = useState<Teacher[]>(mockTeachers);
-  const [rosterData, setRosterData] = useState<Roster>({});
   
   useEffect(() => {
-    // Load initial data
-    const savedUsers = localStorage.getItem('mockTeachers');
-    if (savedUsers) setAllTeachers(JSON.parse(savedUsers));
-    else setAllTeachers(mockTeachers);
-    
-    const savedRoster = localStorage.getItem('mockRoster');
-    if(savedRoster) setRosterData(JSON.parse(savedRoster));
-    else setRosterData(require('@/lib/mock-data').mockRoster);
-    
-    const savedDelegations = localStorage.getItem('mockDelegations');
-    const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : [];
-
     if (!user) return;
 
     const getSchedules = () => {
@@ -43,28 +48,16 @@ export default function TeacherDashboardPage() {
       const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
       const currentDayName = dayNames[now.getDay()];
       const todayStr = now.toISOString().split('T')[0];
-
-      const isTimeActive = (time: string) => {
-        const [startTime, endTime] = time.split(' - ');
-        const [startHours, startMinutes] = startTime.split(':').map(Number);
-        const [endHours, endMinutes] = endTime.split(':').map(Number);
-
-        const startDate = new Date();
-        startDate.setHours(startHours, startMinutes, 0, 0);
-
-        const endDate = new Date();
-        endDate.setHours(endHours, endMinutes, 0, 0);
-
-        return now >= startDate && now <= endDate;
-      };
-
-      // 1. Get Teacher's own active schedule
+      
       const currentRosterData = JSON.parse(localStorage.getItem('mockRoster') || '{}');
       const currentTeachers = JSON.parse(localStorage.getItem('mockTeachers') || '[]');
+      const savedDelegations = localStorage.getItem('mockDelegations');
+      const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : [];
 
 
-      const ownActiveSchedules = Object.values(currentRosterData).flat()
-        .filter((entry: any) => entry.teacherId === user.id && entry.day === currentDayName && isTimeActive(entry.time))
+      // 1. Get Teacher's own schedule for today
+      const ownSchedules = Object.values(currentRosterData).flat()
+        .filter((entry: any) => entry.teacherId === user.id && entry.day === currentDayName)
         .map((cs: any) => {
            const subject = mockSubjects.find(s => s.id === cs.subjectId)?.name || 'N/A';
            const className = mockClasses.find(c => Object.entries(currentRosterData).some(([classId, entries] : [string, any]) => classId === c.id && entries.some((e: any) => e.id === cs.id)))?.name || 'N/A';
@@ -73,19 +66,18 @@ export default function TeacherDashboardPage() {
               time: cs.time,
               subject: subject,
               class: className,
-              teacher: user.name, // It's their own schedule
-              status: 'Sedang Berlangsung'
+              teacher: user.name,
+              status: getStatusForSchedule(cs.time)
            } as ScheduleItem;
         });
-      setActiveSchedule(ownActiveSchedules);
+      setTodaysSchedule(ownSchedules);
 
-      // 2. Get active delegated tasks
-      const activeDelegatedTasks = delegations
-        .filter(d => d.substituteTeacherId === user.id && d.date === todayStr && isTimeActive(d.rosterEntry.time))
+      // 2. Get delegated tasks for today
+      const todaysDelegatedTasks = delegations
+        .filter(d => d.substituteTeacherId === user.id && d.date === todayStr)
         .map(d => {
             const { rosterEntry } = d;
             const subject = mockSubjects.find(s => s.id === rosterEntry.subjectId)?.name || 'N/A';
-            // Find class name from the main roster data
             const className = mockClasses.find(c => Object.entries(currentRosterData).some(([classId, entries]: [string, any]) => entries.some((e:any) => e.id === rosterEntry.id)))?.name || 'N/A';
             const originalTeacher = currentTeachers.find((t:any) => t.id === rosterEntry.teacherId)?.name || 'N/A';
             return {
@@ -94,21 +86,30 @@ export default function TeacherDashboardPage() {
                 subject: subject,
                 class: className,
                 teacher: `Menggantikan: ${originalTeacher}`,
-                status: 'Sedang Berlangsung'
+                status: getStatusForSchedule(rosterEntry.time)
             } as ScheduleItem;
         });
-      setDelegatedSchedule(activeDelegatedTasks);
+      setDelegatedSchedule(todaysDelegatedTasks);
     };
 
     getSchedules();
-    const interval = setInterval(getSchedules, 60000); // Check every minute
+    const interval = setInterval(getSchedules, 60000); // Check every minute to update status
 
     return () => clearInterval(interval);
   }, [user]);
 
+  const getStatusVariant = (status: ScheduleStatus) => {
+    switch(status) {
+        case 'Sedang Berlangsung': return 'success';
+        case 'Akan Datang': return 'outline';
+        case 'Selesai': return 'secondary';
+        default: return 'default';
+    }
+  }
+
   const renderScheduleList = (items: ScheduleItem[], isDelegated = false) => (
       <ul className="space-y-4">
-        {items.map((item) => (
+        {items.sort((a,b) => a.time.localeCompare(b.time)).map((item) => (
           <li key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg transition-colors hover:bg-muted/50 border">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
               <Clock className="h-5 w-5 text-primary" />
@@ -116,13 +117,13 @@ export default function TeacherDashboardPage() {
             <div className="flex-1 w-full">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{item.subject}</p>
-                {isDelegated && <Badge variant="warning">Tugas Tambahan</Badge>}
+                 <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">{item.class}</p>
               <p className="text-sm text-muted-foreground">{item.time}</p>
               {isDelegated && <p className="text-xs text-muted-foreground italic">{item.teacher}</p>}
             </div>
-            <Button asChild className="w-full sm:w-auto">
+            <Button asChild className="w-full sm:w-auto" disabled={item.status !== 'Sedang Berlangsung'}>
               <Link href={`/attendance/${item.id}`}>
                 <ScanLine className="mr-2 h-4 w-4" />
                 Mulai Absensi
@@ -137,7 +138,7 @@ export default function TeacherDashboardPage() {
     <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor Guru</h1>
-        <p className="text-muted-foreground">Selamat datang, {user?.name}! Berikut jadwal mengajar Anda saat ini.</p>
+        <p className="text-muted-foreground">Selamat datang, {user?.name}! Berikut jadwal mengajar Anda untuk hari ini.</p>
       </div>
       
       {delegatedSchedule.length > 0 && (
@@ -159,16 +160,16 @@ export default function TeacherDashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarClock className="h-6 w-6" />
-            Jadwal Mengajar Anda
+            Jadwal Mengajar Anda Hari Ini
           </CardTitle>
-          <CardDescription>Pilih kelas untuk memulai sesi absensi.</CardDescription>
+          <CardDescription>Tombol absensi akan aktif saat jadwal sedang berlangsung.</CardDescription>
         </CardHeader>
         <CardContent>
-          {activeSchedule.length > 0 ? (
-            renderScheduleList(activeSchedule)
+          {todaysSchedule.length > 0 ? (
+            renderScheduleList(todaysSchedule)
           ) : (
             <div className="text-center text-muted-foreground py-10">
-              <p>Tidak ada jadwal mengajar untuk Anda saat ini.</p>
+              <p>Tidak ada jadwal mengajar untuk Anda hari ini.</p>
             </div>
           )}
         </CardContent>
