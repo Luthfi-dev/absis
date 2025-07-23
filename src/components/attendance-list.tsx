@@ -21,20 +21,30 @@ import { mockStudents, mockAttendance } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, QrCode, Eye, Trash2, MoreHorizontal } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const ITEMS_PER_PAGE = 10;
 
 const getStatusVariant = (status: string) => {
     switch (status) {
-        case 'Excellent':
+        case 'Tepat Waktu':
             return 'success';
-        case 'Terlambat':
-            return 'warning';
         case 'Hadir':
             return 'default';
-        default:
+        case 'Terlambat':
+        case 'Alpa':
+        case 'Sakit':
+        case 'Izin':
             return 'destructive';
+        default:
+            return 'secondary';
     }
 }
 
@@ -78,18 +88,18 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
                 </TableCell>
             </TableRow>
             {isExpanded && (
-                 <TableRow className="bg-muted/50 hover:bg-muted/50 lg:hidden">
-                    <TableCell colSpan={7}>
-                        <div className="grid grid-cols-2 gap-4 p-2 text-sm">
-                            <div>
-                                <div className="font-medium text-muted-foreground">Mata Pelajaran</div>
+                 <TableRow className="bg-muted/50 hover:bg-muted/50 md:hidden">
+                    <TableCell colSpan={2}>
+                        <div className="grid grid-cols-2 gap-y-2 p-2 text-sm text-center">
+                             <div className="md:hidden">
+                                <div className="font-medium text-muted-foreground">Pelajaran</div>
                                 <div>{record.subject}</div>
                             </div>
                             <div>
                                 <div className="font-medium text-muted-foreground">Jam Masuk</div>
-                                <div>{record.checkInTime || '-'}</div>
+                                <div >{record.checkInTime || '-'}</div>
                             </div>
-                            <div>
+                             <div>
                                 <div className="font-medium text-muted-foreground">Jam Pulang</div>
                                 <div>{record.checkOutTime || '-'}</div>
                             </div>

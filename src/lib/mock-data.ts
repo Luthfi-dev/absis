@@ -61,7 +61,7 @@ export type AttendanceRecord = {
   id: string;
   subject: string;
   date: string;
-  status: 'Excellent' | 'Terlambat' | 'Absen' | 'Hadir'; // 'Hadir' is for per-subject, 'Excellent' for on-time
+  status: 'Tepat Waktu' | 'Terlambat' | 'Alpa' | 'Hadir' | 'Izin' | 'Sakit';
   checkInTime?: string;
   checkOutTime?: string;
 };
@@ -121,29 +121,29 @@ export const mockRoster: Roster = {
 
 export let mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [
-    { id: 'a1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Excellent', checkInTime: '06:55:12', checkOutTime: '15:02:00' },
+    { id: 'a1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:55:12', checkOutTime: '15:02:00' },
     { id: 'a2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Hadir' },
     { id: 'a3', subject: 'Absensi Pagi', date: '2024-05-19', status: 'Terlambat', checkInTime: '07:15:30' },
-    { id: 'a4', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Excellent', checkInTime: '06:58:15', checkOutTime: '15:00:05' },
+    { id: 'a4', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Tepat Waktu', checkInTime: '06:58:15', checkOutTime: '15:00:05' },
   ],
   '2': [
     { id: 'b1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Terlambat', checkInTime: '07:05:02', checkOutTime: '15:01:15' },
-    { id: 'b2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Absen' },
-    { id: 'b3', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Excellent', checkInTime: '06:55:45', checkOutTime: '15:03:20' },
+    { id: 'b2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Alpa' },
+    { id: 'b3', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Tepat Waktu', checkInTime: '06:55:45', checkOutTime: '15:03:20' },
   ],
   '3': [
-    { id: 'c1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Excellent', checkInTime: '06:58:41', checkOutTime: '15:05:30'},
-    { id: 'c2', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Excellent', checkInTime: '06:59:59', checkOutTime: '15:01:00' },
+    { id: 'c1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:58:41', checkOutTime: '15:05:30'},
+    { id: 'c2', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Tepat Waktu', checkInTime: '06:59:59', checkOutTime: '15:01:00' },
   ],
   '4': [
-    { id: 'd1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Excellent', checkInTime: '06:50:00', checkOutTime: '14:59:00' },
-    { id: 'd2', subject: 'Matematika 101', date: '2024-05-20', status: 'Absen' },
+    { id: 'd1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:50:00', checkOutTime: '14:59:00' },
+    { id: 'd2', subject: 'Matematika 101', date: '2024-05-20', status: 'Alpa' },
     { id: 'd3', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Terlambat', checkInTime: '07:01:10', checkOutTime: '15:10:00' },
   ],
   '5': [
     { id: 'e1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Terlambat', checkInTime: '07:30:11' },
     { id: 'e2', subject: 'Matematika 101', date: '2024-05-20', status: 'Hadir' },
-    { id: 'e3', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Excellent', checkInTime: '06:50:30', checkOutTime: '15:05:00' },
+    { id: 'e3', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Tepat Waktu', checkInTime: '06:50:30', checkOutTime: '15:05:00' },
   ],
 };
 

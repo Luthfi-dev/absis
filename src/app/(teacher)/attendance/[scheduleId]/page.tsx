@@ -65,7 +65,7 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
         const studentsWhoCheckedIn = new Set(
           Object.entries(mockAttendance)
             .filter(([studentId, records]) => {
-              const morningCheckIn = records.find(r => r.date === todayStr && (r.status === 'Excellent' || r.status === 'Terlambat'));
+              const morningCheckIn = records.find(r => r.date === todayStr && (r.status === 'Tepat Waktu' || r.status === 'Terlambat'));
               return !!morningCheckIn;
             })
             .map(([studentId]) => studentId)

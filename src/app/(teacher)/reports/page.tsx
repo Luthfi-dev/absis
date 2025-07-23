@@ -33,12 +33,12 @@ type ReportData = {
     total: number;
     hadir: number;
     terlambat: number;
-    absen: number;
+    alpa: number;
 };
 
 const ResponsiveRow = ({ data }: { data: ReportData }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const { student, total, hadir, terlambat, absen } = data;
+    const { student, total, hadir, terlambat, alpa } = data;
 
     return (
         <Fragment>
@@ -53,8 +53,8 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
                 </TableCell>
                 <TableCell className="text-center hidden md:table-cell">{total}</TableCell>
                 <TableCell className="text-center hidden sm:table-cell text-green-600 font-semibold">{hadir}</TableCell>
-                <TableCell className="text-center hidden sm:table-cell text-orange-600 font-semibold">{terlambat}</TableCell>
-                <TableCell className="text-center hidden sm:table-cell text-red-600 font-semibold">{absen}</TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-destructive font-semibold">{terlambat}</TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-destructive font-semibold">{alpa}</TableCell>
                 <TableCell className="text-right sm:hidden">
                     <span className="sr-only">Details</span>
                 </TableCell>
@@ -73,11 +73,11 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
                             </div>
                             <div>
                                 <div className="font-medium text-muted-foreground">Terlambat</div>
-                                <div className="text-orange-600 font-semibold">{terlambat}</div>
+                                <div className="text-destructive font-semibold">{terlambat}</div>
                             </div>
                              <div>
-                                <div className="font-medium text-muted-foreground">Absen</div>
-                                <div className="text-red-600 font-semibold">{absen}</div>
+                                <div className="font-medium text-muted-foreground">Alpa</div>
+                                <div className="text-destructive font-semibold">{alpa}</div>
                             </div>
                         </div>
                     </TableCell>
@@ -148,9 +148,9 @@ export default function TeacherReportsPage() {
             return {
                 student: student,
                 total: filteredRecords.length,
-                hadir: filteredRecords.filter(r => r.status === 'Hadir' || r.status === 'Excellent').length,
+                hadir: filteredRecords.filter(r => r.status === 'Hadir' || r.status === 'Tepat Waktu').length,
                 terlambat: filteredRecords.filter(r => r.status === 'Terlambat').length,
-                absen: filteredRecords.filter(r => r.status === 'Absen').length,
+                alpa: filteredRecords.filter(r => r.status === 'Alpa').length,
             };
         });
 
@@ -225,7 +225,7 @@ export default function TeacherReportsPage() {
                                             <TableHead className="text-center hidden md:table-cell">Total Pertemuan</TableHead>
                                             <TableHead className="text-center hidden sm:table-cell">Hadir</TableHead>
                                             <TableHead className="text-center hidden sm:table-cell">Terlambat</TableHead>
-                                            <TableHead className="text-center hidden sm:table-cell">Absen</TableHead>
+                                            <TableHead className="text-center hidden sm:table-cell">Alpa</TableHead>
                                             <TableHead className="sm:hidden"><span className="sr-only">Details</span></TableHead>
                                         </TableRow>
                                     </TableHeader>

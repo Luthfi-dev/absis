@@ -23,21 +23,20 @@ import { notFound, useRouter, useParams } from "next/navigation"
 import { decryptId } from "@/lib/crypto"
 import { generateAvatarColor } from "@/lib/utils"
 import { useEffect, useState } from "react"
-import { type Student, type AttendanceRecord } from "@/lib/mock-data"
+import type { Student, AttendanceRecord } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
-type StatusVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
+type StatusVariant = "default" | "secondary" | "destructive" | "outline" | "success"
 
 function getStatusVariant(status: string): StatusVariant {
     switch (status) {
         case 'Hadir':
             return 'default'
-        case 'Excellent':
+        case 'Tepat Waktu':
             return 'success'
         case 'Terlambat':
-            return 'warning'
-        case 'Absen':
+        case 'Alpa':
         case 'Izin':
         case 'Sakit':
             return 'destructive'
@@ -48,7 +47,7 @@ function getStatusVariant(status: string): StatusVariant {
 
 export default function StudentRecordsPage() {
   const router = useRouter()
-  const params = useParams();
+  const params = useParams()
   const [student, setStudent] = useState<Student | null>(null)
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
