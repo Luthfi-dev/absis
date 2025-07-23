@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useMemo, Fragment } from 'react';
@@ -72,7 +71,7 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
                 <TableCell className="hidden lg:table-cell">{record.checkInTime || '-'}</TableCell>
                 <TableCell className="hidden lg:table-cell">{record.checkOutTime || '-'}</TableCell>
                 <TableCell className="text-right">
-                   <div className="flex items-center justify-end gap-2">
+                   <div className="flex items-center justify-end">
                         <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
                         <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -86,16 +85,16 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
                     <TableCell colSpan={7}>
                         <div className="grid grid-cols-2 gap-4 p-2 text-sm">
                             <div>
-                                <p className="font-medium text-muted-foreground">Mata Pelajaran</p>
-                                <p>{record.subject}</p>
+                                <div className="font-medium text-muted-foreground">Mata Pelajaran</div>
+                                <div>{record.subject}</div>
                             </div>
                             <div>
-                                <p className="font-medium text-muted-foreground">Jam Masuk</p>
-                                <p>{record.checkInTime || '-'}</p>
+                                <div className="font-medium text-muted-foreground">Jam Masuk</div>
+                                <div>{record.checkInTime || '-'}</div>
                             </div>
                             <div>
-                                <p className="font-medium text-muted-foreground">Jam Pulang</p>
-                                <p>{record.checkOutTime || '-'}</p>
+                                <div className="font-medium text-muted-foreground">Jam Pulang</div>
+                                <div>{record.checkOutTime || '-'}</div>
                             </div>
                         </div>
                     </TableCell>

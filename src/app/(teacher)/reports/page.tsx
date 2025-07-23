@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect, useMemo, Fragment } from 'react';
@@ -56,7 +55,7 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
                 <TableCell className="text-center hidden sm:table-cell text-orange-600 font-semibold">{terlambat}</TableCell>
                 <TableCell className="text-center hidden sm:table-cell text-red-600 font-semibold">{absen}</TableCell>
                 <TableCell className="text-right sm:hidden">
-                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                    <Button size="icon" variant="ghost">
                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         <span className="sr-only">Toggle details</span>
                     </Button>

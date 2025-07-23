@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -64,13 +63,15 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                 </TableCell>
                 <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                        <Switch
-                            onClick={(e) => e.stopPropagation()}
-                            checked={user.status === 'active'}
-                            onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
-                            aria-label={`Aktifkan ${user.name}`}
-                        />
-                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                        <div className="hidden md:flex">
+                          <Switch
+                              onClick={(e) => e.stopPropagation()}
+                              checked={user.status === 'active'}
+                              onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
+                              aria-label={`Aktifkan ${user.name}`}
+                          />
+                        </div>
+                        <Button size="icon" variant="ghost" className="lg:hidden">
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             <span className="sr-only">Toggle details</span>
                         </Button>
@@ -82,7 +83,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                     <TableCell colSpan={5}>
                         <div className="grid grid-cols-2 gap-4 p-2 text-sm">
                              <div className="md:hidden">
-                                <div className="font-medium text-muted-foreground">Email</div>
+                                <div>Email</div>
                                 <div className="truncate">{user.email}</div>
                             </div>
                             <div>
@@ -105,6 +106,15 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                                         {user.status === 'active' ? 'Aktif' : 'Menunggu'}
                                     </Badge>
                                 </div>
+                            </div>
+                             <div className="col-span-2 flex items-center gap-4">
+                               <span className="font-medium text-muted-foreground">Aktifkan Akun</span>
+                               <Switch
+                                    onClick={(e) => e.stopPropagation()}
+                                    checked={user.status === 'active'}
+                                    onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
+                                    aria-label={`Aktifkan ${user.name}`}
+                                />
                             </div>
                         </div>
                     </TableCell>
@@ -219,7 +229,7 @@ export default function UsersPage() {
                     <TableHead className="hidden md:table-cell">Email</TableHead>
                     <TableHead className="hidden lg:table-cell">Peran</TableHead>
                     <TableHead className="hidden md:table-cell">Status</TableHead>
-                    <TableHead className="text-right">Aktifkan</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -1,5 +1,4 @@
-
-"use client"
+'use client'
 
 import { useState, useEffect, useMemo, Fragment } from "react"
 import {
@@ -50,6 +49,53 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
     const [isExpanded, setIsExpanded] = useState(false);
     const router = useRouter();
 
+    const ActionMenu = () => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Buka menu</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                <StudentCardDialog student={student}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <QrCode className="mr-2 h-4 w-4" />
+                        Lihat Kartu Digital
+                    </DropdownMenuItem>
+                </StudentCardDialog>
+                <DropdownMenuItem onSelect={() => onViewRecords(student.id)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Lihat Catatan
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Ubah
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onSelect={(e) => e.preventDefault()}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Hapus
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                            <AlertDialogDescription>Tindakan ini akan menghapus data siswa bernama {student.name}.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDelete(student.id)}>Ya, Hapus</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
     return (
         <Fragment>
             <TableRow data-state={selected ? "selected" : ""} className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
@@ -76,52 +122,11 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                 <TableCell className="hidden md:table-cell">{student.nisn}</TableCell>
                 <TableCell className="hidden lg:table-cell">{student.kelas}</TableCell>
                 <TableCell className="pr-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Buka menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                <StudentCardDialog student={student}>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <QrCode className="mr-2 h-4 w-4" />
-                                        Lihat Kartu Digital
-                                    </DropdownMenuItem>
-                                </StudentCardDialog>
-                                <DropdownMenuItem onSelect={() => onViewRecords(student.id)}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Lihat Catatan
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Ubah
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onSelect={(e) => e.preventDefault()}>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Hapus
-                                        </DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
-                                            <AlertDialogDescription>Tindakan ini akan menghapus data siswa bernama {student.name}.</AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => onDelete(student.id)}>Ya, Hapus</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                    <div className="flex items-center justify-end">
+                        <div className="hidden md:flex">
+                           <ActionMenu />
+                        </div>
+                        <Button size="icon" variant="ghost" className="lg:hidden">
                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                            <span className="sr-only">Toggle details</span>
                         </Button>
@@ -129,7 +134,7 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                 </TableCell>
             </TableRow>
             {isExpanded && (
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableRow className="bg-muted/50 hover:bg-muted/50 lg:hidden">
                     <TableCell colSpan={6} className="p-0">
                         <div className="p-4 grid grid-cols-2 gap-4 text-sm">
                             <div className="lg:hidden">
@@ -147,6 +152,9 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                              <div>
                                 <div className="font-medium text-muted-foreground">NIS</div>
                                 <div>{student.nis}</div>
+                            </div>
+                            <div className="col-span-2 flex justify-end">
+                                <ActionMenu />
                             </div>
                         </div>
                     </TableCell>

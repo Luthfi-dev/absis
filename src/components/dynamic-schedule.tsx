@@ -1,5 +1,4 @@
-
-"use client"
+'use client'
 
 import {
   Card,
@@ -52,9 +51,9 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
                 <TableCell className="hidden lg:table-cell">{item.class}</TableCell>
                 <TableCell className="hidden md:table-cell">{item.teacher}</TableCell>
                 <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end">
                         <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
-                         <Button size="icon" variant="ghost" className="md:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                         <Button size="icon" variant="ghost" className="md:hidden">
                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                            <span className="sr-only">Toggle details</span>
                         </Button>
@@ -66,12 +65,12 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
                     <TableCell colSpan={3}>
                         <div className="space-y-2 text-sm p-2">
                             <div>
-                                <p className="font-medium text-muted-foreground">Waktu</p>
-                                <p>{item.time}</p>
+                                <div className="font-medium text-muted-foreground">Waktu</div>
+                                <div>{item.time}</div>
                             </div>
                             <div>
-                                <p className="font-medium text-muted-foreground">Kelas</p>
-                                <p>{item.class}</p>
+                                <div className="font-medium text-muted-foreground">Kelas</div>
+                                <div>{item.class}</div>
                             </div>
                         </div>
                     </TableCell>
