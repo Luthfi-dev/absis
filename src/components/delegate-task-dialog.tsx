@@ -16,8 +16,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
+import { Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
   Form,
@@ -29,9 +28,19 @@ import {
 } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { mockTeachers as initialTeachers, type RosterEntry, type Teacher, type DelegatedTask } from "@/lib/mock-data"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Calendar } from "./ui/calendar"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 const delegateTaskSchema = z.object({
   substituteTeacherId: z.string().min(1, "Guru pengganti harus dipilih."),
+  date: z.date({
+    required_error: "Tanggal pengalihan harus dipilih.",
+  }),
+}).refine(data => data.date >= new Date(new Date().setHours(0,0,0,0)), {
+    message: "Tanggal pengalihan tidak boleh di masa lalu.",
+    path: ['date']
 });
 
 type DelegateTaskFormValues = z.infer<typeof delegateTaskSchema>
@@ -39,10 +48,10 @@ type DelegateTaskFormValues = z.infer<typeof delegateTaskSchema>
 interface DelegateTaskDialogProps {
     rosterEntry: RosterEntry;
     onTaskDelegated: (delegation: DelegatedTask) => void;
-    triggerButton: React.ReactNode;
+    children: React.ReactNode;
 }
 
-export function DelegateTaskDialog({ rosterEntry, onTaskDelegated, triggerButton }: DelegateTaskDialogProps) {
+export function DelegateTaskDialog({ rosterEntry, onTaskDelegated, children }: DelegateTaskDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [availableTeachers, setAvailableTeachers] = useState<Teacher[]>([]);
   const { toast } = useToast()
@@ -51,6 +60,7 @@ export function DelegateTaskDialog({ rosterEntry, onTaskDelegated, triggerButton
     resolver: zodResolver(delegateTaskSchema),
     defaultValues: {
       substituteTeacherId: "",
+      date: new Date(),
     },
   })
   
@@ -65,28 +75,26 @@ export function DelegateTaskDialog({ rosterEntry, onTaskDelegated, triggerButton
     setAvailableTeachers(teachers);
 
     if (isOpen) {
-        form.reset({ substituteTeacherId: "" });
+        form.reset({ substituteTeacherId: "" , date: new Date() });
     }
   }, [isOpen, form, rosterEntry.teacherId]);
 
 
   const onSubmit = (data: DelegateTaskFormValues) => {
-    const today = new Date().toISOString().split('T')[0]; // Get date in YYYY-MM-DD format
-
     const newDelegation: DelegatedTask = {
         id: `del-${Date.now()}`,
         rosterEntryId: rosterEntry.id,
         rosterEntry: rosterEntry,
         originalTeacherId: rosterEntry.teacherId,
         substituteTeacherId: data.substituteTeacherId,
-        date: today,
+        date: format(data.date, 'yyyy-MM-dd'),
     }
     
     onTaskDelegated(newDelegation);
 
     toast({
       title: "Tugas Berhasil Dialihkan",
-      description: `Jadwal telah dialihkan ke guru pengganti untuk hari ini.`,
+      description: `Jadwal telah dialihkan ke guru pengganti untuk tanggal ${format(data.date, 'PPP')}.`,
     })
 
     form.reset()
@@ -96,13 +104,13 @@ export function DelegateTaskDialog({ rosterEntry, onTaskDelegated, triggerButton
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {triggerButton}
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Alihkan Tugas Mengajar</DialogTitle>
           <DialogDescription>
-            Pilih guru pengganti untuk jadwal ini, hanya untuk hari ini.
+            Pilih guru pengganti dan tanggal spesifik untuk jadwal ini.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -127,6 +135,47 @@ export function DelegateTaskDialog({ rosterEntry, onTaskDelegated, triggerButton
                         )}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Tanggal Pengalihan</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pilih tanggal</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0,0,0,0))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

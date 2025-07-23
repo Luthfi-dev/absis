@@ -45,27 +45,22 @@ const rosterEntrySchema = z.object({
 
 type RosterFormValues = z.infer<typeof rosterEntrySchema>
 
-interface AddRosterEntryDialogProps {
+interface RosterEntryDialogProps {
     classId: string | null;
     day?: string;
-    onRosterAdded: (newEntry: RosterEntry) => void;
-    triggerButton: React.ReactNode;
+    entry?: RosterEntry | null;
+    onSave: (newEntry: RosterEntry) => void;
+    children: React.ReactNode;
+    mode: 'add' | 'edit';
 }
 
-export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButton }: AddRosterEntryDialogProps) {
+export function RosterEntryDialog({ classId, day, entry, onSave, children, mode }: RosterEntryDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [availableTeachers, setAvailableTeachers] = useState<Teacher[]>([]);
   const { toast } = useToast()
 
   const form = useForm<RosterFormValues>({
     resolver: zodResolver(rosterEntrySchema),
-    defaultValues: {
-      day: day || "",
-      startTime: "",
-      endTime: "",
-      subjectId: "",
-      teacherId: "",
-    },
   })
   
   useEffect(() => {
@@ -82,51 +77,62 @@ export function AddRosterEntryDialog({ classId, day, onRosterAdded, triggerButto
 
     // Reset form when dialog opens
     if (isOpen) {
-        form.reset({
-            day: day || "",
-            startTime: "",
-            endTime: "",
-            subjectId: "",
-            teacherId: "",
-        })
+        if (mode === 'edit' && entry) {
+            const [startTime, endTime] = entry.time.split(' - ');
+            form.reset({
+                day: entry.day,
+                startTime: startTime || "",
+                endTime: endTime || "",
+                subjectId: entry.subjectId,
+                teacherId: entry.teacherId,
+            })
+        } else {
+            form.reset({
+                day: day || "",
+                startTime: "",
+                endTime: "",
+                subjectId: "",
+                teacherId: "",
+            })
+        }
     }
-  }, [isOpen, day, form]);
+  }, [isOpen, day, form, mode, entry]);
 
 
   const onSubmit = (data: RosterFormValues) => {
     const newEntry: RosterEntry = {
-        id: `r-${Date.now()}`,
+        id: mode === 'edit' && entry ? entry.id : `r-${Date.now()}`,
         day: data.day,
         time: `${data.startTime} - ${data.endTime}`,
         subjectId: data.subjectId,
         teacherId: data.teacherId,
     }
     
-    onRosterAdded(newEntry);
+    onSave(newEntry);
 
     toast({
-      title: "Jadwal Ditambahkan",
-      description: `Pelajaran baru telah ditambahkan pada hari ${data.day}.`,
+      title: mode === 'edit' ? "Jadwal Diperbarui" : "Jadwal Ditambahkan",
+      description: `Pelajaran telah di${mode === 'edit' ? 'perbarui' : 'tambahkan'} pada hari ${data.day}.`,
     })
 
     form.reset()
     setIsOpen(false)
   }
 
-  if (!classId) {
-    return <div onClick={() => toast({ variant: "destructive", title: "Pilih Kelas", description: "Anda harus memilih kelas terlebih dahulu."})}>{triggerButton}</div>;
+  if (mode === 'add' && !classId) {
+    return <div onClick={() => toast({ variant: "destructive", title: "Pilih Kelas", description: "Anda harus memilih kelas terlebih dahulu."})}>{children}</div>;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {triggerButton}
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Tambah Jadwal Pelajaran</DialogTitle>
+          <DialogTitle>{mode === 'edit' ? 'Ubah' : 'Tambah'} Jadwal Pelajaran</DialogTitle>
           <DialogDescription>
-            Pilih detail pelajaran untuk ditambahkan ke roster kelas.
+            Isi detail pelajaran untuk {mode === 'edit' ? 'mengubah' : 'menambahkan ke'} roster kelas.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

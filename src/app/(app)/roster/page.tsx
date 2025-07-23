@@ -16,11 +16,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockClasses, mockSubjects, mockTeachers, type Roster, type RosterEntry, type Teacher, type DelegatedTask } from "@/lib/mock-data"
+import { mockClasses, mockSubjects, mockTeachers, type Roster, type RosterEntry, type Teacher, type DelegatedTask, mockAttendance } from "@/lib/mock-data"
 import { Button } from '@/components/ui/button'
-import { Calendar, PlusCircle, Pilcrow } from 'lucide-react'
-import { AddRosterEntryDialog } from '@/components/add-roster-entry-dialog'
+import { Calendar, PlusCircle, MoreHorizontal, Edit, Trash2, Pilcrow } from 'lucide-react'
+import { RosterEntryDialog } from '@/components/add-roster-entry-dialog'
 import { DelegateTaskDialog } from '@/components/delegate-task-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast'
+
 
 const daysOfWeek = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
@@ -28,6 +47,7 @@ export default function RosterPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [rosterData, setRosterData] = useState<Roster>({});
   const [allTeachers, setAllTeachers] = useState<Teacher[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Load initial data or from localStorage
@@ -83,22 +103,58 @@ export default function RosterPage() {
     entries: selectedRoster.filter(entry => entry.day === day)
         .sort((a,b) => a.time.localeCompare(b.time))
   }));
+  
+  const updateRosterInStorage = (newRosterData: Roster) => {
+    setRosterData(newRosterData);
+    if(typeof window !== 'undefined') {
+        localStorage.setItem('mockRoster', JSON.stringify(newRosterData));
+        window.dispatchEvent(new Event('rosterUpdated'));
+    }
+  }
 
-  const handleRosterAdded = (newEntry: RosterEntry) => {
+  const handleRosterSave = (entryToSave: RosterEntry) => {
     if (!selectedClassId) return;
 
     const updatedRoster = { ...rosterData };
     if (!updatedRoster[selectedClassId]) {
       updatedRoster[selectedClassId] = [];
     }
-    updatedRoster[selectedClassId].push(newEntry);
     
-    setRosterData(updatedRoster);
-    if(typeof window !== 'undefined') {
-        localStorage.setItem('mockRoster', JSON.stringify(updatedRoster));
-        window.dispatchEvent(new Event('rosterUpdated'));
+    const entryIndex = updatedRoster[selectedClassId].findIndex(e => e.id === entryToSave.id);
+    if (entryIndex > -1) {
+      // Edit mode
+      updatedRoster[selectedClassId][entryIndex] = entryToSave;
+    } else {
+      // Add mode
+      updatedRoster[selectedClassId].push(entryToSave);
     }
+    
+    updateRosterInStorage(updatedRoster);
   };
+  
+  const handleDeleteRoster = (entryId: string) => {
+    if (!selectedClassId) return;
+
+    // Check if attendance exists for this roster entry
+    const attendanceExists = Object.values(mockAttendance).flat().some(rec => rec.rosterEntryId === entryId);
+    if (attendanceExists) {
+        toast({
+            variant: "destructive",
+            title: "Hapus Gagal",
+            description: "Tidak dapat menghapus jadwal yang sudah memiliki catatan kehadiran.",
+        });
+        return;
+    }
+    
+    const updatedRoster = { ...rosterData };
+    updatedRoster[selectedClassId] = updatedRoster[selectedClassId].filter(e => e.id !== entryId);
+    
+    updateRosterInStorage(updatedRoster);
+    toast({
+        title: "Jadwal Dihapus",
+        description: "Jadwal pelajaran telah berhasil dihapus.",
+    });
+  }
 
   const handleTaskDelegated = (delegation: DelegatedTask) => {
     const savedDelegations = localStorage.getItem('mockDelegations');
@@ -106,6 +162,10 @@ export default function RosterPage() {
     delegations.push(delegation);
     localStorage.setItem('mockDelegations', JSON.stringify(delegations));
     window.dispatchEvent(new Event('delegationsUpdated'));
+    toast({
+      title: "Tugas Berhasil Dialihkan",
+      description: `Jadwal telah dialihkan untuk tanggal yang dipilih.`,
+    });
   };
 
 
@@ -129,16 +189,16 @@ export default function RosterPage() {
                 ))}
               </SelectContent>
             </Select>
-             <AddRosterEntryDialog 
+            <RosterEntryDialog 
                 classId={selectedClassId} 
-                onRosterAdded={handleRosterAdded} 
-                triggerButton={
-                    <Button disabled={!selectedClassId} className="w-full sm:w-auto">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Atur Roster
-                    </Button>
-                }
-            />
+                onSave={handleRosterSave} 
+                mode="add"
+            >
+                <Button disabled={!selectedClassId} className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Atur Roster
+                </Button>
+            </RosterEntryDialog>
         </div>
       </div>
       
@@ -152,16 +212,16 @@ export default function RosterPage() {
                                <Calendar className="h-5 w-5 text-primary" />
                                {day}
                             </CardTitle>
-                            <AddRosterEntryDialog 
+                             <RosterEntryDialog 
                                 classId={selectedClassId}
-                                day={day} 
-                                onRosterAdded={handleRosterAdded}
-                                triggerButton={
-                                    <Button variant="ghost" size="sm">
-                                        <PlusCircle className="mr-2 h-4 w-4" /> Tambah
-                                    </Button>
-                                }
-                            />
+                                day={day}
+                                onSave={handleRosterSave}
+                                mode="add"
+                            >
+                                <Button variant="ghost" size="sm">
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Tambah
+                                </Button>
+                            </RosterEntryDialog>
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow flex flex-col pt-0">
@@ -172,33 +232,76 @@ export default function RosterPage() {
                                         <p className="font-semibold">{getSubjectName(entry.subjectId)}</p>
                                         <p className="text-muted-foreground">{getTeacherName(entry.teacherId)}</p>
                                         <p className="text-xs text-muted-foreground pt-1">{entry.time}</p>
-
-                                        <DelegateTaskDialog 
-                                            rosterEntry={entry}
-                                            onTaskDelegated={handleTaskDelegated}
-                                            triggerButton={
-                                                <Button variant="outline" size="sm" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Pilcrow className="mr-2 h-4 w-4" /> Alihkan
-                                                </Button>
-                                            }
-                                        />
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <RosterEntryDialog
+                                                        classId={selectedClassId}
+                                                        entry={entry}
+                                                        onSave={handleRosterSave}
+                                                        mode="edit"
+                                                    >
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            <span>Ubah</span>
+                                                        </DropdownMenuItem>
+                                                    </RosterEntryDialog>
+                                                    <DelegateTaskDialog
+                                                        rosterEntry={entry}
+                                                        onTaskDelegated={handleTaskDelegated}
+                                                    >
+                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                            <Pilcrow className="mr-2 h-4 w-4" />
+                                                            <span>Alihkan Tugas</span>
+                                                        </DropdownMenuItem>
+                                                    </DelegateTaskDialog>
+                                                     <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={(e) => e.preventDefault()}>
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Hapus</span>
+                                                            </DropdownMenuItem>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Tindakan ini akan menghapus jadwal secara permanen. Anda tidak dapat menghapus jadwal jika sudah ada data absensi yang terkait.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteRoster(entry.id)}>
+                                                                    Ya, Hapus
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4 border-2 border-dashed rounded-lg">
                                 <p className="mb-4 text-sm">Belum ada jadwal untuk hari ini.</p>
-                                <AddRosterEntryDialog 
+                                 <RosterEntryDialog 
                                     classId={selectedClassId} 
                                     day={day}
-                                    onRosterAdded={handleRosterAdded} 
-                                    triggerButton={
-                                        <Button variant="outline" size="sm">
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Tambah Pelajaran
-                                        </Button>
-                                    }
-                                />
+                                    onSave={handleRosterSave} 
+                                    mode="add"
+                                >
+                                     <Button variant="outline" size="sm">
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Tambah Pelajaran
+                                    </Button>
+                                </RosterEntryDialog>
                             </div>
                         )}
                     </CardContent>
