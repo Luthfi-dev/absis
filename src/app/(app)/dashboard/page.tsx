@@ -64,12 +64,12 @@ export default function DashboardPage() {
     }, []);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+    <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dasbor Super Admin</h1>
         <p className="text-muted-foreground">Selamat datang kembali! Berikut adalah ringkasan sistem Anda.</p>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -85,6 +85,6 @@ export default function DashboardPage() {
       <div>
         <DynamicSchedule />
       </div>
-    </div>
+    </>
   )
 }

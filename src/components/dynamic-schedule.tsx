@@ -40,7 +40,7 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
 
     return (
         <Fragment>
-            <TableRow>
+            <TableRow className="cursor-pointer md:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell className="font-medium md:hidden">
                     <div className="flex flex-col">
                         <span>{item.subject}</span>
@@ -54,7 +54,7 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
                 <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                         <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
-                         <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                         <Button size="icon" variant="ghost" className="md:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                            <span className="sr-only">Toggle details</span>
                         </Button>
@@ -64,7 +64,7 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
             {isExpanded && (
                 <TableRow className="bg-muted/50 hover:bg-muted/50 md:hidden">
                     <TableCell colSpan={3}>
-                        <div className="space-y-2 text-sm">
+                        <div className="space-y-2 text-sm p-2">
                             <div>
                                 <p className="font-medium text-muted-foreground">Waktu</p>
                                 <p>{item.time}</p>
@@ -109,7 +109,7 @@ export function DynamicSchedule() {
                     <ResponsiveRow key={item.id} item={item} />
                 )) : (
                     <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                             Tidak ada jadwal untuk hari ini.
                         </TableCell>
                     </TableRow>

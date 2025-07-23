@@ -42,7 +42,7 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
 
     return (
         <Fragment>
-            <TableRow>
+            <TableRow className="cursor-pointer sm:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell>
                      <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 hidden sm:flex">
@@ -56,7 +56,7 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
                 <TableCell className="text-center hidden sm:table-cell text-orange-600 font-semibold">{terlambat}</TableCell>
                 <TableCell className="text-center hidden sm:table-cell text-red-600 font-semibold">{absen}</TableCell>
                 <TableCell className="text-right sm:hidden">
-                    <Button size="icon" variant="ghost" onClick={() => setIsExpanded(!isExpanded)}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         <span className="sr-only">Toggle details</span>
                     </Button>
@@ -237,7 +237,7 @@ export default function TeacherReportsPage() {
                                             <ResponsiveRow key={data.student.id} data={data} />
                                         )) : (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center">
+                                                <TableCell colSpan={6} className="h-24 text-center">
                                                     Tidak ada data laporan untuk filter yang dipilih.
                                                 </TableCell>
                                             </TableRow>

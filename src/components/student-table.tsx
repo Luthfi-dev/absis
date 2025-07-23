@@ -52,8 +52,8 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
 
     return (
         <Fragment>
-            <TableRow data-state={selected ? "selected" : ""}>
-                <TableCell className="pl-4">
+            <TableRow data-state={selected ? "selected" : ""} className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
+                <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                         checked={selected}
                         onCheckedChange={(checked) => onSelect(student.id, !!checked)}
@@ -79,7 +79,7 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                     <div className="flex items-center justify-end gap-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
                                     <MoreHorizontal className="h-4 w-4" />
                                     <span className="sr-only">Buka menu</span>
                                 </Button>
@@ -121,7 +121,7 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                                 </AlertDialog>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                            <span className="sr-only">Toggle details</span>
                         </Button>

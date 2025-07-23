@@ -59,7 +59,7 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
 
     return (
         <Fragment>
-            <TableRow>
+            <TableRow className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell className="md:hidden">
                     <div className="flex flex-col">
                        <span className="font-medium">{record.studentName}</span>
@@ -74,7 +74,7 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end gap-2">
                         <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
-                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             <span className="sr-only">Toggle details</span>
                         </Button>

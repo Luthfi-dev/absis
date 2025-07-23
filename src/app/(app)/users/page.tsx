@@ -35,7 +35,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
 
     return (
         <Fragment>
-            <TableRow>
+            <TableRow className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
@@ -47,7 +47,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                 <TableCell className="hidden md:table-cell">{user.email}</TableCell>
                 <TableCell className="hidden lg:table-cell">
                     <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
-                        <SelectTrigger className="w-[120px]">
+                        <SelectTrigger className="w-[120px]" onClick={(e) => e.stopPropagation()}>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -65,11 +65,12 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                 <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                         <Switch
+                            onClick={(e) => e.stopPropagation()}
                             checked={user.status === 'active'}
                             onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
                             aria-label={`Aktifkan ${user.name}`}
                         />
-                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsExpanded(!isExpanded)}>
+                        <Button size="icon" variant="ghost" className="lg:hidden" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             <span className="sr-only">Toggle details</span>
                         </Button>
@@ -87,7 +88,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                             <div>
                                 <p className="font-medium text-muted-foreground">Peran</p>
                                 <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
-                                    <SelectTrigger className="w-[120px] h-8 mt-1">
+                                    <SelectTrigger className="w-[120px] h-8 mt-1" onClick={(e) => e.stopPropagation()}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -183,7 +184,7 @@ export default function UsersPage() {
     }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+    <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Pengguna</h1>
         <p className="text-muted-foreground">Kelola pengguna, peran, dan status akun.</p>
@@ -262,6 +263,6 @@ export default function UsersPage() {
             </div>
         </CardContent>
       </Card>
-    </div>
+    </>
   )
 }
