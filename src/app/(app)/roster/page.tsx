@@ -16,10 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockClasses, mockSubjects, mockTeachers, type Roster, type RosterEntry, type Teacher } from "@/lib/mock-data"
+import { mockClasses, mockSubjects, mockTeachers, type Roster, type RosterEntry, type Teacher, type DelegatedTask } from "@/lib/mock-data"
 import { Button } from '@/components/ui/button'
-import { Calendar, PlusCircle } from 'lucide-react'
+import { Calendar, PlusCircle, Pilcrow } from 'lucide-react'
 import { AddRosterEntryDialog } from '@/components/add-roster-entry-dialog'
+import { DelegateTaskDialog } from '@/components/delegate-task-dialog'
 
 const daysOfWeek = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
@@ -99,6 +100,14 @@ export default function RosterPage() {
     }
   };
 
+  const handleTaskDelegated = (delegation: DelegatedTask) => {
+    const savedDelegations = localStorage.getItem('mockDelegations');
+    const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : [];
+    delegations.push(delegation);
+    localStorage.setItem('mockDelegations', JSON.stringify(delegations));
+    window.dispatchEvent(new Event('delegationsUpdated'));
+  };
+
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
@@ -159,10 +168,20 @@ export default function RosterPage() {
                         {entries.length > 0 ? (
                             <ul className="space-y-4">
                                 {entries.map(entry => (
-                                    <li key={entry.id} className="p-3 bg-muted/50 rounded-lg text-sm">
+                                    <li key={entry.id} className="p-3 bg-muted/50 rounded-lg text-sm relative group">
                                         <p className="font-semibold">{getSubjectName(entry.subjectId)}</p>
                                         <p className="text-muted-foreground">{getTeacherName(entry.teacherId)}</p>
                                         <p className="text-xs text-muted-foreground pt-1">{entry.time}</p>
+
+                                        <DelegateTaskDialog 
+                                            rosterEntry={entry}
+                                            onTaskDelegated={handleTaskDelegated}
+                                            triggerButton={
+                                                <Button variant="outline" size="sm" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Pilcrow className="mr-2 h-4 w-4" /> Alihkan
+                                                </Button>
+                                            }
+                                        />
                                     </li>
                                 ))}
                             </ul>

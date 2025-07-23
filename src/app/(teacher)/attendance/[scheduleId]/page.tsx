@@ -52,6 +52,10 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   const { scheduleId } = params;
   
   useEffect(() => {
+    // This logic needs to be aware of delegated tasks now.
+    // For this prototype, we'll keep it simple and assume scheduleId is unique
+    // across original and delegated tasks. A real app would need a more robust way
+    // to fetch the correct schedule details (e.g., passing a date and delegation status).
     const foundSchedule = mockSchedule.find(s => s.id === scheduleId)
     if (foundSchedule) {
       setSchedule(foundSchedule)
@@ -121,8 +125,11 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
   }
   
   const handleSaveAttendance = () => {
+    // In a real app, this is where you'd check if it's a delegated task
+    // and save the attendance record under the ORIGINAL teacher's name/ID,
+    // but maybe with a flag indicating who recorded it.
+    // For now, we'll just log and toast.
     console.log("Saving attendance:", attendance)
-    // In a real app, this would be an API call
     toast({
         title: "Absensi Disimpan",
         description: "Data kehadiran siswa telah berhasil disimpan.",

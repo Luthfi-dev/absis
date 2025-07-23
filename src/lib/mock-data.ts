@@ -56,6 +56,15 @@ export type Roster = {
     [classId: string]: RosterEntry[];
 }
 
+export type DelegatedTask = {
+    id: string;
+    rosterEntryId: string;
+    rosterEntry: RosterEntry;
+    originalTeacherId: string;
+    substituteTeacherId: string;
+    date: string; // YYYY-MM-DD
+}
+
 
 export type AttendanceRecord = {
   id: string;
@@ -64,6 +73,7 @@ export type AttendanceRecord = {
   status: 'Tepat Waktu' | 'Terlambat' | 'Alpa' | 'Hadir' | 'Izin' | 'Sakit';
   checkInTime?: string;
   checkOutTime?: string;
+  rosterEntryId?: string; // To link back to a specific class schedule
 };
 
 export const mockStudents: Student[] = [
@@ -122,7 +132,7 @@ export const mockRoster: Roster = {
 export let mockAttendance: Record<string, AttendanceRecord[]> = {
   '1': [
     { id: 'a1', subject: 'Absensi Pagi', date: '2024-05-20', status: 'Tepat Waktu', checkInTime: '06:55:12', checkOutTime: '15:02:00' },
-    { id: 'a2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Hadir' },
+    { id: 'a2', subject: 'Sejarah Seni', date: '2024-05-20', status: 'Hadir', rosterEntryId: 'r1-2' },
     { id: 'a3', subject: 'Absensi Pagi', date: '2024-05-19', status: 'Terlambat', checkInTime: '07:15:30' },
     { id: 'a4', subject: 'Absensi Pagi', date: '2024-05-21', status: 'Tepat Waktu', checkInTime: '06:58:15', checkOutTime: '15:00:05' },
   ],
