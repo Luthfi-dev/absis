@@ -52,9 +52,14 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const { studentId: encryptedStudentId } = params;
-
   useEffect(() => {
+    const encryptedStudentId = params.studentId;
+    if (!encryptedStudentId) {
+        setIsLoading(false);
+        notFound();
+        return;
+    }
+
     try {
       const decryptedId = decryptId(encryptedStudentId)
       if (decryptedId === 'decryption_error') {
@@ -75,7 +80,7 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
     } finally {
       setIsLoading(false)
     }
-  }, [encryptedStudentId])
+  }, [params.studentId])
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>
