@@ -51,9 +51,9 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
   const [student, setStudent] = useState<Student | null>(null)
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const encryptedStudentId = params.studentId;
 
   useEffect(() => {
-    const encryptedStudentId = params.studentId;
     if (!encryptedStudentId) {
         setIsLoading(false);
         notFound();
@@ -80,7 +80,7 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
     } finally {
       setIsLoading(false)
     }
-  }, [params.studentId])
+  }, [encryptedStudentId])
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>
