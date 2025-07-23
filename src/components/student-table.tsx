@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search, ChevronDown, ChevronUp } from "lucide-react"
 import { mockStudents, type Student } from "@/lib/mock-data"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { Avatar, AvatarFallback } from "./ui/avatar"
 import { Badge } from "./ui/badge"
 import { useRouter } from "next/navigation"
 import { Checkbox } from "./ui/checkbox"
@@ -133,20 +133,20 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                     <TableCell colSpan={6} className="p-0">
                         <div className="p-4 grid grid-cols-2 gap-4 text-sm">
                             <div className="lg:hidden">
-                                <p className="font-medium text-muted-foreground">ID Siswa</p>
-                                <p><Badge variant="outline">{student.studentId}</Badge></p>
+                                <div className="font-medium text-muted-foreground">ID Siswa</div>
+                                <div><Badge variant="outline">{student.studentId}</Badge></div>
                             </div>
                              <div className="md:hidden">
-                                <p className="font-medium text-muted-foreground">NISN</p>
-                                <p>{student.nisn}</p>
+                                <div className="font-medium text-muted-foreground">NISN</div>
+                                <div>{student.nisn}</div>
                             </div>
                             <div className="lg:hidden">
-                                <p className="font-medium text-muted-foreground">Kelas</p>
-                                <p>{student.kelas}</p>
+                                <div className="font-medium text-muted-foreground">Kelas</div>
+                                <div>{student.kelas}</div>
                             </div>
                              <div>
-                                <p className="font-medium text-muted-foreground">NIS</p>
-                                <p>{student.nis}</p>
+                                <div className="font-medium text-muted-foreground">NIS</div>
+                                <div>{student.nis}</div>
                             </div>
                         </div>
                     </TableCell>

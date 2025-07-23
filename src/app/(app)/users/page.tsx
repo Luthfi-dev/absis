@@ -82,11 +82,11 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                     <TableCell colSpan={5}>
                         <div className="grid grid-cols-2 gap-4 p-2 text-sm">
                              <div className="md:hidden">
-                                <p className="font-medium text-muted-foreground">Email</p>
-                                <p className="truncate">{user.email}</p>
+                                <div className="font-medium text-muted-foreground">Email</div>
+                                <div className="truncate">{user.email}</div>
                             </div>
                             <div>
-                                <p className="font-medium text-muted-foreground">Peran</p>
+                                <div className="font-medium text-muted-foreground">Peran</div>
                                 <Select value={user.role} onValueChange={(value: UserRole) => onRoleChange(user.id, value)}>
                                     <SelectTrigger className="w-[120px] h-8 mt-1" onClick={(e) => e.stopPropagation()}>
                                         <SelectValue />
@@ -99,12 +99,12 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                                 </Select>
                             </div>
                             <div className="md:hidden">
-                                <p className="font-medium text-muted-foreground">Status</p>
-                                <p>
+                                <div className="font-medium text-muted-foreground">Status</div>
+                                <div>
                                     <Badge variant={user.status === 'active' ? 'default' : 'outline'}>
                                         {user.status === 'active' ? 'Aktif' : 'Menunggu'}
                                     </Badge>
-                                </p>
+                                </div>
                             </div>
                         </div>
                     </TableCell>
@@ -184,7 +184,7 @@ export default function UsersPage() {
     }
 
   return (
-    <>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Manajemen Pengguna</h1>
         <p className="text-muted-foreground">Kelola pengguna, peran, dan status akun.</p>
@@ -263,6 +263,6 @@ export default function UsersPage() {
             </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   )
 }

@@ -67,20 +67,20 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
                     <TableCell colSpan={2}>
                         <div className="grid grid-cols-3 gap-y-2 p-2 text-sm text-center">
                              <div className="md:hidden">
-                                <p className="font-medium text-muted-foreground">Total</p>
-                                <p>{total}</p>
+                                <div className="font-medium text-muted-foreground">Total</div>
+                                <div>{total}</div>
                             </div>
                             <div>
-                                <p className="font-medium text-muted-foreground">Hadir</p>
-                                <p className="text-green-600 font-semibold">{hadir}</p>
+                                <div className="font-medium text-muted-foreground">Hadir</div>
+                                <div className="text-green-600 font-semibold">{hadir}</div>
                             </div>
                             <div>
-                                <p className="font-medium text-muted-foreground">Terlambat</p>
-                                <p className="text-orange-600 font-semibold">{terlambat}</p>
+                                <div className="font-medium text-muted-foreground">Terlambat</div>
+                                <div className="text-orange-600 font-semibold">{terlambat}</div>
                             </div>
                              <div>
-                                <p className="font-medium text-muted-foreground">Absen</p>
-                                <p className="text-red-600 font-semibold">{absen}</p>
+                                <div className="font-medium text-muted-foreground">Absen</div>
+                                <div className="text-red-600 font-semibold">{absen}</div>
                             </div>
                         </div>
                     </TableCell>
