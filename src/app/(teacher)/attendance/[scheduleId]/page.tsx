@@ -26,8 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockRoster, mockStudents, mockClasses, mockAttendance, mockSubjects, mockDelegations } from "@/lib/mock-data"
-import type { Student, ScheduleItem, DelegatedTask } from '@/lib/mock-data'
+import { mockRoster as initialRoster, mockStudents, mockClasses, mockAttendance, mockSubjects, mockDelegations as initialDelegations } from "@/lib/mock-data"
+import type { Student, ScheduleItem, DelegatedTask, Roster, RosterEntry } from '@/lib/mock-data'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ArrowLeft, Save } from 'lucide-react'
@@ -57,79 +57,82 @@ export default function TeacherAttendancePage() {
     if (!scheduleId) return;
 
     let foundScheduleItem: ScheduleItem | null = null;
-    let rosterEntryIdForAttendance: string | undefined = undefined;
+    let rosterEntryForAttendance: RosterEntry | null = null;
+    let foundClassName: string | null = null;
 
-    // Check if it's a delegated task first
-    const savedDelegations = localStorage.getItem('mockDelegations');
-    const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : mockDelegations;
+    // Load data safely from localStorage or use initial data
+    const savedDelegations = typeof window !== 'undefined' ? localStorage.getItem('mockDelegations') : null;
+    const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : initialDelegations;
+
+    const savedRoster = typeof window !== 'undefined' ? localStorage.getItem('mockRoster') : null;
+    const rosterData: Roster = savedRoster ? JSON.parse(savedRoster) : initialRoster;
+
+    // 1. Check if it's a delegated task first
     const delegatedTask = delegations.find(d => d.id === scheduleId);
 
     if (delegatedTask) {
-        const { rosterEntry } = delegatedTask;
-        const subjectName = mockSubjects.find(s => s.id === rosterEntry.subjectId)?.name || 'N/A';
-        const classInfo = Object.entries(mockRoster).find(([_, entries]) => entries.some(e => e.id === rosterEntry.id));
-        const className = classInfo ? mockClasses.find(c => c.id === classInfo[0])?.name || 'N/A' : 'N/A';
+        rosterEntryForAttendance = delegatedTask.rosterEntry;
+        const subjectName = mockSubjects.find(s => s.id === rosterEntryForAttendance!.subjectId)?.name || 'N/A';
+        const classInfo = Object.entries(rosterData).find(([_, entries]) => entries.some(e => e.id === rosterEntryForAttendance!.id));
+        foundClassName = classInfo ? mockClasses.find(c => c.id === classInfo[0])?.name || 'N/A' : 'N/A';
         
         foundScheduleItem = {
             id: delegatedTask.id,
-            time: rosterEntry.time,
+            time: rosterEntryForAttendance.time,
             subject: subjectName,
-            class: className,
-            teacher: 'Delegated Task', // This isn't displayed on the page anyway
+            class: foundClassName,
+            teacher: 'Delegated Task', 
             status: 'Sedang Berlangsung'
         };
-        rosterEntryIdForAttendance = rosterEntry.id;
     } else {
-        // If not a delegation, check the regular roster
-        Object.entries(mockRoster).forEach(([classId, entries]) => {
-            const rosterEntry = entries.find(e => e.id === scheduleId);
-            if (rosterEntry) {
-                const subjectName = mockSubjects.find(s => s.id === rosterEntry.subjectId)?.name || 'N/A';
-                const className = mockClasses.find(c => c.id === classId)?.name || 'N/A';
+        // 2. If not a delegation, check the regular roster
+        for (const classId in rosterData) {
+            const entry = rosterData[classId].find(e => e.id === scheduleId);
+            if (entry) {
+                rosterEntryForAttendance = entry;
+                const subjectName = mockSubjects.find(s => s.id === rosterEntryForAttendance!.subjectId)?.name || 'N/A';
+                foundClassName = mockClasses.find(c => c.id === classId)?.name || 'N/A';
                 foundScheduleItem = {
-                    id: rosterEntry.id,
-                    time: rosterEntry.time,
+                    id: rosterEntryForAttendance.id,
+                    time: rosterEntryForAttendance.time,
                     subject: subjectName,
-                    class: className,
+                    class: foundClassName,
                     teacher: 'Regular Schedule',
                     status: 'Sedang Berlangsung'
                 };
-                rosterEntryIdForAttendance = rosterEntry.id;
+                break; // Exit loop once found
             }
-        });
+        }
     }
 
-    if (foundScheduleItem) {
+    if (foundScheduleItem && foundClassName) {
         setSchedule(foundScheduleItem);
-        const classInfo = mockClasses.find(c => c.name === foundScheduleItem!.class);
-        if (classInfo) {
-            const classStudents = mockStudents.filter(s => s.kelas === classInfo.name);
-            setStudents(classStudents);
+        const classStudents = mockStudents.filter(s => s.kelas === foundClassName);
+        setStudents(classStudents);
 
-            const todayStr = new Date().toISOString().split('T')[0];
-            const morningAttendance = JSON.parse(localStorage.getItem('mockAttendance') || JSON.stringify(mockAttendance));
-            
-            const studentsWhoCheckedIn = new Set(
-              Object.entries(morningAttendance)
-                .filter(([studentId, records] : [string, any]) => {
-                  const morningCheckIn = records.find((r:any) => r.date === todayStr && (r.status === 'Tepat Waktu' || r.status === 'Terlambat'));
-                  return !!morningCheckIn;
-                })
-                .map(([studentId]) => studentId)
-            );
+        const todayStr = new Date().toISOString().split('T')[0];
+        const morningAttendance = JSON.parse(localStorage.getItem('mockAttendance') || JSON.stringify(mockAttendance));
+        
+        const studentsWhoCheckedIn = new Set(
+          Object.entries(morningAttendance)
+            .filter(([studentId, records] : [string, any]) => {
+              const morningCheckIn = records.find((r:any) => r.date === todayStr && (r.status === 'Tepat Waktu' || r.status === 'Terlambat'));
+              return !!morningCheckIn;
+            })
+            .map(([studentId]) => studentId)
+        );
 
-            const initialAttendance = classStudents.reduce((acc, student) => {
-              const hasCheckedIn = studentsWhoCheckedIn.has(student.id);
-              acc[student.id] = {
-                studentId: student.id,
-                status: hasCheckedIn ? 'Hadir' : 'Alpa',
-                notes: '',
-                isPresent: hasCheckedIn,
-              };
-              return acc;
-            }, {} as Record<string, StudentAttendance>);
-            setAttendance(initialAttendance);
-        }
+        const initialAttendance = classStudents.reduce((acc, student) => {
+          const hasCheckedIn = studentsWhoCheckedIn.has(student.id);
+          acc[student.id] = {
+            studentId: student.id,
+            status: hasCheckedIn ? 'Hadir' : 'Alpa',
+            notes: '',
+            isPresent: hasCheckedIn,
+          };
+          return acc;
+        }, {} as Record<string, StudentAttendance>);
+        setAttendance(initialAttendance);
     }
   }, [scheduleId]);
 
