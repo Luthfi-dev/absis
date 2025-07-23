@@ -20,9 +20,9 @@ type ScheduleStatus = 'Akan Datang' | 'Sedang Berlangsung' | 'Selesai';
 
 const getStatusForSchedule = (time: string): ScheduleStatus => {
     const now = new Date();
-    const [startTime, endTime] = time.split(' - ');
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    const [startTimeStr, endTimeStr] = time.split(' - ');
+    const [startHours, startMinutes] = startTimeStr.split(':').map(Number);
+    const [endHours, endMinutes] = endTimeStr.split(':').map(Number);
 
     const startDate = new Date();
     startDate.setHours(startHours, startMinutes, 0, 0);
@@ -49,8 +49,8 @@ export default function TeacherDashboardPage() {
       const currentDayName = dayNames[now.getDay()];
       const todayStr = now.toISOString().split('T')[0];
       
-      const currentRosterData = JSON.parse(localStorage.getItem('mockRoster') || '{}');
-      const currentTeachers = JSON.parse(localStorage.getItem('mockTeachers') || '[]');
+      const currentRosterData: Roster = JSON.parse(localStorage.getItem('mockRoster') || JSON.stringify(mockRoster));
+      const currentTeachers: Teacher[] = JSON.parse(localStorage.getItem('mockTeachers') || JSON.stringify(mockTeachers));
       const savedDelegations = localStorage.getItem('mockDelegations');
       const delegations: DelegatedTask[] = savedDelegations ? JSON.parse(savedDelegations) : [];
 
