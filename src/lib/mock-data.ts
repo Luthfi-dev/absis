@@ -65,11 +65,11 @@ export type AttendanceRecord = {
 };
 
 export const mockStudents: Student[] = [
-  { id: '1', name: 'Alice Johnson', studentId: 'S001', nis: '212210001', nisn: '0011223344', kelas: '12 IPA 1', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
-  { id: '2', name: 'Bob Williams', studentId: 'S002', nis: '212210002', nisn: '0022334455', kelas: '12 IPA 1', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-  { id: '3', name: 'Charlie Brown', studentId: 'S003', nis: '212210003', nisn: '0033445566', kelas: '12 IPA 1', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
-  { id: '4', name: 'Diana Miller', studentId: 'S004', nis: '212210004', nisn: '0044556677', kelas: '11 IPS 2', avatar: 'https://i.pravatar.cc/150?u=a048581f4e29026701d' },
-  { id: '5', name: 'Ethan Davis', studentId: 'S005', nis: '212210005', nisn: '0055667788', kelas: '10 A', avatar: 'https://i.pravatar.cc/150?u=a092581f4e29026705d' },
+  { id: '1', name: 'Alice Johnson', studentId: 'S001', nis: '212210001', nisn: '0011223344', kelas: '12 IPA 1', avatar: 'https://api.dicebear.com/8.x/bottts/svg?seed=S001' },
+  { id: '2', name: 'Bob Williams', studentId: 'S002', nis: '212210002', nisn: '0022334455', kelas: '12 IPA 1', avatar: 'https://api.dicebear.com/8.x/bottts/svg?seed=S002' },
+  { id: '3', name: 'Charlie Brown', studentId: 'S003', nis: '212210003', nisn: '0033445566', kelas: '12 IPA 1', avatar: 'https://api.dicebear.com/8.x/bottts/svg?seed=S003' },
+  { id: '4', name: 'Diana Miller', studentId: 'S004', nis: '212210004', nisn: '0044556677', kelas: '11 IPS 2', avatar: 'https://api.dicebear.com/8.x/bottts/svg?seed=S004' },
+  { id: '5', name: 'Ethan Davis', studentId: 'S005', nis: '212210005', nisn: '0055667788', kelas: '10 A', avatar: 'https://api.dicebear.com/8.x/bottts/svg?seed=S005' },
 ];
 
 export const mockTeachers: Teacher[] = [

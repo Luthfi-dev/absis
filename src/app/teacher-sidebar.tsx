@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -65,7 +66,7 @@ export function TeacherSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-2">
           <Avatar className="size-8">
-            <AvatarImage src="https://i.pravatar.cc/150?u=teacher" alt="Guru" />
+            <AvatarImage src={`https://api.dicebear.com/8.x/bottts/svg?seed=teacher`} alt="Guru" />
             <AvatarFallback>G</AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">

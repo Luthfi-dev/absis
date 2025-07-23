@@ -82,7 +82,7 @@ export function TeacherSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-2">
           <Avatar className="size-8">
-            <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
+            <AvatarImage src={`https://api.dicebear.com/8.x/bottts/svg?seed=${user.email}`} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">
