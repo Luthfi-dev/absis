@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table"
 import { mockTeachers, type Teacher, type UserRole } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Search } from "lucide-react"
+import { PlusCircle, Search, User } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
@@ -143,8 +143,8 @@ export default function UsersPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={user.avatar} alt={user.name} />
-                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+                                <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                             </Avatar>
                             <span className="font-medium">{user.name}</span>
                         </div>

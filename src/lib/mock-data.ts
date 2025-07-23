@@ -7,7 +7,7 @@ export type Student = {
   nisn: string;
   kelas: string;
   nomorOrangTua?: string;
-  avatar: string;
+  avatar?: string;
 };
 
 export type UserRole = 'superadmin' | 'admin' | 'teacher';
@@ -20,7 +20,7 @@ export type Teacher = {
   password?: string;
   status: 'active' | 'pending';
   role: UserRole;
-  avatar: string;
+  avatar?: string;
 }
 
 export type Class = {
@@ -67,20 +67,20 @@ export type AttendanceRecord = {
 };
 
 export const mockStudents: Student[] = [
-  { id: '1', name: 'Alice Johnson', studentId: 'S001', nis: '212210001', nisn: '0011223344', kelas: '12 IPA 1', avatar: 'https://placehold.co/128x128.png' },
-  { id: '2', name: 'Bob Williams', studentId: 'S002', nis: '212210002', nisn: '0022334455', kelas: '12 IPA 1', avatar: 'https://placehold.co/128x128.png' },
-  { id: '3', name: 'Charlie Brown', studentId: 'S003', nis: '212210003', nisn: '0033445566', kelas: '12 IPA 1', avatar: 'https://placehold.co/128x128.png' },
-  { id: '4', name: 'Diana Miller', studentId: 'S004', nis: '212210004', nisn: '0044556677', kelas: '11 IPS 2', avatar: 'https://placehold.co/128x128.png' },
-  { id: '5', name: 'Ethan Davis', studentId: 'S005', nis: '212210005', nisn: '0055667788', kelas: '10 A', avatar: 'https://placehold.co/128x128.png' },
+  { id: '1', name: 'Alice Johnson', studentId: 'S001', nis: '212210001', nisn: '0011223344', kelas: '12 IPA 1' },
+  { id: '2', name: 'Bob Williams', studentId: 'S002', nis: '212210002', nisn: '0022334455', kelas: '12 IPA 1' },
+  { id: '3', name: 'Charlie Brown', studentId: 'S003', nis: '212210003', nisn: '0033445566', kelas: '12 IPA 1' },
+  { id: '4', name: 'Diana Miller', studentId: 'S004', nis: '212210004', nisn: '0044556677', kelas: '11 IPS 2' },
+  { id: '5', name: 'Ethan Davis', studentId: 'S005', nis: '212210005', nisn: '0055667788', kelas: '10 A' },
 ];
 
 export const mockTeachers: Teacher[] = [
-  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com', status: 'active', role: 'teacher', password: 'password', avatar: 'https://placehold.co/128x128.png' },
-  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com', status: 'active', role: 'teacher', password: 'password', avatar: 'https://placehold.co/128x128.png' },
-  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com', status: 'pending', role: 'teacher', password: 'password', avatar: 'https://placehold.co/128x128.png' },
-  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com', status: 'active', role: 'teacher', password: 'password', avatar: 'https://placehold.co/128x128.png' },
-  { id: 'sa', name: 'Super Admin', nip: 'A00000000', email: 'superadmin@gmail.com', status: 'active', role: 'superadmin', password: '123456', avatar: 'https://placehold.co/128x128.png'},
-  { id: 'adm', name: 'Admin Biasa', nip: 'A00000001', email: 'admin@gmail.com', status: 'active', role: 'admin', password: 'admin*#', avatar: 'https://placehold.co/128x128.png'},
+  { id: 't1', name: 'Bpk. Smith', nip: 'G12345678', email: 'smith@attendease.com', status: 'active', role: 'teacher', password: 'password' },
+  { id: 't2', name: 'Ibu Jones', nip: 'G87654321', email: 'jones@attendease.com', status: 'active', role: 'teacher', password: 'password' },
+  { id: 't3', name: 'Dr. Quantum', nip: 'G56781234', email: 'quantum@attendease.com', status: 'pending', role: 'teacher', password: 'password' },
+  { id: 't4', name: 'Prof. Verse', nip: 'G12348765', email: 'verse@attendease.com', status: 'active', role: 'teacher', password: 'password' },
+  { id: 'sa', name: 'Super Admin', nip: 'A00000000', email: 'superadmin@gmail.com', status: 'active', role: 'superadmin', password: '123456'},
+  { id: 'adm', name: 'Admin Biasa', nip: 'A00000001', email: 'admin@gmail.com', status: 'active', role: 'admin', password: 'admin*#'},
 ];
 
 export const mockClasses: Class[] = [

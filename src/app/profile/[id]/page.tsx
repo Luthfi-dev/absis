@@ -61,8 +61,8 @@ export default function StudentProfilePage({ params }: { params: { id: string } 
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="items-center text-center">
           <Avatar className="h-24 w-24 border-4 border-primary mb-4">
-            <AvatarImage src={student.avatar} alt={student.name} />
-            <AvatarFallback className="text-4xl">{student.name.charAt(0)}</AvatarFallback>
+            {student.avatar && <AvatarImage src={student.avatar} alt={student.name} />}
+            <AvatarFallback className="text-4xl"><User className="h-10 w-10"/></AvatarFallback>
           </Avatar>
           <CardTitle className="font-headline text-3xl font-bold">{student.name}</CardTitle>
           <p className="text-muted-foreground">{student.kelas}</p>

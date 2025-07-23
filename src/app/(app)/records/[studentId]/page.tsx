@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { notFound } from "next/navigation"
 import { decryptId } from "@/lib/crypto"
+import { User } from "lucide-react"
 
 type StatusVariant = "default" | "secondary" | "destructive" | "outline"
 
@@ -46,8 +47,8 @@ export default function StudentRecordsPage({ params }: { params: { studentId: st
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20 border-2 border-primary">
-          <AvatarImage src={student.avatar} />
-          <AvatarFallback className="text-2xl">{student.name.charAt(0)}</AvatarFallback>
+          {student.avatar && <AvatarImage src={student.avatar} />}
+          <AvatarFallback className="text-2xl"><User className="h-8 w-8"/></AvatarFallback>
         </Avatar>
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">{student.name}</h1>

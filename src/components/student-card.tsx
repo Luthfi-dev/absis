@@ -5,8 +5,9 @@ import { Student } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import QRCode from "react-qr-code"
 import { useState, useEffect } from "react"
-import { CheckSquare } from "lucide-react"
+import { CheckSquare, User } from "lucide-react"
 import { encryptId } from "@/lib/crypto"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 
 interface StudentCardProps {
     student: Student

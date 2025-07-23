@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { mockStudents, mockAttendance, mockClasses, Student } from '@/lib/mock-data';
 import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, startOfDay, endOfDay } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { Crown, Medal } from 'lucide-react';
+import { Crown, Medal, User } from 'lucide-react';
 
 type TimeRange = 'today' | 'week' | 'month';
 type Scope = 'all' | string; // 'all' for overall, or classId for specific class
@@ -162,8 +162,8 @@ export function RankingLeaderboard() {
                                {rank <= 3 ? <Medal className="w-7 h-7" /> : <span className="text-base">{rank}</span>}
                             </div>
                              <Avatar className="h-12 w-12 border-2 border-primary/50">
-                                <AvatarImage src={item.student.avatar} alt={item.student.name} />
-                                <AvatarFallback>{item.student.name.charAt(0)}</AvatarFallback>
+                                {item.student.avatar && <AvatarImage src={item.student.avatar} alt={item.student.name} />}
+                                <AvatarFallback><User className="h-6 w-6" /></AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
                                 <p className="text-base">{item.student.name}</p>

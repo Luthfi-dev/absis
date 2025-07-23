@@ -24,6 +24,7 @@ import {
   Calendar,
   BarChart,
   Crown,
+  User,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -82,8 +83,8 @@ export function TeacherSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-2">
           <Avatar className="size-8">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+            <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">
             <span className="font-semibold text-sidebar-foreground">{user.name}</span>

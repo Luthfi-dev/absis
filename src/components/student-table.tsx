@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search, User } from "lucide-react"
 import { mockStudents, type Student } from "@/lib/mock-data"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
@@ -222,8 +222,10 @@ export function StudentTable() {
                     <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar>
-                        <AvatarImage src={student.avatar} alt={student.name} />
-                        <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                          {student.avatar && <AvatarImage src={student.avatar} alt={student.name} />}
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
                         </Avatar>
                         <div className="font-medium">{student.name}</div>
                     </div>

@@ -30,7 +30,7 @@ import { mockSchedule, mockStudents, mockClasses, mockAttendance } from "@/lib/m
 import type { Student, ScheduleItem } from '@/lib/mock-data'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, User } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 
@@ -180,8 +180,8 @@ export default function TeacherAttendancePage({ params }: { params: { scheduleId
                   <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar>
-                            <AvatarImage src={student.avatar} alt={student.name} />
-                            <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                            {student.avatar && <AvatarImage src={student.avatar} alt={student.name} />}
+                            <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
                         </Avatar>
                         <div>
                             <p className="font-medium">{student.name}</p>
