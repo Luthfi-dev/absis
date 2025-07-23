@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { mockSchedule, type ScheduleItem } from "@/lib/mock-data"
-import { CalendarClock, ChevronDown, ChevronUp } from "lucide-react"
+import { CalendarClock } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -40,7 +40,7 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
 
     return (
         <Fragment>
-            <TableRow className="cursor-pointer md:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
+            <TableRow className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell className="font-medium md:hidden">
                     <div className="flex flex-col">
                         <span>{item.subject}</span>
@@ -54,10 +54,6 @@ const ResponsiveRow = ({ item }: { item: ScheduleItem }) => {
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end">
                         <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
-                         <div className="md:hidden ml-2">
-                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                           <span className="sr-only">Toggle details</span>
-                        </div>
                     </div>
                 </TableCell>
             </TableRow>

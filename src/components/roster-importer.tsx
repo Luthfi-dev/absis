@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -101,9 +102,9 @@ export function RosterImporter() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Upload className="mr-2 h-4 w-4" />
-          Impor Daftar
+        <Button size="sm" variant="outline" className="sm:w-auto w-10 p-0 sm:px-4 sm:py-2">
+            <Upload />
+            <span className="sr-only sm:not-sr-only sm:ml-2">Impor Daftar</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>

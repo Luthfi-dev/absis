@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search, ChevronDown, ChevronUp } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, QrCode, Printer, Trash, Search } from "lucide-react"
 import { mockStudents, type Student } from "@/lib/mock-data"
 import { Avatar, AvatarFallback } from "./ui/avatar"
 import { Badge } from "./ui/badge"
@@ -99,7 +99,7 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
 
     return (
         <Fragment>
-            <TableRow data-state={selected ? "selected" : ""} className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
+            <TableRow data-state={selected ? "selected" : ""} className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                         checked={selected}
@@ -123,13 +123,8 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                 <TableCell className="hidden md:table-cell">{student.nisn}</TableCell>
                 <TableCell className="hidden lg:table-cell">{student.kelas}</TableCell>
                 <TableCell className="pr-4 text-right">
-                    <div className="flex items-center justify-end">
-                        <div className="hidden md:flex">
-                           <ActionMenu />
-                        </div>
-                         <div className="md:hidden">
-                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </div>
+                    <div className="hidden md:flex">
+                       <ActionMenu />
                     </div>
                 </TableCell>
             </TableRow>
@@ -158,19 +153,19 @@ const ResponsiveRow = ({ student, selected, onSelect, onDelete, onPrint, onViewR
                             <div className="flex flex-col sm:flex-row gap-2">
                                 <StudentCardDialog student={student}>
                                     <Button variant="outline" size="sm" className="w-full justify-center">
-                                        <QrCode className="mr-2 h-4 w-4" />
-                                        Lihat Kartu
+                                        <QrCode />
+                                        <span className="sm:ml-2">Lihat Kartu</span>
                                     </Button>
                                 </StudentCardDialog>
                                 <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => onViewRecords(student.id)}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Lihat Catatan
+                                    <Eye />
+                                    <span className="sm:ml-2">Lihat Catatan</span>
                                 </Button>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button variant="destructive" size="sm" className="w-full justify-center" onClick={(e) => e.stopPropagation()}>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Hapus
+                                            <Trash2 />
+                                            <span className="sm:ml-2">Hapus</span>
                                         </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
@@ -201,7 +196,12 @@ export function StudentTable() {
         localStorage.setItem('mockStudents', JSON.stringify(mockStudents));
         return mockStudents;
       }
-      return JSON.parse(savedStudents);
+      try {
+        return JSON.parse(savedStudents)
+      } catch {
+        localStorage.setItem('mockStudents', JSON.stringify(mockStudents));
+        return mockStudents;
+      }
     }
     return mockStudents;
   });

@@ -22,7 +22,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { mockStudents, mockSubjects, mockAttendance, type Student, mockRoster } from '@/lib/mock-data';
 import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, startOfISOWeek } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { BarChart, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { generateAvatarColor } from '@/lib/utils';
@@ -42,7 +42,7 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
 
     return (
         <Fragment>
-            <TableRow className="cursor-pointer sm:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
+            <TableRow className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell>
                      <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 hidden sm:flex">
@@ -56,9 +56,7 @@ const ResponsiveRow = ({ data }: { data: ReportData }) => {
                 <TableCell className="text-center hidden sm:table-cell text-orange-600 font-semibold">{terlambat}</TableCell>
                 <TableCell className="text-center hidden sm:table-cell text-red-600 font-semibold">{absen}</TableCell>
                 <TableCell className="text-right sm:hidden">
-                     <div className="sm:hidden">
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                     </div>
+                    <span className="sr-only">Details</span>
                 </TableCell>
             </TableRow>
             {isExpanded && (

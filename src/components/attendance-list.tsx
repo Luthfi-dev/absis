@@ -21,7 +21,7 @@ import { mockStudents, mockAttendance } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -59,7 +59,7 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
 
     return (
         <Fragment>
-            <TableRow className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
+            <TableRow className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell className="md:hidden">
                     <div className="flex flex-col">
                        <span className="font-medium">{record.studentName}</span>
@@ -74,10 +74,6 @@ const ResponsiveRow = ({ record }: { record: (typeof allAttendanceRecords)[0] })
                 <TableCell className="text-right">
                    <div className="flex items-center justify-end">
                         <Badge variant={getStatusVariant(record.status)}>{record.status}</Badge>
-                        <div className="md:hidden ml-2" onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
-                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                            <span className="sr-only">Toggle details</span>
-                        </div>
                     </div>
                 </TableCell>
             </TableRow>

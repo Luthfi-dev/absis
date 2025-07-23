@@ -119,7 +119,6 @@ export function AddStudentDialog() {
         nisn: data.nisn,
         kelas: data.kelas,
         nomorOrangTua: data.nomorOrangTua,
-        avatar: undefined, // No default avatar image
     };
 
     localStorage.setItem('mockStudents', JSON.stringify([...students, newStudent]));
@@ -133,9 +132,9 @@ export function AddStudentDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Tambah Siswa
+        <Button size="sm" className="sm:w-auto w-10 p-0 sm:px-4 sm:py-2">
+            <PlusCircle />
+            <span className="sr-only sm:not-sr-only sm:ml-2">Tambah Siswa</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

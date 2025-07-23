@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table"
 import { mockTeachers, type Teacher, type UserRole } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { useEffect, useState, useMemo, Fragment } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
@@ -35,7 +35,7 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
 
     return (
         <Fragment>
-            <TableRow className="cursor-pointer lg:cursor-auto" onClick={() => setIsExpanded(!isExpanded)}>
+            <TableRow className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
@@ -63,18 +63,13 @@ const ResponsiveRow = ({ user, onRoleChange, onStatusChange }: { user: Teacher; 
                     </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                        <div className="hidden md:flex">
-                          <Switch
-                              onClick={(e) => e.stopPropagation()}
-                              checked={user.status === 'active'}
-                              onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
-                              aria-label={`Aktifkan ${user.name}`}
-                          />
-                        </div>
-                         <div className="md:hidden">
-                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </div>
+                    <div className="hidden md:flex items-center justify-end gap-2">
+                      <Switch
+                          onClick={(e) => e.stopPropagation()}
+                          checked={user.status === 'active'}
+                          onCheckedChange={(checked) => onStatusChange(user.id, checked ? 'active' : 'pending')}
+                          aria-label={`Aktifkan ${user.name}`}
+                      />
                     </div>
                 </TableCell>
             </TableRow>
