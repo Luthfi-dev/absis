@@ -123,12 +123,14 @@ export default function TeacherDashboardPage() {
               <p className="text-sm text-muted-foreground">{item.time}</p>
               {isDelegated && <p className="text-xs text-muted-foreground italic">{item.teacher}</p>}
             </div>
-            <Button asChild className="w-full sm:w-auto" disabled={item.status !== 'Sedang Berlangsung'}>
-              <Link href={`/attendance/${item.id}`}>
-                <ScanLine className="mr-2 h-4 w-4" />
-                Mulai Absensi
-              </Link>
-            </Button>
+            {item.status === 'Sedang Berlangsung' && (
+              <Button asChild className="w-full sm:w-auto">
+                <Link href={`/attendance/${item.id}`}>
+                  <ScanLine className="mr-2 h-4 w-4" />
+                  Mulai Absensi
+                </Link>
+              </Button>
+            )}
           </li>
         ))}
       </ul>
