@@ -9,25 +9,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { mockSchedule, type ScheduleItem, mockRoster, mockTeachers, type Teacher, type Roster, mockSubjects, mockClasses, type DelegatedTask } from "@/lib/mock-data"
-import { CalendarClock, Clock, ScanLine, UserPlus } from "lucide-react"
+import { mockRoster, mockTeachers, type Teacher, type Roster, mockSubjects, mockClasses, type DelegatedTask } from "@/lib/mock-data"
+import { CalendarClock, Clock, ScanLine, UserPlus, ArrowRightLeft } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 
-type ScheduleStatus = 'Akan Datang' | 'Sedang Berlangsung' | 'Selesai';
+type ScheduleStatus = 'Akan Datang' | 'Sedang Berlangsung' | 'Selesai' | 'Dialihkan';
 
-const getStatusForSchedule = (time: string): ScheduleStatus => {
+type ScheduleItem = {
+  id: string;
+  time: string;
+  subject: string;
+  class: string;
+  teacher: string;
+  status: ScheduleStatus;
+  isDelegated?: boolean;
+  delegatedTo?: string;
+};
+
+
+const getStatusForSchedule = (time: string): Omit<ScheduleStatus, 'Dialihkan'> => {
     const now = new Date();
     const [startTimeStr, endTimeStr] = time.split(' - ');
+    
     const [startHours, startMinutes] = startTimeStr.split(':').map(Number);
-    const [endHours, endMinutes] = endTimeStr.split(':').map(Number);
-
-    const startDate = new Date();
+    const startDate = new Date(now);
     startDate.setHours(startHours, startMinutes, 0, 0);
 
-    const endDate = new Date();
+    const [endHours, endMinutes] = endTimeStr.split(':').map(Number);
+    const endDate = new Date(now);
     endDate.setHours(endHours, endMinutes, 0, 0);
 
     if (now < startDate) return 'Akan Datang';
@@ -61,6 +73,23 @@ export default function TeacherDashboardPage() {
         .map((cs: any) => {
            const subject = mockSubjects.find(s => s.id === cs.subjectId)?.name || 'N/A';
            const className = mockClasses.find(c => Object.entries(currentRosterData).some(([classId, entries] : [string, any]) => classId === c.id && entries.some((e: any) => e.id === cs.id)))?.name || 'N/A';
+           
+           const todaysDelegation = delegations.find(d => d.rosterEntryId === cs.id && d.date === todayStr && d.originalTeacherId === user.id);
+
+           if (todaysDelegation) {
+               const substituteTeacher = currentTeachers.find(t => t.id === todaysDelegation.substituteTeacherId)?.name || 'N/A';
+               return {
+                  id: cs.id,
+                  time: cs.time,
+                  subject: subject,
+                  class: className,
+                  teacher: user.name,
+                  status: 'Dialihkan',
+                  isDelegated: true,
+                  delegatedTo: substituteTeacher
+               } as ScheduleItem;
+           }
+           
            return {
               id: cs.id,
               time: cs.time,
@@ -72,7 +101,7 @@ export default function TeacherDashboardPage() {
         });
       setTodaysSchedule(ownSchedules);
 
-      // 2. Get delegated tasks for today
+      // 2. Get delegated tasks received by the user for today
       const todaysDelegatedTasks = delegations
         .filter(d => d.substituteTeacherId === user.id && d.date === todayStr)
         .map(d => {
@@ -103,11 +132,12 @@ export default function TeacherDashboardPage() {
         case 'Sedang Berlangsung': return 'success';
         case 'Akan Datang': return 'outline';
         case 'Selesai': return 'secondary';
+        case 'Dialihkan': return 'warning';
         default: return 'default';
     }
   }
 
-  const renderScheduleList = (items: ScheduleItem[], isDelegated = false) => (
+  const renderScheduleList = (items: ScheduleItem[], isReceivedDelegation = false) => (
       <ul className="space-y-4">
         {items.sort((a,b) => a.time.localeCompare(b.time)).map((item) => (
           <li key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg transition-colors hover:bg-muted/50 border">
@@ -121,7 +151,7 @@ export default function TeacherDashboardPage() {
               </div>
               <p className="text-sm text-muted-foreground">{item.class}</p>
               <p className="text-sm text-muted-foreground">{item.time}</p>
-              {isDelegated && <p className="text-xs text-muted-foreground italic">{item.teacher}</p>}
+              {isReceivedDelegation && <p className="text-xs text-muted-foreground italic">{item.teacher}</p>}
             </div>
             {item.status === 'Sedang Berlangsung' && (
               <Button asChild className="w-full sm:w-auto">
@@ -130,6 +160,12 @@ export default function TeacherDashboardPage() {
                   Mulai Absensi
                 </Link>
               </Button>
+            )}
+            {item.status === 'Dialihkan' && (
+                 <div className="text-xs sm:text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-md flex items-center gap-2 w-full sm:w-auto justify-center">
+                    <ArrowRightLeft className="h-4 w-4 flex-shrink-0"/>
+                    <span>Dialihkan ke {item.delegatedTo}</span>
+                 </div>
             )}
           </li>
         ))}
