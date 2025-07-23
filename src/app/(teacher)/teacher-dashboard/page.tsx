@@ -27,6 +27,7 @@ export default function TeacherDashboardPage() {
     // Load initial data
     const savedUsers = localStorage.getItem('mockTeachers');
     if (savedUsers) setAllTeachers(JSON.parse(savedUsers));
+    else setAllTeachers(mockTeachers);
     
     const savedRoster = localStorage.getItem('mockRoster');
     if(savedRoster) setRosterData(JSON.parse(savedRoster));
@@ -58,11 +59,15 @@ export default function TeacherDashboardPage() {
       };
 
       // 1. Get Teacher's own active schedule
-      const ownActiveSchedules = Object.values(rosterData).flat()
-        .filter(entry => entry.teacherId === user.id && entry.day === currentDayName && isTimeActive(entry.time))
-        .map(cs => {
+      const currentRosterData = JSON.parse(localStorage.getItem('mockRoster') || '{}');
+      const currentTeachers = JSON.parse(localStorage.getItem('mockTeachers') || '[]');
+
+
+      const ownActiveSchedules = Object.values(currentRosterData).flat()
+        .filter((entry: any) => entry.teacherId === user.id && entry.day === currentDayName && isTimeActive(entry.time))
+        .map((cs: any) => {
            const subject = mockSubjects.find(s => s.id === cs.subjectId)?.name || 'N/A';
-           const className = mockClasses.find(c => Object.entries(rosterData).some(([classId, entries]) => classId === c.id && entries.some(e => e.id === cs.id)))?.name || 'N/A';
+           const className = mockClasses.find(c => Object.entries(currentRosterData).some(([classId, entries] : [string, any]) => classId === c.id && entries.some((e: any) => e.id === cs.id)))?.name || 'N/A';
            return {
               id: cs.id,
               time: cs.time,
@@ -81,8 +86,8 @@ export default function TeacherDashboardPage() {
             const { rosterEntry } = d;
             const subject = mockSubjects.find(s => s.id === rosterEntry.subjectId)?.name || 'N/A';
             // Find class name from the main roster data
-            const className = mockClasses.find(c => Object.entries(rosterData).some(([classId, entries]) => entries.some(e => e.id === rosterEntry.id)))?.name || 'N/A';
-            const originalTeacher = allTeachers.find(t => t.id === rosterEntry.teacherId)?.name || 'N/A';
+            const className = mockClasses.find(c => Object.entries(currentRosterData).some(([classId, entries]: [string, any]) => entries.some((e:any) => e.id === rosterEntry.id)))?.name || 'N/A';
+            const originalTeacher = currentTeachers.find((t:any) => t.id === rosterEntry.teacherId)?.name || 'N/A';
             return {
                 id: d.id, // Use delegation ID for uniqueness
                 time: rosterEntry.time,
@@ -99,7 +104,7 @@ export default function TeacherDashboardPage() {
     const interval = setInterval(getSchedules, 60000); // Check every minute
 
     return () => clearInterval(interval);
-  }, [user, allTeachers, rosterData]);
+  }, [user]);
 
   const renderScheduleList = (items: ScheduleItem[], isDelegated = false) => (
       <ul className="space-y-4">
